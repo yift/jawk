@@ -1,14 +1,16 @@
-mod extractors;
+mod functions_definitions;
 mod json_parser;
 mod json_value;
 mod output;
 mod printer;
 mod reader;
+mod selection;
 
 use clap::Parser;
-use extractors::{print_help, Get, Selection};
+use functions_definitions::print_help;
 use json_parser::JsonParserError;
 use output::{get_output, Output};
+use selection::{Get, Selection};
 use std::fmt::Error as FormatError;
 use std::fs::read_dir;
 use std::io::Error as IoEror;
