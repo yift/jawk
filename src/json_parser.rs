@@ -1,188 +1,166 @@
-use std::{collections::HashMap, io::Bytes, io::Read, io::Result};
+use std::io::Error as IoError;
+use std::num::{ParseFloatError, ParseIntError};
+use std::{collections::HashMap, io::Read, string::FromUtf8Error};
 
-pub struct JsonReader<R: Read> {
-    bytes: Bytes<R>,
-    current_byte: Option<u8>,
+use thiserror::Error;
+
+use crate::json_value::{JsonValue, NumberValue};
+use crate::reader::{Location, Reader};
+
+pub type Result<T> = std::result::Result<T, JsonParserError>;
+
+pub trait JsonParser {
+    fn next_json_value(&mut self) -> Result<Option<JsonValue>>;
 }
 
-impl<R: Read> JsonReader<R> {
-    pub fn new(reader: R) -> Self {
-        JsonReader {
-            bytes: reader.bytes(),
-            current_byte: Option::None,
-        }
-    }
+trait JsonParserUtils {
+    fn read_reserved_word<const N: usize>(&mut self, chars: &[u8; N], word: &str) -> Result<()>;
+    fn read_true(&mut self) -> Result<JsonValue>;
+    fn read_false(&mut self) -> Result<JsonValue>;
+    fn read_null(&mut self) -> Result<JsonValue>;
+    fn read_array(&mut self) -> Result<JsonValue>;
+    fn read_object(&mut self) -> Result<JsonValue>;
+    fn read_number(&mut self) -> Result<JsonValue>;
+    fn read_string(&mut self) -> Result<JsonValue>;
+}
 
+impl<R: Read> JsonParserUtils for Reader<R> {
     #[inline]
-    fn next(&mut self) -> Result<Option<u8>> {
-        match self.bytes.next() {
-            None => {
-                self.current_byte = None;
-                Ok(None)
-            }
-            Some(ch) => {
-                let ch = ch?;
-                self.current_byte = Some(ch);
-                Ok(Some(ch))
-            }
-        }
-    }
-
-    #[inline]
-    fn peek(&mut self) -> Result<Option<u8>> {
-        match self.current_byte {
-            Some(ch) => Ok(Some(ch)),
-            None => self.next(),
-        }
-    }
-
-    #[inline]
-    fn eat_whitespace(&mut self) -> Result<()> {
-        loop {
-            match self.peek()? {
-                None => {
-                    return Ok(());
+    fn read_reserved_word<const N: usize>(&mut self, chars: &[u8; N], word: &str) -> Result<()> {
+        for expected in chars {
+            match self.next()? {
+                Some(ch) => {
+                    if ch != *expected {
+                        return Err(JsonParserError::IncompleteReservedWord(
+                            self.where_am_i(),
+                            word.to_string(),
+                            ch as char,
+                            *expected as char,
+                        ));
+                    }
                 }
-
-                Some(b' ' | b'\n' | b'\t' | b'\r') => {
-                    self.next()?;
-                }
-                _ => {
-                    return Ok(());
-                }
+                None => return Err(JsonParserError::UnexpectedEof(self.where_am_i())),
             }
         }
+        self.next()?;
+        Ok(())
     }
 
     #[inline]
-    fn read_true(&mut self) -> Result<ReadValue> {
-        if self.next()? == Some(b'r') && self.next()? == Some(b'u') && self.next()? == Some(b'e') {
-            self.next()?;
-            Ok(ReadValue::Value(JsonValue::Boolean(true)))
-        } else {
-            Ok(ReadValue::Error)
-        }
+    fn read_true(&mut self) -> Result<JsonValue> {
+        self.read_reserved_word(&[b'r', b'u', b'e'], "true")?;
+        Ok(JsonValue::Boolean(true))
     }
 
     #[inline]
-    fn read_false(&mut self) -> Result<ReadValue> {
-        if self.next()? == Some(b'a')
-            && self.next()? == Some(b'l')
-            && self.next()? == Some(b's')
-            && self.next()? == Some(b'e')
-        {
-            self.next()?;
-            Ok(ReadValue::Value(JsonValue::Boolean(false)))
-        } else {
-            Ok(ReadValue::Error)
-        }
+    fn read_false(&mut self) -> Result<JsonValue> {
+        self.read_reserved_word(&[b'a', b'l', b's', b'e'], "false")?;
+        Ok(JsonValue::Boolean(false))
     }
 
     #[inline]
-    fn read_null(&mut self) -> Result<ReadValue> {
-        if self.next()? == Some(b'u') && self.next()? == Some(b'l') && self.next()? == Some(b'l') {
-            self.next()?;
-            Ok(ReadValue::Value(JsonValue::Null))
-        } else {
-            Ok(ReadValue::Error)
-        }
-    }
-
-    #[inline]
-    fn read_next_value(&mut self) -> Result<ReadValue> {
-        self.eat_whitespace()?;
-
-        match self.peek()? {
-            None => Ok(ReadValue::Eof),
-            Some(b't') => self.read_true(),
-            Some(b'f') => self.read_false(),
-            Some(b'n') => self.read_null(),
-            Some(b'\"') => self.read_string(),
-            Some(b'-' | b'0'..=b'9') => self.read_number(),
-            Some(b'[') => self.read_array(),
-            Some(b'{') => self.read_object(),
-            _ => {
-                self.next()?;
-                Ok(ReadValue::Error)
-            }
-        }
+    fn read_null(&mut self) -> Result<JsonValue> {
+        self.read_reserved_word(&[b'u', b'l', b'l'], "null")?;
+        Ok(JsonValue::Null)
     }
     #[inline]
-    fn read_array(&mut self) -> Result<ReadValue> {
+    fn read_array(&mut self) -> Result<JsonValue> {
         self.next()?;
         self.eat_whitespace()?;
         if self.peek()? == Some(b']') {
             self.next()?;
-            return Ok(ReadValue::Value(JsonValue::Array(vec![])));
+            return Ok(JsonValue::Array(vec![]));
         }
         let mut array = Vec::new();
         loop {
-            if let ReadValue::Value(value) = self.read_next_value()? {
-                array.push(value);
-            } else {
-                return Ok(ReadValue::Error);
-            }
+            let value = match self.next_json_value()? {
+                Some(value) => value,
+                None => return Err(JsonParserError::UnexpectedEof(self.where_am_i())),
+            };
+            array.push(value);
             self.eat_whitespace()?;
             match self.peek()? {
                 Some(b']') => {
                     self.next()?;
-                    return Ok(ReadValue::Value(JsonValue::Array(array)));
+                    return Ok(JsonValue::Array(array));
                 }
                 Some(b',') => {
                     self.next()?;
                 }
-                _ => {
-                    return Ok(ReadValue::Error);
+                Some(ch) => {
+                    return Err(create_unexpected_character(self, ch, [',', ']']));
+                }
+                None => {
+                    return Err(JsonParserError::UnexpectedEof(self.where_am_i()));
                 }
             }
         }
     }
     #[inline]
-    fn read_object(&mut self) -> Result<ReadValue> {
+    fn read_object(&mut self) -> Result<JsonValue> {
         self.next()?;
         self.eat_whitespace()?;
         let mut map = HashMap::new();
         if self.peek()? == Some(b'}') {
             self.next()?;
-            return Ok(ReadValue::Value(JsonValue::Object(map)));
+            return Ok(JsonValue::Object(map));
         }
         loop {
-            if let ReadValue::Value(JsonValue::String(key)) = self.read_next_value()? {
-                self.eat_whitespace()?;
-                if self.peek()? != Some(b':') {
-                    return Ok(ReadValue::Error);
+            match self.next_json_value()? {
+                Some(value) => {
+                    if let JsonValue::String(key) = value {
+                        self.eat_whitespace()?;
+                        match self.peek()? {
+                            Some(b':') => {}
+                            None => {
+                                return Err(JsonParserError::UnexpectedEof(self.where_am_i()));
+                            }
+                            Some(ch) => {
+                                return Err(create_unexpected_character(self, ch, [':']));
+                            }
+                        }
+                        self.next()?;
+                        if let Some(value) = self.next_json_value()? {
+                            map.insert(key, value);
+                        } else {
+                            return Err(JsonParserError::UnexpectedEof(self.where_am_i()));
+                        }
+                    } else {
+                        return Err(JsonParserError::StringKeyMissing(
+                            self.where_am_i(),
+                            value.type_name(),
+                        ));
+                    }
                 }
-                self.next()?;
-                if let ReadValue::Value(value) = self.read_next_value()? {
-                    map.insert(key, value);
-                } else {
-                    return Ok(ReadValue::Error);
+                _ => {
+                    return Err(JsonParserError::UnexpectedEof(self.where_am_i()));
                 }
-            } else {
-                return Ok(ReadValue::Error);
             }
             self.eat_whitespace()?;
             match self.peek()? {
                 Some(b'}') => {
                     self.next()?;
-                    return Ok(ReadValue::Value(JsonValue::Object(map)));
+                    return Ok(JsonValue::Object(map));
                 }
                 Some(b',') => {
                     self.next()?;
                 }
-                _ => {
-                    return Ok(ReadValue::Error);
+                Some(ch) => {
+                    return Err(create_unexpected_character(self, ch, [',', '}']));
+                }
+                None => {
+                    return Err(JsonParserError::UnexpectedEof(self.where_am_i()));
                 }
             }
         }
     }
 
     #[inline]
-    fn read_number(&mut self) -> Result<ReadValue> {
+    fn read_number(&mut self) -> Result<JsonValue> {
         let mut chars = Vec::new();
         let negative = if self.peek()? == Some(b'-') {
             if self.next()?.is_none() {
-                return Ok(ReadValue::Error);
+                return Err(JsonParserError::UnexpectedEof(self.where_am_i()));
             }
             chars.push(b'-');
             true
@@ -214,66 +192,50 @@ impl<R: Read> JsonReader<R> {
             self.read_digits(&mut chars)?;
         };
 
-        match String::from_utf8(chars) {
-            Ok(str) => {
-                if double {
-                    match str.parse::<f64>() {
-                        Ok(f) => Ok(ReadValue::Value(JsonValue::Number(NumberValue::Float(f)))),
-                        Err(_) => Ok(ReadValue::Error),
-                    }
-                } else if negative {
-                    match str.parse::<i64>() {
-                        Ok(i) => Ok(ReadValue::Value(JsonValue::Number(NumberValue::Negative(
-                            i,
-                        )))),
-                        Err(_) => Ok(ReadValue::Error),
-                    }
-                } else {
-                    match str.parse::<u64>() {
-                        Ok(u) => Ok(ReadValue::Value(JsonValue::Number(NumberValue::Positive(
-                            u,
-                        )))),
-                        Err(_) => Ok(ReadValue::Error),
-                    }
-                }
-            }
-            Err(_) => Ok(ReadValue::Error),
-        }
-    }
+        let str = match String::from_utf8(chars) {
+            Ok(chars) => chars,
+            Err(e) => return Err(JsonParserError::StringUtfError(self.where_am_i(), e)),
+        };
 
-    #[inline]
-    fn read_digits(&mut self, digits: &mut Vec<u8>) -> Result<()> {
-        loop {
-            let letter = self.peek()?;
-            match letter {
-                Some(b'0'..=b'9') => {
-                    digits.push(letter.unwrap());
-                    self.next()?;
-                }
-                _ => return Ok(()),
+        if double {
+            match str.parse::<f64>() {
+                Ok(f) => Ok(JsonValue::Number(NumberValue::Float(f))),
+                Err(e) => Err(JsonParserError::NumberParseFloatError(self.where_am_i(), e)),
+            }
+        } else if negative {
+            match str.parse::<i64>() {
+                Ok(i) => Ok(JsonValue::Number(NumberValue::Negative(i))),
+                Err(e) => Err(JsonParserError::NumberParseIntError(self.where_am_i(), e)),
+            }
+        } else {
+            match str.parse::<u64>() {
+                Ok(u) => Ok(JsonValue::Number(NumberValue::Positive(u))),
+                Err(e) => Err(JsonParserError::NumberParseIntError(self.where_am_i(), e)),
             }
         }
     }
 
     #[inline]
-    fn read_string(&mut self) -> Result<ReadValue> {
+    fn read_string(&mut self) -> Result<JsonValue> {
         let mut chars = Vec::new();
         loop {
             match self.next()? {
                 None => {
-                    return Ok(ReadValue::Error);
+                    return Err(JsonParserError::UnexpectedEof(self.where_am_i()));
                 }
                 Some(b'\"') => {
                     self.next()?;
                     match String::from_utf8(chars) {
                         Ok(str) => {
-                            return Ok(ReadValue::Value(JsonValue::String(str)));
+                            return Ok(JsonValue::String(str));
                         }
-                        Err(_) => return Ok(ReadValue::Error),
+                        Err(e) => {
+                            return Err(JsonParserError::StringUtfError(self.where_am_i(), e))
+                        }
                     }
                 }
                 Some(b'\\') => match self.next()? {
-                    None => return Ok(ReadValue::Error),
+                    None => return Err(JsonParserError::UnexpectedEof(self.where_am_i())),
                     Some(b'\"') => chars.push(b'\"'),
                     Some(b'\\') => chars.push(b'\\'),
                     Some(b'/') => chars.push(b'/'),
@@ -286,13 +248,24 @@ impl<R: Read> JsonReader<R> {
                         let mut chr: u32 = 0;
                         for _ in 0..4 {
                             match self.next()? {
-                                None => return Ok(ReadValue::Error),
+                                None => {
+                                    return Err(JsonParserError::UnexpectedEof(self.where_am_i()))
+                                }
                                 Some(c) => {
                                     let d = match c {
                                         b'0'..=b'9' => (c - b'0') as u32,
                                         b'a'..=b'f' => (c - b'a' + 10) as u32,
                                         b'A'..=b'F' => (c - b'A' + 10) as u32,
-                                        _ => return Ok(ReadValue::Error),
+                                        ch => {
+                                            let mut expected: Vec<char> = ('0'..='9').collect();
+                                            let letters: Vec<char> = ('a'..='f').collect();
+                                            expected.extend(letters);
+                                            let letters: Vec<char> = ('A'..='F').collect();
+                                            expected.extend(letters);
+                                            return Err(create_unexpected_character(
+                                                self, ch, expected,
+                                            ));
+                                        }
                                     };
                                     chr = (chr << 4) | d;
                                 }
@@ -306,10 +279,21 @@ impl<R: Read> JsonReader<R> {
                                     chars.push(*b);
                                 }
                             }
-                            None => return Ok(ReadValue::Error),
+                            None => {
+                                return Err(JsonParserError::InvalidChacterHex(
+                                    self.where_am_i(),
+                                    chr,
+                                ))
+                            }
                         }
                     }
-                    _ => return Ok(ReadValue::Error),
+                    Some(ch) => {
+                        return Err(create_unexpected_character(
+                            self,
+                            ch,
+                            ['\"', '\\', '/', 'b', 'f', 'n', 'r', 't', 'u'],
+                        ))
+                    }
                 },
                 Some(c) => {
                     chars.push(c);
@@ -317,43 +301,75 @@ impl<R: Read> JsonReader<R> {
             }
         }
     }
+}
 
-    pub fn next_value(&mut self) -> Result<Option<JsonValue>> {
-        loop {
-            match self.read_next_value()? {
-                ReadValue::Eof => {
-                    return Ok(None);
-                }
-                ReadValue::Value(value) => {
-                    return Ok(Some(value));
-                }
-                ReadValue::Error => {
-                    // Do nothing
-                }
+impl<R: Read> JsonParser for Reader<R> {
+    #[inline]
+    fn next_json_value(&mut self) -> Result<Option<JsonValue>> {
+        self.eat_whitespace()?;
+
+        match self.peek()? {
+            None => Ok(None),
+            Some(b't') => Ok(Some(self.read_true()?)),
+            Some(b'f') => Ok(Some(self.read_false()?)),
+            Some(b'n') => Ok(Some(self.read_null()?)),
+            Some(b'\"') => Ok(Some(self.read_string()?)),
+            Some(b'-' | b'0'..=b'9') => Ok(Some(self.read_number()?)),
+            Some(b'[') => Ok(Some(self.read_array()?)),
+            Some(b'{') => Ok(Some(self.read_object()?)),
+            Some(ch) => {
+                self.next()?;
+                let mut expected = vec!['n', 't', 'f', '\"', '-', '[', '{'];
+                let digits: Vec<char> = ('0'..='9').collect();
+                expected.extend(digits);
+                Err(create_unexpected_character(self, ch, expected))
             }
         }
     }
 }
 
-#[derive(Debug)]
-pub enum JsonValue {
-    Null,
-    Boolean(bool),
-    String(String),
-    Number(NumberValue),
-    Object(HashMap<String, JsonValue>),
-    Array(Vec<JsonValue>),
+fn create_unexpected_character<R: Read, T: IntoIterator<Item = char>>(
+    reader: &Reader<R>,
+    ch: u8,
+    expected: T,
+) -> JsonParserError {
+    JsonParserError::UnexpectedCharacter(
+        reader.where_am_i(),
+        ch as char,
+        expected
+            .into_iter()
+            .map(|c| format!("{}", c))
+            .collect::<Vec<_>>()
+            .join(", "),
+    )
 }
 
-#[derive(Debug)]
-pub enum NumberValue {
-    Negative(i64),
-    Positive(u64),
-    Float(f64),
+#[derive(Debug, Error)]
+pub enum JsonParserError {
+    #[error("{0}")]
+    IoError(#[from] IoError),
+    #[error("{0}: {1}")]
+    StringUtfError(Location, FromUtf8Error),
+    #[error("{0}: {1}")]
+    NumberParseIntError(Location, ParseIntError),
+    #[error("{0}: {1}")]
+    NumberParseFloatError(Location, ParseFloatError),
+    #[error(
+        "{0}: Reserved word '{1}' started but was not completed, got '{2}', should have been '{3}'"
+    )]
+    IncompleteReservedWord(Location, String, char, char),
+    #[error("{0}: Got character '{1}', expecting one of [{2}]")]
+    UnexpectedCharacter(Location, char, String),
+    #[error("{0}: unkonw character with hex: {1:#04x}")]
+    InvalidChacterHex(Location, u32),
+    #[error("{0}: Unexpected end of file")]
+    UnexpectedEof(Location),
+    #[error("{0}: Only string keys are supported, not keys of type: {1}")]
+    StringKeyMissing(Location, String),
 }
 
-enum ReadValue {
-    Eof,
-    Error,
-    Value(JsonValue),
+impl JsonParserError {
+    pub fn can_recover(&self) -> bool {
+        !matches!(self, JsonParserError::IoError(_))
+    }
 }
