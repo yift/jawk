@@ -133,7 +133,19 @@ static ref BASIC_FUNCTIONS: FunctionsGroup = FunctionsGroup{ name: "Basic functi
             names: vec!["|"],
             min_args_count: 2,
             max_args_count: usize::MAX,
-            build_extractor: combine_extractors,
+            build_extractor: |args| {
+                struct Impl(Arguments);
+                impl Get for Impl {
+                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                        let mut value = value.clone();
+                        for e in &self.0.args {
+                            value = e.get(&value);
+                        }
+                        value
+                    }
+                }
+                Box::new(Impl(Arguments::new(args)))
+            },
             description: vec!["Pipe the output of one function to the next function."],
             examples: vec![Example {
                 input: Some("{\"key\": [20, 40, 60, {\"key-2\": 100}]}"),
@@ -836,18 +848,4 @@ pub fn print_help() {
             }
         }
     }
-}
-
-fn combine_extractors(args: Vec<Box<dyn Get>>) -> Box<dyn Get> {
-    struct Impl(Vec<Box<dyn Get>>);
-    impl Get for Impl {
-        fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
-            let mut value = value.clone();
-            for e in &self.0 {
-                value = e.get(&value);
-            }
-            value
-        }
-    }
-    Box::new(Impl(args))
 }
