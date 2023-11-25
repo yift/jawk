@@ -226,9 +226,13 @@ impl Extract {
 }
 
 fn parse_function<R: Read>(reader: &mut Reader<R>) -> Result<Box<dyn Get>> {
-    let name = read_function_name(reader)?;
+    let mut name = read_function_name(reader)?;
+    let mut args: Vec<Box<dyn Get>> = Vec::new();
+    if name.starts_with(".") {
+        args.push(Box::new(Extract::Root));
+        name = name[1..].to_string();
+    }
     let function = find_function(&name)?;
-    let mut args = Vec::new();
     loop {
         reader.eat_whitespace()?;
         match reader.peek()? {
