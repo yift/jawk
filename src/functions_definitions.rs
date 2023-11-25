@@ -268,6 +268,37 @@ static ref BASIC_FUNCTIONS: FunctionsGroup = FunctionsGroup{ name: "Basic functi
                 },
             ]
         },
+        FunctionDefinitions {
+            names: vec!["stringify"],
+            min_args_count: 1,
+            max_args_count: 1,
+            build_extractor: |args| {
+                struct Impl(Arguments);
+                impl Get for Impl {
+                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                        self.0.apply(value, 0).map(|val| format!("{}", val).into())
+                    }
+                }
+                Box::new(Impl(Arguments::new(args)))
+            },
+            description: vec![
+                "Return the JSON represantation of the object."
+            ],
+            examples: vec![
+                Example {
+                    input: None,
+                    arguments: vec!["true"]
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["1e2"]
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["{\"key\": [1, 2, \"3\"]}"]
+                },
+            ]
+        },
     ]};
     static ref TYPES_FUNCTIONS : FunctionsGroup = FunctionsGroup{ name: "Type functions", functions: vec![
         FunctionDefinitions {
@@ -757,6 +788,48 @@ static ref BASIC_FUNCTIONS: FunctionsGroup = FunctionsGroup{ name: "Basic functi
             ]
         },
         FunctionDefinitions {
+            names: vec!["group_by"],
+            min_args_count: 2,
+            max_args_count: 2,
+            build_extractor: |args| {
+                struct Impl(Arguments);
+                impl Get for Impl {
+                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                        match self.0.apply(value, 0) {
+                            Some(JsonValue::Array(list)) => {
+                                let mut groups = HashMap::new();
+                                for item in list {
+                                    let value = Some(item.clone());
+                                    let key = match self.0.apply(&value,1 ) {
+                                        None => return None,
+                                        Some(key) => format!("{}", key),
+                                    };
+                                    let values = groups.entry(key).or_insert_with(Vec::new);
+                                    values.push(item);
+                                }
+
+                                Some(groups.iter().map(|(k, v)| {
+                                    (k.clone(), Into::<JsonValue>::into(v.clone()))
+                                }).collect::<HashMap<_,_>>().into())
+                            },
+                            _ => None,
+                        }
+                    }
+                }
+                Box::new(Impl(Arguments::new(args)))
+            },
+            description: vec![
+                "Group items by function.",
+                "If the first argument is a list, return list grouped by the second argument."
+            ],
+            examples: vec![
+                Example {
+                    input: None,
+                    arguments: vec!["[\"11\", \"5\", \"23\", \"ab\", \"1\", \"\", \"100\", {}]", "(len .)"]
+                },
+            ]
+        },
+        FunctionDefinitions {
             names: vec!["sort_by", "order_by"],
             min_args_count: 2,
             max_args_count: 2,
@@ -794,13 +867,100 @@ static ref BASIC_FUNCTIONS: FunctionsGroup = FunctionsGroup{ name: "Basic functi
                 },
             ]
         },
+        FunctionDefinitions {
+            names: vec!["sum"],
+            min_args_count: 1,
+            max_args_count: 1,
+            build_extractor: |args| {
+                struct Impl(Arguments);
+                impl Get for Impl {
+                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                        match self.0.apply(value, 0) {
+                            Some(JsonValue::Array(list)) => {
+                                let mut sum = 0.0;
+                                for t in list {
+                                    let t: Result<f64, _> = t.try_into();
+                                    match t {
+                                        Ok(num) => sum += num,
+                                        Err(_) => return None,
+                                    }
+                                }
+                                Some(sum.into())
+                            },
+                            _ => None,
+                        }
+                    }
+                }
+                Box::new(Impl(Arguments::new(args)))
+            },
+            description: vec![
+                "Sum all the items in the list.",
+                "If list have non numeric items, it will return nuthing."
+            ],
+            examples: vec![
+                Example {
+                    input: None,
+                    arguments: vec!["[1, 5, 1.1]"]
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["[]"]
+                },
+            ]
+        },
     ]};
-    static ref ALL_FUNCTIONS: Vec<&'static FunctionsGroup> = vec![
+    static ref STRING_FUNCTIONS : FunctionsGroup = FunctionsGroup{ name: "String functions", functions: vec![
+        FunctionDefinitions {
+            names: vec!["parse"],
+            min_args_count: 1,
+            max_args_count: 1,
+            build_extractor: |args| {
+                struct Impl(Arguments);
+                impl Get for Impl {
+                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                        match self.0.apply(value, 0) {
+                            Some(JsonValue::String(str)) => {
+                                let mut reader = from_string(&str);
+                                match reader.next_json_value() {
+                                    Ok(Some(first_value)) => {
+                                        match reader.next_json_value() {
+                                            Ok(None) => Some(first_value),
+                                            _ => None,
+                                        }
+                                    },
+                                    _ => None
+                                }
+                            },
+                            _ => None,
+                        }
+                    }
+                }
+                Box::new(Impl(Arguments::new(args)))
+            },
+            description: vec!["Parse a string into JSON value."],
+            examples: vec![
+                Example {
+                    input: None,
+                    arguments: vec!["\"[1, 2, 3, 4]\""]
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["\"312\""]
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["\"{}\""]
+                },
+            ]
+        },
+    ]};
+static ref ALL_FUNCTIONS: Vec<&'static FunctionsGroup> = vec![
         &BASIC_FUNCTIONS,
         &TYPES_FUNCTIONS,
         &LIST_FUNCTIONS,
         &OBJECT_FUNCTIONS,
         &NUMBER_FUNCTIONS,
+        &STRING_FUNCTIONS,
     ];
     static ref NAME_TO_FUNCTION: HashMap<&'static str, &'static FunctionDefinitions> = ALL_FUNCTIONS
         .iter()

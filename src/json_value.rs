@@ -123,6 +123,17 @@ impl TryFrom<NumberValue> for usize {
         }
     }
 }
+impl TryFrom<JsonValue> for f64 {
+    type Error = CastError;
+    fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
+        match value {
+            JsonValue::Number(NumberValue::Float(f)) => Ok(f),
+            JsonValue::Number(NumberValue::Positive(f)) => Ok(f as f64),
+            JsonValue::Number(NumberValue::Negative(f)) => Ok(f as f64),
+            _ => Err(CastError::IncorrectType(value.type_name())),
+        }
+    }
+}
 
 impl TryFrom<JsonValue> for usize {
     type Error = CastError;

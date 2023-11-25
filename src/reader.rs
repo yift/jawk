@@ -224,8 +224,8 @@ mod tests {
         assert_eq!(
             reader.where_am_i(),
             Location {
-                input: None,
-                line_number: 4,
+                input: Some("a\nb\ncde".to_string()),
+                line_number: 3,
                 char_number: 1
             }
         );
