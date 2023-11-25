@@ -1,7 +1,8 @@
 use std::io::Error as IoError;
 use std::num::{ParseFloatError, ParseIntError};
-use std::{collections::HashMap, io::Read, string::FromUtf8Error};
+use std::{io::Read, string::FromUtf8Error};
 
+use indexmap::IndexMap;
 use thiserror::Error;
 
 use crate::json_value::{JsonValue, NumberValue};
@@ -100,7 +101,7 @@ impl<R: Read> JsonParserUtils for Reader<R> {
     fn read_object(&mut self) -> Result<JsonValue> {
         self.next()?;
         self.eat_whitespace()?;
-        let mut map = HashMap::new();
+        let mut map = IndexMap::new();
         if self.peek()? == Some(b'}') {
             self.next()?;
             return Ok(JsonValue::Object(map));

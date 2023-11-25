@@ -1,4 +1,6 @@
-use std::{collections::HashMap, fmt::Result};
+use std::fmt::Result;
+
+use indexmap::IndexMap;
 
 use crate::{
     json_value::JsonValue,
@@ -18,7 +20,7 @@ struct JsonOutput {
 
 impl Output for JsonOutput {
     fn output_row(&self, row: Vec<Option<JsonValue>>) -> Result {
-        let mut data = HashMap::new();
+        let mut data = IndexMap::new();
         self.rows_titles.iter().zip(row).for_each(|(title, value)| {
             if let Some(value) = value {
                 data.insert(title.clone(), value);

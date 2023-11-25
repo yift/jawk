@@ -1,7 +1,6 @@
-use std::{
-    collections::HashMap,
-    fmt::{Result, Write},
-};
+use std::fmt::{Result, Write};
+
+use indexmap::IndexMap;
 
 use crate::json_value::{JsonValue, NumberValue};
 
@@ -75,7 +74,7 @@ impl JsonPrinter {
         write!(f, "]")
     }
 
-    fn print_object<W: Write>(&self, f: &mut W, object: &HashMap<String, JsonValue>) -> Result {
+    fn print_object<W: Write>(&self, f: &mut W, object: &IndexMap<String, JsonValue>) -> Result {
         if object.is_empty() {
             return write!(f, "{{}}");
         }

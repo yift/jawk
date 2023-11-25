@@ -1,5 +1,6 @@
-use std::{cmp::Ordering, collections::HashMap, fmt::Display, num::TryFromIntError};
+use std::{cmp::Ordering, fmt::Display, num::TryFromIntError};
 
+use indexmap::IndexMap;
 use thiserror::Error;
 
 use crate::printer::{JsonPrinter, Print};
@@ -10,7 +11,7 @@ pub enum JsonValue {
     Boolean(bool),
     String(String),
     Number(NumberValue),
-    Object(HashMap<String, JsonValue>),
+    Object(IndexMap<String, JsonValue>),
     Array(Vec<JsonValue>),
 }
 
@@ -184,7 +185,7 @@ impl TryFrom<JsonValue> for Vec<JsonValue> {
         }
     }
 }
-impl TryFrom<JsonValue> for HashMap<String, JsonValue> {
+impl TryFrom<JsonValue> for IndexMap<String, JsonValue> {
     type Error = CastError;
     fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
         match value {
@@ -193,8 +194,8 @@ impl TryFrom<JsonValue> for HashMap<String, JsonValue> {
         }
     }
 }
-impl From<HashMap<String, JsonValue>> for JsonValue {
-    fn from(value: HashMap<String, JsonValue>) -> Self {
+impl From<IndexMap<String, JsonValue>> for JsonValue {
+    fn from(value: IndexMap<String, JsonValue>) -> Self {
         JsonValue::Object(value)
     }
 }

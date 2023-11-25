@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use indexmap::IndexMap;
 
 use crate::{
     functions_definitions::{Arguments, Example, FunctionDefinitions, FunctionsGroup},
@@ -105,7 +105,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
                             Some(JsonValue::Array(list)) => {
-                                let mut groups = HashMap::new();
+                                let mut groups = IndexMap::new();
                                 for item in list {
                                     let value = Some(item.clone());
                                     let key = match self.0.apply(&value,1 ) {
@@ -118,7 +118,7 @@ pub fn get_list_functions() -> FunctionsGroup {
 
                                 Some(groups.iter().map(|(k, v)| {
                                     (k.clone(), Into::<JsonValue>::into(v.clone()))
-                                }).collect::<HashMap<_,_>>().into())
+                                }).collect::<IndexMap<_,_>>().into())
                             },
                             _ => None,
                         }
