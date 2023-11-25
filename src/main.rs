@@ -1,10 +1,17 @@
+mod basic_functions;
+mod boolean_functions;
 mod functions_definitions;
 mod json_parser;
 mod json_value;
+mod list_functions;
+mod number_functions;
+mod object_functions;
 mod output;
 mod printer;
 mod reader;
 mod selection;
+mod string_functions;
+mod type_functions;
 
 use clap::Parser;
 use functions_definitions::print_help;

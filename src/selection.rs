@@ -86,17 +86,13 @@ enum Extract {
     Root,
     Element(Vec<SingleExtract>),
 }
-enum BasicGetters {
-    Const(JsonValue),
+struct ConstGetters {
+    value: JsonValue,
 }
-impl Get for BasicGetters {
+impl Get for ConstGetters {
     fn get(&self, _: &Option<JsonValue>) -> Option<JsonValue> {
-        match self {
-            BasicGetters::Const(val) => {
-                let val = val.clone();
-                Some(val)
-            }
-        }
+        let val = self.value.clone();
+        Some(val)
     }
 }
 impl Get for Extract {
@@ -142,7 +138,7 @@ fn read_getter<R: Read>(reader: &mut Reader<R>) -> Result<Box<dyn Get>> {
         Some(b'(') => parse_function(reader),
         _ => match reader.next_json_value()? {
             None => Err(SelectionParseError::UnexpectedEof),
-            Some(val) => Ok(Box::new(BasicGetters::Const(val))),
+            Some(val) => Ok(Box::new(ConstGetters { value: val })),
         },
     }
 }
