@@ -75,4 +75,4 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: jawk-x86_64-unknown-linux-musl
-          path: ./target/release/jawk
+          path: ./target/x86_64-unknown-linux-musl/release/jawk
