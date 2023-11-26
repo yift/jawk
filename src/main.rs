@@ -41,7 +41,7 @@ struct Cli {
     on_error: OnError,
 
     /// How to display the output
-    #[arg(long, short, default_value_t = OutputStyle::ConsiseJson)]
+    #[arg(long, short, default_value_t = OutputStyle::OneLineJson)]
     #[clap(value_enum)]
     output_style: OutputStyle,
 
@@ -70,6 +70,7 @@ enum OnError {
 #[clap(rename_all = "kebab_case")]
 enum OutputStyle {
     Json,
+    OneLineJson,
     ConsiseJson,
     Csv,
     Text,

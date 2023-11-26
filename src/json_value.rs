@@ -62,7 +62,7 @@ impl JsonValue {
 }
 impl Display for JsonValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let printer = JsonPrinter::new(false);
+        let printer = JsonPrinter::new(false, true);
         printer.print(f, self)
     }
 }

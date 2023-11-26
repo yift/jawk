@@ -263,5 +263,153 @@ pub fn get_list_functions() -> FunctionsGroup {
                 },
             ]
         },
+        FunctionDefinitions {
+            name: "join",
+            aliases: vec![],
+            min_args_count: 1,
+            max_args_count: 2,
+            build_extractor: |args| {
+                struct Impl(Arguments);
+                impl Get for Impl {
+                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                        let sepetator = self.0.apply(value, 1).and_then(|f|
+                            TryInto::<String>::try_into(f).ok()
+                        ).unwrap_or(", ".into());
+                        match self.0.apply(value, 0) {
+                            Some(JsonValue::Array(list)) => {
+                                let mut str = String::new();
+                                for t in list {
+                                    let t: Result<String, _> = t.try_into();
+                                    match t {
+                                        Ok(to_add) => {
+                                            if !str.is_empty() {
+                                                str.push_str(sepetator.as_str());
+                                            }
+                                            str.push_str(to_add.as_str());
+                                        },
+                                        Err(_) => return None,
+                                    }
+                                }
+                                Some(str.into())
+                            },
+                            _ => None,
+                        }
+                    }
+                }
+                Box::new(Impl(Arguments::new(args)))
+            },
+            description: vec![
+                "Join all the items in the list into a String.",
+                "If list have non string items, it will return nuthing.",
+                "If the second argument is ommited, the items will be seperated by comma.",
+            ],
+            examples: vec![
+                Example {
+                    input: None,
+                    arguments: vec!["[\"one\", \"two\", \"three\"]"],
+                    output: Some("\"one, two, three\""),
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["[\"one\", \"two\", \"three\"]", "\" ; \""],
+                    output: Some("\"one ; two ; three\""),
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["[\"one\", \"two\", 3]"],
+                    output: None,
+                },
+            ]
+        },
+        FunctionDefinitions {
+            name: "first",
+            aliases: vec![],
+            min_args_count: 1,
+            max_args_count: 1,
+            build_extractor: |args| {
+                struct Impl(Arguments);
+                impl Get for Impl {
+                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                        match self.0.apply(value, 0) {
+                            Some(JsonValue::Array(list)) => {
+                                list.first().cloned()
+                            },
+                            _ => None,
+                        }
+                    }
+                }
+                Box::new(Impl(Arguments::new(args)))
+            },
+            description: vec![
+                "The first item in a list.",
+            ],
+            examples: vec![
+                Example {
+                    input: None,
+                    arguments: vec!["[1, 5, 1.1]"],
+                    output: Some("1"),
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["[]"],
+                    output: None,
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["[\"text\"]"],
+                    output: Some("\"text\""),
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["\"text\""],
+                    output: None,
+                },
+            ]
+        },
+        FunctionDefinitions {
+            name: "last",
+            aliases: vec![],
+            min_args_count: 1,
+            max_args_count: 1,
+            build_extractor: |args| {
+                struct Impl(Arguments);
+                impl Get for Impl {
+                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                        match self.0.apply(value, 0) {
+                            Some(JsonValue::Array(list)) => {
+                                list.last().cloned()
+                            },
+                            _ => None,
+                        }
+                    }
+                }
+                Box::new(Impl(Arguments::new(args)))
+            },
+            description: vec![
+                "The last item in a list.",
+            ],
+            examples: vec![
+                Example {
+                    input: None,
+                    arguments: vec!["[1, 5, 1.1]"],
+                    output: Some("1.1"),
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["[]"],
+                    output: None,
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["[\"text\"]"],
+                    output: Some("\"text\""),
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["\"text\""],
+                    output: None,
+                },
+            ]
+        },
     ]}
 }

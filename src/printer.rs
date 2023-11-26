@@ -10,11 +10,12 @@ pub trait Print<W: Write> {
 
 pub struct JsonPrinter {
     indent: Option<usize>,
+    space: bool,
 }
 impl JsonPrinter {
-    pub fn new(pretty: bool) -> Self {
+    pub fn new(pretty: bool, space: bool) -> Self {
         let indent = if pretty { Some(0) } else { None };
-        JsonPrinter { indent }
+        JsonPrinter { indent, space }
     }
 
     fn print_string<W: Write>(f: &mut W, str: &str) -> Result {
@@ -53,6 +54,13 @@ impl JsonPrinter {
             }
         }
     }
+    fn insert_comma<W: Write>(&self, f: &mut W) -> Result {
+        write!(f, ",")?;
+        if self.space {
+            write!(f, " ")?;
+        }
+        Ok(())
+    }
 
     fn print_array<W: Write>(&self, f: &mut W, array: &Vec<JsonValue>) -> Result {
         if array.is_empty() {
@@ -61,13 +69,14 @@ impl JsonPrinter {
         let size = array.len();
         let printer = JsonPrinter {
             indent: self.indent.map(|f| f + 1),
+            space: self.space,
         };
         write!(f, "[")?;
         for (index, element) in array.iter().enumerate() {
             printer.insert_indent(f)?;
             printer.print(f, element)?;
             if index != size - 1 {
-                write!(f, ",")?;
+                self.insert_comma(f)?;
             }
         }
         self.insert_indent(f)?;
@@ -81,6 +90,7 @@ impl JsonPrinter {
         let size = object.len();
         let printer = JsonPrinter {
             indent: self.indent.map(|f| f + 1),
+            space: self.space,
         };
         write!(f, "{{")?;
         for (index, element) in object.iter().enumerate() {
@@ -88,12 +98,12 @@ impl JsonPrinter {
             printer.insert_indent(f)?;
             Self::print_string(f, key)?;
             write!(f, ":")?;
-            if self.indent.is_some() {
+            if self.indent.is_some() || self.space {
                 write!(f, " ")?;
             }
             printer.print(f, value)?;
             if index != size - 1 {
-                write!(f, ",")?;
+                self.insert_comma(f)?;
             }
         }
         self.insert_indent(f)?;
@@ -134,11 +144,11 @@ impl<W: Write> Print<W> for RawTextPrinter {
             JsonValue::Number(n) => print_number(f, n),
             JsonValue::String(str) => write!(f, "{}", str),
             JsonValue::Array(_) => {
-                let json = JsonPrinter::new(false);
+                let json = JsonPrinter::new(false, false);
                 json.print(f, value)
             }
             JsonValue::Object(_) => {
-                let json = JsonPrinter::new(false);
+                let json = JsonPrinter::new(false, false);
                 json.print(f, value)
             }
         }
@@ -156,14 +166,14 @@ impl<W: Write> Print<W> for CsvPrinter {
             JsonValue::Number(n) => print_number(f, n),
             JsonValue::String(str) => Self::print_string(f, str),
             JsonValue::Array(_) => {
-                let json = JsonPrinter::new(false);
+                let json = JsonPrinter::new(false, false);
                 let mut str = String::new();
                 json.print(&mut str, value)?;
                 Self::print_string(f, &str)
             }
 
             JsonValue::Object(_) => {
-                let json = JsonPrinter::new(false);
+                let json = JsonPrinter::new(false, false);
                 let mut str = String::new();
                 json.print(&mut str, value)?;
                 Self::print_string(f, &str)

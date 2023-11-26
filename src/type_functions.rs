@@ -194,6 +194,37 @@ pub fn get_type_functions() -> FunctionsGroup {
                     },
                 ],
             },
+            FunctionDefinitions {
+                name: "empty?",
+                aliases: vec!["nothing?"],
+                min_args_count: 1,
+                max_args_count: 1,
+                build_extractor: |args| {
+                    struct Impl(Arguments);
+                    impl Get for Impl {
+                        fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                            match self.0.apply(value, 0) {
+                                Some(_) => Some(false.into()),
+                                _ => Some(true.into()),
+                            }
+                        }
+                    }
+                    Box::new(Impl(Arguments::new(args)))
+                },
+                description: vec!["return true if the argument is nothing."],
+                examples: vec![
+                    Example {
+                        input: None,
+                        arguments: vec!["\"one\""],
+                        output: Some("false"),
+                    },
+                    Example {
+                        input: Some("{}"),
+                        arguments: vec![".key"],
+                        output: Some("true"),
+                    },
+                ],
+            },
         ],
     }
 }

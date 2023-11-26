@@ -129,11 +129,15 @@ pub fn get_output(
         match style {
             OutputStyle::ConsiseJson => Box::new(EmptyJsonOutput {
                 line_seperator,
-                printer: JsonPrinter::new(false),
+                printer: JsonPrinter::new(false, false),
             }),
             OutputStyle::Json => Box::new(EmptyJsonOutput {
                 line_seperator,
-                printer: JsonPrinter::new(true),
+                printer: JsonPrinter::new(true, false),
+            }),
+            OutputStyle::OneLineJson => Box::new(EmptyJsonOutput {
+                line_seperator,
+                printer: JsonPrinter::new(false, true),
             }),
             OutputStyle::Csv => panic!("CSV output must contain a selection"),
             OutputStyle::Text => Box::new(RawOutput::new(line_seperator, rows_titles)),
@@ -142,12 +146,17 @@ pub fn get_output(
         match style {
             OutputStyle::ConsiseJson => Box::new(JsonOutput {
                 line_seperator,
-                printer: JsonPrinter::new(false),
+                printer: JsonPrinter::new(false, false),
                 rows_titles,
             }),
             OutputStyle::Json => Box::new(JsonOutput {
                 line_seperator,
-                printer: JsonPrinter::new(true),
+                printer: JsonPrinter::new(true, false),
+                rows_titles,
+            }),
+            OutputStyle::OneLineJson => Box::new(JsonOutput {
+                line_seperator,
+                printer: JsonPrinter::new(false, true),
                 rows_titles,
             }),
             OutputStyle::Csv => Box::new(CsvOutut::new(line_seperator, rows_titles)),
