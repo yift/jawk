@@ -34,18 +34,22 @@ pub fn get_boolean_functions() -> FunctionsGroup {
                     Example {
                         input: None,
                         arguments: vec!["1", "3"],
+                        output: Some("false"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["1", "1"],
+                        output: Some("true"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["\"1\"", "1"],
+                        output: Some("false"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["\"abc\"", "\"abc\""],
+                        output: Some("true"),
                     },
                 ],
             },
@@ -75,18 +79,22 @@ pub fn get_boolean_functions() -> FunctionsGroup {
                     Example {
                         input: None,
                         arguments: vec!["1", "3"],
+                        output: Some("true"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["1", "1"],
+                        output: Some("false"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["\"1\"", "1"],
+                        output: Some("true"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["\"abc\"", "\"abc\""],
+                        output: Some("false"),
                     },
                 ],
             },
@@ -118,14 +126,17 @@ pub fn get_boolean_functions() -> FunctionsGroup {
                     Example {
                         input: None,
                         arguments: vec!["1", "3"],
+                        output: Some("true"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["1", "1"],
+                        output: Some("false"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["31", "1"],
+                        output: Some("false"),
                     },
                 ],
             },
@@ -157,14 +168,17 @@ pub fn get_boolean_functions() -> FunctionsGroup {
                     Example {
                         input: None,
                         arguments: vec!["1", "3"],
+                        output: Some("true"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["1", "1"],
+                        output: Some("true"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["31", "1"],
+                        output: Some("false"),
                     },
                 ],
             },
@@ -196,14 +210,17 @@ pub fn get_boolean_functions() -> FunctionsGroup {
                     Example {
                         input: None,
                         arguments: vec!["1", "3"],
+                        output: Some("false"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["1", "1"],
+                        output: Some("true"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["31", "1"],
+                        output: Some("true"),
                     },
                 ],
             },
@@ -235,14 +252,17 @@ pub fn get_boolean_functions() -> FunctionsGroup {
                     Example {
                         input: None,
                         arguments: vec!["1", "3"],
+                        output: Some("false"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["1", "1"],
+                        output: Some("false"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["31", "1"],
+                        output: Some("true"),
                     },
                 ],
             },
@@ -274,10 +294,17 @@ pub fn get_boolean_functions() -> FunctionsGroup {
                     Example {
                         input: None,
                         arguments: vec!["true", "true", "true", "true"],
+                        output: Some("true"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["true", "true", "false", "true"],
+                        output: Some("false"),
+                    },
+                    Example {
+                        input: None,
+                        arguments: vec!["true", "true", "12", "true"],
+                        output: None,
                     },
                 ],
             },
@@ -309,14 +336,22 @@ pub fn get_boolean_functions() -> FunctionsGroup {
                     Example {
                         input: None,
                         arguments: vec!["true", "true", "true", "true"],
+                        output: Some("true"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["false","false","false","true", "true", "false", "true"],
+                        output: Some("true"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["false", "false"],
+                        output: Some("false"),
+                    },
+                    Example {
+                        input: None,
+                        arguments: vec!["121", "true", "true"],
+                        output: None,
                     },
                 ],
             },
@@ -348,18 +383,32 @@ pub fn get_boolean_functions() -> FunctionsGroup {
                     Example {
                         input: None,
                         arguments: vec!["true", "true"],
+                        output: Some("false"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["true", "false"],
+                        output: Some("true"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["false", "true"],
+                        output: Some("true"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["false", "false"],
+                        output: Some("false"),
+                    },
+                    Example {
+                        input: None,
+                        arguments: vec!["null", "false"],
+                        output: None,
+                    },
+                    Example {
+                        input: None,
+                        arguments: vec!["true", "12"],
+                        output: None,
                     },
                 ],
             },
@@ -391,14 +440,22 @@ pub fn get_boolean_functions() -> FunctionsGroup {
                     Example {
                         input: None,
                         arguments: vec!["true"],
+                        output: Some("false"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["false"],
+                        output: Some("true"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["(string? 12)"],
+                        output: Some("true"),
+                    },
+                    Example {
+                        input: None,
+                        arguments: vec!["12"],
+                        output: None,
                     },
                 ],
             },

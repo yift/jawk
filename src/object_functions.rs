@@ -32,6 +32,11 @@ pub fn get_object_functions() -> FunctionsGroup {
                 examples: vec![Example {
                     input: None,
                     arguments: vec!["{\"key-1\": 1, \"key-2\": false}"],
+                    output: Some(r#"["key-1","key-2"]"#),
+                },Example {
+                    input: None,
+                    arguments: vec!["[1, 2, 4]"],
+                    output: None,
                 }],
             },
             FunctionDefinitions {
@@ -56,6 +61,11 @@ pub fn get_object_functions() -> FunctionsGroup {
                 examples: vec![Example {
                     input: None,
                     arguments: vec!["{\"key-1\": 1, \"key-2\": false}"],
+                    output: Some("[1, false]"),
+                },Example {
+                    input: None,
+                    arguments: vec!["[1, 2, 4]"],
+                    output: None,
                 }],
             },
             FunctionDefinitions {
@@ -87,6 +97,11 @@ pub fn get_object_functions() -> FunctionsGroup {
                 examples: vec![Example {
                     input: None,
                     arguments: vec!["{\"z\": 1, \"x\": 2, \"w\": null}"],
+                    output: Some(r#"{"w":null,"x":2,"z":1}"#),
+                },Example {
+                    input: None,
+                    arguments: vec!["false"],
+                    output: None,
                 }],
             },
             FunctionDefinitions {
@@ -118,6 +133,11 @@ pub fn get_object_functions() -> FunctionsGroup {
                 examples: vec![Example {
                     input: None,
                     arguments: vec!["{\"z\": 5, \"x\": 2, \"w\": null}"],
+                    output: Some(r#"{"w":null,"x":2,"z":5}"#),
+                }, Example {
+                    input: None,
+                    arguments: vec!["false"],
+                    output: None,
                 }],
             },
             FunctionDefinitions {
@@ -155,6 +175,11 @@ pub fn get_object_functions() -> FunctionsGroup {
                 examples: vec![Example {
                     input: None,
                     arguments: vec!["{\"a\": [1, 2, 3], \"b\": [1], \"c\": [2], \"d\": [3], \"e\": [0, null, 0]}", "(.len)"],
+                    output: Some(r#"{"b":[1],"c":[2],"d":[3],"a":[1,2,3],"e":[0,null,0]}"#),
+                }, Example {
+                    input: None,
+                    arguments: vec!["false", "."],
+                    output: None,
                 }],
             },
         ],

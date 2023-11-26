@@ -32,6 +32,8 @@ pub enum FunctionDefinitionsError {
 pub struct Example {
     pub input: Option<&'static str>,
     pub arguments: Vec<&'static str>,
+    // For test only
+    pub output: Option<&'static str>,
 }
 
 pub struct FunctionDefinitions {
@@ -157,11 +159,58 @@ pub fn print_help() {
                 };
                 let args = example.arguments.join(", ");
                 let run = format!("({} {})", name, args);
-                let selection = Selection::from_str(&run).unwrap();
-                let result = selection.get(&json).unwrap();
                 println!("        running: \"{}\"", run);
-                println!("        will give: \"{}\"", result);
+                let selection = Selection::from_str(&run).unwrap();
+                match selection.get(&json) {
+                    None => println!("        will return nothing"),
+                    Some(result) => println!("        will give: \"{}\"", result),
+                };
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::selection;
+
+    use super::*;
+
+    #[test]
+    fn test_functions() -> selection::Result<()> {
+        for group in ALL_FUNCTIONS.iter() {
+            println!("Running group: {}", group.name);
+            for func in group.functions.iter() {
+                println!("\tRunning function: {}", func.name);
+                for example in &func.examples {
+                    let json = if let Some(input) = example.input {
+                        let input = input.to_string();
+                        let mut reader = from_string(&input);
+                        let json = reader.next_json_value()?;
+                        Some(json.unwrap())
+                    } else {
+                        None
+                    };
+                    let args = example.arguments.join(", ");
+                    println!("\t\tRunning examplt: {}...", args);
+                    let run = format!("({} {})", func.name, args);
+                    let selection = Selection::from_str(&run)?;
+                    let expected = example.output.map(|input| {
+                        let input = input.to_string();
+                        let mut reader = from_string(&input);
+                        reader.next_json_value().unwrap().unwrap()
+                    });
+                    let result = selection.get(&json);
+                    match &result {
+                        Some(result) => println!("\t\t\tgot: {}", result),
+                        None => println!("\t\t\tgot nothing"),
+                    }
+                    assert_eq!(result, expected);
+                    println!("\t\tPassed");
+                }
+                println!("\tPassed");
+            }
+        }
+        Ok(())
     }
 }

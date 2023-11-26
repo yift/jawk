@@ -36,10 +36,17 @@ pub fn get_number_functions() -> FunctionsGroup {
                 Example {
                     input: None,
                     arguments: vec!["1", "3"],
+                    output: Some("4"),
                 },
                 Example {
                     input: None,
                     arguments: vec!["1", "10", "-4.1", "0.1"],
+                    output: Some("7"),
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["1", "3", "false"],
+                    output: None,
                 },
             ],
         },
@@ -70,10 +77,22 @@ pub fn get_number_functions() -> FunctionsGroup {
                 Example {
                     input: None,
                     arguments: vec!["100", "3"],
+                    output: Some("97"),
                 },
                 Example {
                     input: None,
                     arguments: vec!["10", "3.2"],
+                    output: Some("6.8"),
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["10", "\"text\""],
+                    output: None,
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["null", "6"],
+                    output: None,
                 },
             ],
         },
@@ -107,10 +126,17 @@ pub fn get_number_functions() -> FunctionsGroup {
                 Example {
                     input: None,
                     arguments: vec!["2", "3"],
+                    output: Some("6"),
                 },
                 Example {
                     input: None,
                     arguments: vec!["2", "15", "0.1"],
+                    output: Some("3"),
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["2", "true"],
+                    output: None,
                 },
             ],
         },
@@ -145,10 +171,22 @@ pub fn get_number_functions() -> FunctionsGroup {
                 Example {
                     input: None,
                     arguments: vec!["100", "25"],
+                    output: Some("4"),
                 },
                 Example {
                     input: None,
                     arguments: vec!["7", "2"],
+                    output: Some("3.5"),
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["7", "[]"],
+                    output: None,
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["{}", "5"],
+                    output: None,
                 },
             ],
         },
@@ -183,10 +221,22 @@ pub fn get_number_functions() -> FunctionsGroup {
                 Example {
                     input: None,
                     arguments: vec!["5", "3"],
+                    output: Some("2"),
                 },
                 Example {
                     input: None,
                     arguments: vec!["7", "2"],
+                    output: Some("1"),
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["7", "false"],
+                    output: None,
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["[1]", "4"],
+                    output: None,
                 },
             ],
         },

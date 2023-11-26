@@ -8,3 +8,4 @@ clap = { version = "4", features = ["derive"] }
 lazy_static = "1.4"
 thiserror = "1.0"
 indexmap = "2.1"
+const_format = "0.2"

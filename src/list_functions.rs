@@ -41,19 +41,28 @@ pub fn get_list_functions() -> FunctionsGroup {
             examples: vec![
                 Example {
                     input: None,
-                    arguments: vec!["[1, 2, 3, 4]", "true"]
+                    arguments: vec!["[1, 2, 3, 4]", "true"],
+                    output: Some("[1, 2, 3, 4]")
                 },
                 Example {
                     input: None,
-                    arguments: vec!["[1, 2, 3, 4]", "null"]
+                    arguments: vec!["[1, 2, 3, 4]", "null"],
+                    output: Some("[]")
                 },
                 Example {
                     input: None,
-                    arguments: vec!["[1, 2, 3, 4, \"one\", null]", "(string? .)"]
+                    arguments: vec!["[1, 2, 3, 4, \"one\", null]", "(string? .)"],
+                    output: Some("[\"one\"]")
                 },
                 Example {
                     input: Some("[1, 2, null, \"a\", 4]"),
-                    arguments: vec![".", "(number? .)"]
+                    arguments: vec![".", "(number? .)"],
+                    output: Some("[1, 2, 4]")
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["{}", "true"],
+                    output: None,
                 },
             ]
         },
@@ -86,11 +95,18 @@ pub fn get_list_functions() -> FunctionsGroup {
             examples: vec![
                 Example {
                     input: None,
-                    arguments: vec!["[1, -2, 3.01, 3.05, -544, 100]"]
+                    arguments: vec!["[1, -2, 3.01, 3.05, -544, 100]"],
+                    output: Some("[-544, -2, 1, 3.01, 3.05, 100]")
                 },
                 Example {
                     input: None,
-                    arguments: vec!["[null, true, false, {}, [1, 2, 3], \"abc\", \"cde\", {\"key\": 12}]"]
+                    arguments: vec!["[null, true, false, {}, [1, 2, 3], \"abc\", \"cde\", {\"key\": 12}]"],
+                    output: Some("[null, false, true, \"abc\", \"cde\", {}, {\"key\": 12}, [1, 2, 3]]")
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["344"],
+                    output: None,
                 },
             ]
         },
@@ -133,11 +149,23 @@ pub fn get_list_functions() -> FunctionsGroup {
             examples: vec![
                 Example {
                     input: None,
-                    arguments: vec!["[\"11\", \"5\", \"23\", \"ab\", \"1\", \"\", \"100\", {}]", "(stringify (len .))"]
+                    arguments: vec!["[\"11\", \"5\", \"23\", \"ab\", \"1\", \"\", \"100\", {}]", "(stringify (len .))"],
+                    output: Some(r#"{"2":["11","23","ab"],"1":["5","1"],"0":["",{}],"3":["100"]}"#),
                 },
                 Example {
                     input: None,
-                    arguments: vec!["[{\"g\": \"one\", \"v\": 1}, {\"g\": \"two\", \"v\": 2}, {\"g\": \"one\", \"v\": 33}, {\"g\": \"two\", \"v\": false}]", ".g"]
+                    arguments: vec!["[{\"g\": \"one\", \"v\": 1}, {\"g\": \"two\", \"v\": 2}, {\"g\": \"one\", \"v\": 33}, {\"g\": \"two\", \"v\": false}]", ".g"],
+                    output: Some(r#"{"one":[{"g":"one","v":1},{"g":"one","v":33}],"two":[{"g":"two","v":2},{"g":"two","v":false}]}"#),
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["344", "(stringify (len .))"],
+                    output: None,
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["[\"11\", \"5\", \"23\", \"ab\", \"1\", \"\", \"100\", {}]", "(len .)"],
+                    output: None,
                 },
             ]
         },
@@ -176,7 +204,13 @@ pub fn get_list_functions() -> FunctionsGroup {
             examples: vec![
                 Example {
                     input: None,
-                    arguments: vec!["[\"12345\", \"5\", \"23\", \"abc\", \"-1-2\", \"\"]", "(len .)"]
+                    arguments: vec!["[\"12345\", \"5\", \"23\", \"abc\", \"-1-2\", \"\"]", "(len .)"],
+                    output: Some(r#"["","5","23","abc","-1-2","12345"]"#),
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["true", "(len .)"],
+                    output: None,
                 },
             ]
         },
@@ -214,11 +248,18 @@ pub fn get_list_functions() -> FunctionsGroup {
             examples: vec![
                 Example {
                     input: None,
-                    arguments: vec!["[1, 5, 1.1]"]
+                    arguments: vec!["[1, 5, 1.1]"],
+                    output: Some("7.1"),
                 },
                 Example {
                     input: None,
-                    arguments: vec!["[]"]
+                    arguments: vec!["[]"],
+                    output: Some("0"),
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["[1, 5, 1.1, \"text\"]"],
+                    output: None,
                 },
             ]
         },

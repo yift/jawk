@@ -45,11 +45,18 @@ pub fn get_basic_functions() -> FunctionsGroup {
             examples: vec![
                 Example {
                     input: None,
-                    arguments: vec!["[\"a\", \"b\", \"c\"]", "1"]
+                    arguments: vec!["[\"a\", \"b\", \"c\"]", "1"],
+                    output: Some("\"b\""),
                 },
                 Example {
                     input: None,
-                    arguments: vec!["{\"key-1\": 12, \"key-2\": 32}", "\"key-1\""]
+                    arguments: vec!["{\"key-1\": 12, \"key-2\": 32}", "\"key-1\""],
+                    output: Some("12"),
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["[\"a\", \"b\", \"c\"]", "100"],
+                    output: None,
                 },
             ]
         },
@@ -74,7 +81,8 @@ pub fn get_basic_functions() -> FunctionsGroup {
             description: vec!["Pipe the output of one function to the next function."],
             examples: vec![Example {
                 input: Some("{\"key\": [20, 40, 60, {\"key-2\": 100}]}"),
-                arguments: vec!["(get . \"key\")", "(get . 3)", "(get . \"key-2\")"]
+                arguments: vec!["(get . \"key\")", "(get . 3)", "(get . \"key-2\")"],
+                output: Some("100"),
             },]
         },
         FunctionDefinitions {
@@ -111,15 +119,23 @@ pub fn get_basic_functions() -> FunctionsGroup {
             examples: vec![
                 Example {
                     input: None,
-                    arguments: vec!["[1, 2, 3, 4]"]
+                    arguments: vec!["[1, 2, 3, 4]"],
+                    output: Some("4"),
                 },
                 Example {
                     input: None,
-                    arguments: vec!["{\"key-1\": 1, \"key-2\": false}"]
+                    arguments: vec!["{\"key-1\": 1, \"key-2\": false}"],
+                    output: Some("2"),
                 },
                 Example {
                     input: None,
-                    arguments: vec!["\"123\""]
+                    arguments: vec!["\"123\""],
+                    output: Some("3"),
+                },
+                Example {
+                    input: None,
+                    arguments: vec!["50"],
+                    output: None,
                 },
             ]
         },
@@ -147,11 +163,13 @@ pub fn get_basic_functions() -> FunctionsGroup {
             examples: vec![
                 Example {
                     input: Some("{\"key-1\": 1, \"key-2\": false}"),
-                    arguments: vec!["(get . 1)", "(get . \"key-1\")", "22"]
+                    arguments: vec!["(get . 1)", "(get . \"key-1\")", "22"],
+                    output: Some("1")
                 },
                 Example {
                     input: Some("{\"key-1\": 1, \"key-2\": false}"),
-                    arguments: vec!["(get . 1)", "(get . \"key-3\")", "22"]
+                    arguments: vec!["(get . 1)", "(get . \"key-3\")", "22"],
+                    output: Some("22")
                 },
             ]
         },
@@ -180,19 +198,23 @@ pub fn get_basic_functions() -> FunctionsGroup {
             examples: vec![
                 Example {
                     input: None,
-                    arguments: vec!["true", "12", "22"]
+                    arguments: vec!["true", "12", "22"],
+                    output: Some("12")
                 },
                 Example {
                     input: None,
-                    arguments: vec!["false", "12", "22"]
+                    arguments: vec!["false", "12", "22"],
+                    output: Some("22")
                 },
                 Example {
                     input: Some("[1, 2, 3]"),
-                    arguments: vec!["(array? .)", "#1", "#2"]
+                    arguments: vec!["(array? .)", "#1", "#2"],
+                    output: Some("2")
                 },
                 Example {
                     input: Some("[1, 2, 3]"),
-                    arguments: vec!["(null? .)", "#1", "#2"]
+                    arguments: vec!["(null? .)", "#1", "#2"],
+                    output: Some("3")
                 },
             ]
         },
@@ -216,15 +238,18 @@ pub fn get_basic_functions() -> FunctionsGroup {
             examples: vec![
                 Example {
                     input: None,
-                    arguments: vec!["true"]
+                    arguments: vec!["true"],
+                    output: Some("\"true\"")
                 },
                 Example {
                     input: None,
-                    arguments: vec!["1e2"]
+                    arguments: vec!["1e2"],
+                    output: Some("\"100\"")
                 },
                 Example {
                     input: None,
-                    arguments: vec!["{\"key\": [1, 2, \"3\"]}"]
+                    arguments: vec!["{\"key\": [1, 2, \"3\"]}"],
+                    output: Some("\"{\\\"key\\\":[1,2,\\\"3\\\"]}\"")
                 },
             ]
         },

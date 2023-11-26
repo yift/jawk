@@ -30,10 +30,12 @@ pub fn get_type_functions() -> FunctionsGroup {
                     Example {
                         input: None,
                         arguments: vec!["[1, 2, 3, 4]"],
+                        output: Some("true"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["312"],
+                        output: Some("false"),
                     },
                 ],
             },
@@ -59,10 +61,12 @@ pub fn get_type_functions() -> FunctionsGroup {
                     Example {
                         input: None,
                         arguments: vec!["[1, 2, 3, 4]"],
+                        output: Some("false"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["{\"key\": 12}"],
+                        output: Some("true"),
                     },
                 ],
             },
@@ -88,10 +92,12 @@ pub fn get_type_functions() -> FunctionsGroup {
                     Example {
                         input: None,
                         arguments: vec!["null"],
+                        output: Some("true"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["1"],
+                        output: Some("false"),
                     },
                 ],
             },
@@ -117,10 +123,12 @@ pub fn get_type_functions() -> FunctionsGroup {
                     Example {
                         input: None,
                         arguments: vec!["false"],
+                        output: Some("true"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["\"false\""],
+                        output: Some("false"),
                     },
                 ],
             },
@@ -146,10 +154,12 @@ pub fn get_type_functions() -> FunctionsGroup {
                     Example {
                         input: None,
                         arguments: vec!["\"str\""],
+                        output: Some("false"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["1.32"],
+                        output: Some("true"),
                     },
                 ],
             },
@@ -175,10 +185,12 @@ pub fn get_type_functions() -> FunctionsGroup {
                     Example {
                         input: None,
                         arguments: vec!["\"one\""],
+                        output: Some("true"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["1.32"],
+                        output: Some("false"),
                     },
                 ],
             },

@@ -1,6 +1,8 @@
 use std::env::var;
 use std::str::FromStr;
 
+use const_format::formatcp;
+
 use crate::json_parser::JsonParser;
 use crate::selection::Selection;
 use crate::{
@@ -45,14 +47,22 @@ pub fn get_string_functions() -> FunctionsGroup {
                     Example {
                         input: None,
                         arguments: vec!["\"[1, 2, 3, 4]\""],
+                        output: Some("[1, 2, 3, 4]"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["\"312\""],
+                        output: Some("312"),
                     },
                     Example {
                         input: None,
                         arguments: vec!["\"{}\""],
+                        output: Some("{}"),
+                    },
+                    Example {
+                        input: None,
+                        arguments: vec!["400"],
+                        output: None,
                     },
                 ],
             },
@@ -79,10 +89,18 @@ pub fn get_string_functions() -> FunctionsGroup {
                     Box::new(Impl(Arguments::new(args)))
                 },
                 description: vec!["Parse a string into a new selection."],
-                examples: vec![Example {
-                    input: None,
-                    arguments: vec!["\"(+ 10 11)\""],
-                }],
+                examples: vec![
+                    Example {
+                        input: None,
+                        arguments: vec!["\"(+ 10 11)\""],
+                        output: Some("21"),
+                    },
+                    Example {
+                        input: None,
+                        arguments: vec!["false"],
+                        output: None,
+                    },
+                ],
             },
             FunctionDefinitions {
                 name: "env",
@@ -109,7 +127,8 @@ pub fn get_string_functions() -> FunctionsGroup {
                 description: vec!["Get enviornment variable."],
                 examples: vec![Example {
                     input: None,
-                    arguments: vec!["\"USER\""],
+                    arguments: vec!["\"PATH\""],
+                    output: Some(formatcp!("\"{}\"", env!("PATH"))),
                 }],
             },
         ],
