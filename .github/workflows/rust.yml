@@ -10,19 +10,36 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  verify:
 
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
-    - name: Build
-      run: cargo build --verbose
     - name: Run check
       run: cargo check --verbose
+    - name: Build
+      run: cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
     - name: Run Format
       run: cargo fmt --all --check --verbose
     - name: Run Clippy
-      run: cargo clippy  -- -D warnings
+      run: cargo clippy --verbose -- -D warnings
+  build:
+    needs:
+      - verify
+    runs-on: '${{ matrix.os }}'
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    steps:
+      - uses: actions/checkout@master
+      - name: build
+        run: cargo build --release --verbose
