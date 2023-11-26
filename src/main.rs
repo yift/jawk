@@ -68,7 +68,7 @@ enum OnError {
 
 #[derive(clap::ValueEnum, Debug, Clone, PartialEq, Copy)]
 #[clap(rename_all = "kebab_case")]
-enum OutputStyle {
+pub enum OutputStyle {
     Json,
     OneLineJson,
     ConsiseJson,
