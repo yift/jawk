@@ -68,10 +68,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
-      - name: build
-        uses:  juankaram/rust-musl-action@master
-        with:
-          args: /bin/bash -c "cargo build --release --target=x86_64-unknown-linux-musl"
+      - name: install musl
+        run:  rustup target add x86_64-unknown-linux-musl
+      - name: buid
+        run: cargo build --release --target=x86_64-unknown-linux-musl --verbose
       - uses: actions/upload-artifact@v3
         with:
           name: jawk-x86_64-unknown-linux-musl
