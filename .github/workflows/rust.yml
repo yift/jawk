@@ -60,5 +60,19 @@ jobs:
         run: cargo build --release --verbose
       - uses: actions/upload-artifact@v3
         with:
-          name: ${{ steps.get_repository_name.outputs.REPOSITORY_NAME }}-${{ matrix.target }}
-          path: ./target/release/${{ steps.get_repository_name.outputs.REPOSITORY_NAME }}${{ matrix.suffix }}
+          name: jawk-${{ matrix.target }}
+          path: ./target/release/jawk${{ matrix.suffix }}
+  build-musl:
+    needs:
+      - verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: build
+        uses:  stevenleadbeater/rust-musl-builder@master
+        with:
+          args: /bin/bash -c "cargo build --release --target=x86_64-unknown-linux-musl"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: jawk-x86_64-unknown-linux-musl
+          path: ./target/release/jawk
