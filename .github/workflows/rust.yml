@@ -11,9 +11,7 @@ env:
 
 jobs:
   verify:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
     - name: Run check
@@ -26,12 +24,20 @@ jobs:
       run: cargo fmt --all --check --verbose
     - name: Run Clippy
       run: cargo clippy --verbose -- -D warnings
-    - name: Check coverage
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install Tarpaulin
+      run: cargo install cargo-tarpaulin
+    - name: Create Report
       run: cargo tarpaulin --out Html --fail-under 50
     - uses: actions/upload-artifact@v3
       with:
         name: coverage-report
         path: ./tarpaulin-report.html
+        
   build:
     needs:
       - verify
