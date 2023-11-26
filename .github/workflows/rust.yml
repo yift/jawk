@@ -69,7 +69,7 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - name: build
-        uses:  stevenleadbeater/rust-musl-builder@master
+        uses:  juankaram/rust-musl-action@master
         with:
           args: /bin/bash -c "cargo build --release --target=x86_64-unknown-linux-musl"
       - uses: actions/upload-artifact@v3
