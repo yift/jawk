@@ -230,9 +230,9 @@ impl From<NumberValue> for f64 {
 impl From<f64> for JsonValue {
     fn from(value: f64) -> Self {
         if value.fract() == 0.0 {
-            if (value >= 0.0) && (value < u64::MAX as f64) {
+            if value >= 0.0 && value < (u64::MAX as f64) {
                 JsonValue::Number(NumberValue::Positive(value as u64))
-            } else if (value < 0.0) && (value > i64::MIN as f64) {
+            } else if value < 0.0 && value > (i64::MIN as f64) {
                 JsonValue::Number(NumberValue::Negative(value as i64))
             } else {
                 JsonValue::Number(NumberValue::Float(value))

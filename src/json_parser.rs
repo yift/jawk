@@ -40,7 +40,9 @@ impl<R: Read> JsonParserUtils for Reader<R> {
                         ));
                     }
                 }
-                None => return Err(JsonParserError::UnexpectedEof(self.where_am_i())),
+                None => {
+                    return Err(JsonParserError::UnexpectedEof(self.where_am_i()));
+                }
             }
         }
         self.next()?;
@@ -76,7 +78,9 @@ impl<R: Read> JsonParserUtils for Reader<R> {
         loop {
             let value = match self.next_json_value()? {
                 Some(value) => value,
-                None => return Err(JsonParserError::UnexpectedEof(self.where_am_i())),
+                None => {
+                    return Err(JsonParserError::UnexpectedEof(self.where_am_i()));
+                }
             };
             array.push(value);
             self.eat_whitespace()?;
@@ -175,7 +179,7 @@ impl<R: Read> JsonParserUtils for Reader<R> {
             self.next()?;
             chars.push(b'.');
             self.read_digits(&mut chars)?;
-        };
+        }
         if self.peek()? == Some(b'e' | b'E') {
             double = true;
             chars.push(b'E');
@@ -191,11 +195,13 @@ impl<R: Read> JsonParserUtils for Reader<R> {
                 _ => {}
             }
             self.read_digits(&mut chars)?;
-        };
+        }
 
         let str = match String::from_utf8(chars) {
             Ok(chars) => chars,
-            Err(e) => return Err(JsonParserError::StringUtfError(self.where_am_i(), e)),
+            Err(e) => {
+                return Err(JsonParserError::StringUtfError(self.where_am_i(), e));
+            }
         };
 
         if double {
@@ -231,17 +237,19 @@ impl<R: Read> JsonParserUtils for Reader<R> {
                             return Ok(JsonValue::String(str));
                         }
                         Err(e) => {
-                            return Err(JsonParserError::StringUtfError(self.where_am_i(), e))
+                            return Err(JsonParserError::StringUtfError(self.where_am_i(), e));
                         }
                     }
                 }
                 Some(b'\\') => match self.next()? {
-                    None => return Err(JsonParserError::UnexpectedEof(self.where_am_i())),
+                    None => {
+                        return Err(JsonParserError::UnexpectedEof(self.where_am_i()));
+                    }
                     Some(b'\"') => chars.push(b'\"'),
                     Some(b'\\') => chars.push(b'\\'),
                     Some(b'/') => chars.push(b'/'),
                     Some(b'b') => chars.push(0x08),
-                    Some(b'f') => chars.push(0x0C),
+                    Some(b'f') => chars.push(0x0c),
                     Some(b'n') => chars.push(b'\n'),
                     Some(b'r') => chars.push(b'\r'),
                     Some(b't') => chars.push(b'\t'),
@@ -250,7 +258,7 @@ impl<R: Read> JsonParserUtils for Reader<R> {
                         for _ in 0..4 {
                             match self.next()? {
                                 None => {
-                                    return Err(JsonParserError::UnexpectedEof(self.where_am_i()))
+                                    return Err(JsonParserError::UnexpectedEof(self.where_am_i()));
                                 }
                                 Some(c) => {
                                     let d = match c {
@@ -284,7 +292,7 @@ impl<R: Read> JsonParserUtils for Reader<R> {
                                 return Err(JsonParserError::InvalidChacterHex(
                                     self.where_am_i(),
                                     chr,
-                                ))
+                                ));
                             }
                         }
                     }
@@ -293,7 +301,7 @@ impl<R: Read> JsonParserUtils for Reader<R> {
                             self,
                             ch,
                             ['\"', '\\', '/', 'b', 'f', 'n', 'r', 't', 'u'],
-                        ))
+                        ));
                     }
                 },
                 Some(c) => {
@@ -432,7 +440,7 @@ mod tests {
             reader.next_json_value()?,
             Some(JsonValue::Array(vec![
                 JsonValue::Boolean(false),
-                JsonValue::Number(NumberValue::Positive(1)),
+                JsonValue::Number(NumberValue::Positive(1))
             ]))
         );
 

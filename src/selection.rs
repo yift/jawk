@@ -103,8 +103,12 @@ impl Get for Extract {
                 let mut val = value.clone();
                 for e in es {
                     match val {
-                        None => break,
-                        Some(_) => val = e.get(&val),
+                        None => {
+                            break;
+                        }
+                        Some(_) => {
+                            val = e.get(&val);
+                        }
                     }
                 }
                 val
@@ -182,7 +186,9 @@ impl Extract {
         let mut buf = Vec::new();
         loop {
             match reader.next()? {
-                None => break,
+                None => {
+                    break;
+                }
                 Some(ch) => {
                     if ch.is_ascii_whitespace()
                         || ch == b'.'
@@ -200,7 +206,7 @@ impl Extract {
                     {
                         break;
                     } else {
-                        buf.push(ch)
+                        buf.push(ch);
                     }
                 }
             }
@@ -235,7 +241,9 @@ fn parse_function<R: Read>(reader: &mut Reader<R>) -> Result<Box<dyn Get>> {
             Some(b',') => {
                 reader.next()?;
             }
-            Some(b')') => break,
+            Some(b')') => {
+                break;
+            }
             None => {
                 return Err(SelectionParseError::UnexpectedEof);
             }
@@ -255,7 +263,9 @@ fn read_function_name<R: Read>(reader: &mut Reader<R>) -> Result<String> {
     let mut buf = Vec::new();
     loop {
         match reader.next()? {
-            None => break,
+            None => {
+                break;
+            }
             Some(ch) => {
                 if ch.is_ascii_whitespace()
                     || ch == b','
@@ -265,7 +275,7 @@ fn read_function_name<R: Read>(reader: &mut Reader<R>) -> Result<String> {
                 {
                     break;
                 } else {
-                    buf.push(ch)
+                    buf.push(ch);
                 }
             }
         }

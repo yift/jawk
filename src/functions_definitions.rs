@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 
-use crate::basic_functions::get_basic_functions;
-use crate::boolean_functions::get_boolean_functions;
+use crate::functions::basic_functions::get_basic_functions;
+use crate::functions::boolean_functions::get_boolean_functions;
+use crate::functions::list_functions::get_list_functions;
+use crate::functions::number_functions::get_number_functions;
+use crate::functions::object_functions::get_object_functions;
+use crate::functions::string_functions::get_string_functions;
+use crate::functions::type_functions::get_type_functions;
 use crate::json_parser::JsonParser;
-use crate::list_functions::get_list_functions;
-use crate::number_functions::get_number_functions;
-use crate::object_functions::get_object_functions;
-use crate::string_functions::get_string_functions;
-use crate::type_functions::get_type_functions;
 use crate::{
     json_value::JsonValue,
     reader::from_string,
@@ -36,6 +36,28 @@ pub struct Example {
     pub output: Option<&'static str>,
 }
 
+impl Example {
+    pub fn new() -> Self {
+        Example {
+            input: None,
+            arguments: vec![],
+            output: None,
+        }
+    }
+    pub fn input(mut self, inpput: &'static str) -> Self {
+        self.input = Some(inpput);
+        self
+    }
+    pub fn add_argument(mut self, arg: &'static str) -> Self {
+        self.arguments.push(arg);
+        self
+    }
+    pub fn expected_output(mut self, output: &'static str) -> Self {
+        self.output = Some(output);
+        self
+    }
+}
+
 pub struct FunctionDefinitions {
     pub name: &'static str,
     pub aliases: Vec<&'static str>,
@@ -46,16 +68,40 @@ pub struct FunctionDefinitions {
     pub examples: Vec<Example>,
 }
 
-pub struct FunctionsGroup {
-    pub name: &'static str,
-    pub functions: Vec<FunctionDefinitions>,
-}
-
 impl FunctionDefinitions {
-    fn name(&self) -> String {
+    pub fn new(
+        name: &'static str,
+        min_args_count: usize,
+        max_args_count: usize,
+        build_extractor: Factory,
+    ) -> Self {
+        FunctionDefinitions {
+            name,
+            aliases: vec![],
+            min_args_count,
+            max_args_count,
+            build_extractor,
+            description: vec![],
+            examples: vec![],
+        }
+    }
+
+    pub fn add_alias(mut self, alias: &'static str) -> Self {
+        self.aliases.push(alias);
+        self
+    }
+    pub fn add_description_line(mut self, line: &'static str) -> Self {
+        self.description.push(line);
+        self
+    }
+    pub fn add_example(mut self, example: Example) -> Self {
+        self.examples.push(example);
+        self
+    }
+    pub fn name(&self) -> String {
         self.name.into()
     }
-    fn names(&self) -> Vec<&'static str> {
+    pub fn names(&self) -> Vec<&'static str> {
         let mut vec = vec![];
         vec.push(self.name);
         for alias in &self.aliases {
@@ -82,6 +128,24 @@ impl FunctionDefinitions {
             ));
         }
         Ok((self.build_extractor)(args))
+    }
+}
+
+pub struct FunctionsGroup {
+    pub name: &'static str,
+    pub functions: Vec<FunctionDefinitions>,
+}
+
+impl FunctionsGroup {
+    pub fn new(name: &'static str) -> Self {
+        FunctionsGroup {
+            name,
+            functions: vec![],
+        }
+    }
+    pub fn add_function(mut self, function: FunctionDefinitions) -> Self {
+        self.functions.push(function);
+        self
     }
 }
 

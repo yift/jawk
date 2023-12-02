@@ -78,7 +78,7 @@ impl Output for CsvOutut {
             } else {
                 "".into()
             };
-            string_row.push(str)
+            string_row.push(str);
         }
         print!("{}", string_row.join(", "));
         print!("{}", self.line_seperator);
@@ -112,7 +112,7 @@ impl Output for RawOutput {
             } else {
                 "".into()
             };
-            string_row.push(str)
+            string_row.push(str);
         }
         print!("{}", string_row.join("\t"));
         print!("{}", self.line_seperator);

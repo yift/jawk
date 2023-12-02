@@ -107,7 +107,9 @@ impl<R: Read> Reader<R> {
                     digits.push(letter.unwrap());
                     self.next()?;
                 }
-                _ => return Ok(()),
+                _ => {
+                    return Ok(());
+                }
             }
         }
     }
@@ -226,7 +228,7 @@ mod tests {
             Location {
                 input: Some("a\nb\ncde".to_string()),
                 line_number: 3,
-                char_number: 1
+                char_number: 1,
             }
         );
 

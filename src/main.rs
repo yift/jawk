@@ -1,17 +1,11 @@
-mod basic_functions;
-mod boolean_functions;
+mod functions;
 mod functions_definitions;
 mod json_parser;
 mod json_value;
-mod list_functions;
-mod number_functions;
-mod object_functions;
 mod output;
 mod printer;
 mod reader;
 mod selection;
-mod string_functions;
-mod type_functions;
 
 use clap::Parser;
 use functions_definitions::print_help;
@@ -46,13 +40,14 @@ struct Cli {
     output_style: OutputStyle,
 
     /// What to output
-    #[arg(long, short, value_parser= Selection::from_str)]
+    #[arg(long, short, value_parser = Selection::from_str)]
     select: Vec<Selection>,
 
     /// Row seperator
     #[arg(long, short, default_value = "\n")]
     row_seperator: String,
 
+    /// List of available functions
     #[arg(long, short, default_value_t = false)]
     available_functions: bool,
 }
@@ -131,14 +126,18 @@ impl Cli {
                         output.output_row(row)?;
                     }
                 }
-                Ok(None) => return Ok(()),
+                Ok(None) => {
+                    return Ok(());
+                }
                 Err(e) => {
                     if !e.can_recover() {
                         return Err(e.into());
                     }
                     match self.on_error {
                         OnError::Ignore => {}
-                        OnError::Panic => return Err(e.into()),
+                        OnError::Panic => {
+                            return Err(e.into());
+                        }
                         OnError::Stdout => println!("error:{}", e),
                         OnError::Stderr => eprintln!("error:{}", e),
                     }

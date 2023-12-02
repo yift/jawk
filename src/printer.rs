@@ -32,9 +32,9 @@ impl JsonPrinter {
                 '\t' => write!(f, "\\t")?,
                 ch => {
                     if (' '..='~').contains(&ch) {
-                        write!(f, "{}", ch)?
+                        write!(f, "{}", ch)?;
                     } else {
-                        write!(f, "\\u{:#04x}", ch as u64)?
+                        write!(f, "\\u{:#04x}", ch as u64)?;
                     }
                 }
             }
@@ -187,10 +187,10 @@ impl CsvPrinter {
         write!(f, "\"")?;
         for ch in str.chars() {
             if ch == '\"' {
-                write!(f, "\"\"")?
+                write!(f, "\"\"")?;
             } else {
-                write!(f, "{}", ch)?
-            };
+                write!(f, "{}", ch)?;
+            }
         }
         write!(f, "\"")
     }
