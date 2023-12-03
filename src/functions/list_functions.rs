@@ -335,4 +335,135 @@ pub fn get_list_functions() -> FunctionsGroup {
                 .add_example(Example::new().add_argument("[\"text\"]").expected_output("\"text\""))
                 .add_example(Example::new().add_argument("\"text\""))
         )
+        .add_function(
+            FunctionDefinitions::new("map", 2, 2, |args| {
+                struct Impl(Arguments);
+                impl Get for Impl {
+                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                        match self.0.apply(value, 0) {
+                            Some(JsonValue::Array(list)) => {
+                                let list: Vec<_> = list
+                                    .into_iter()
+                                    .filter_map(|v| {
+                                        let v = Some(v.clone());
+                                        self.0.apply(&v, 1)
+                                    })
+                                    .collect();
+
+                                Some(list.into())
+                            }
+                            _ => None,
+                        }
+                    }
+                }
+                Box::new(Impl(Arguments::new(args)))
+            })
+                .add_description_line("Map a list into a new list using a function.")
+                .add_description_line(
+                    "If the first argument is a list, activate the second argument on each item and collect into a new list."
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("[1, 2, 3, 4]")
+                        .add_argument("(+ . 4)")
+                        .expected_output("[5, 6, 7, 8]")
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("[1, 2, 3, 4]")
+                        .add_argument("(.len)")
+                        .expected_output("[]")
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("[1, 2, 3, \"4\"]")
+                        .add_argument("(* . 2)")
+                        .expected_output("[2, 4, 6]")
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument(".")
+                        .add_argument("(+ 2 .)")
+                        .expected_output("[3, 4, 6]")
+                        .input("[1, 2, null, \"a\", 4]")
+                )
+                .add_example(Example::new().add_argument("{}").add_argument("true"))
+        )
+        .add_function(
+            FunctionDefinitions::new("flat_map", 2, 2, |args| {
+                struct Impl(Arguments);
+                impl Get for Impl {
+                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                        match self.0.apply(value, 0) {
+                            Some(JsonValue::Array(list)) => {
+                                let list: Vec<_> = list
+                                    .into_iter()
+                                    .filter_map(|v| {
+                                        let v = Some(v.clone());
+                                        if let Some(JsonValue::Array(list)) = self.0.apply(&v, 1) {
+                                            Some(list)
+                                        } else {
+                                            None
+                                        }
+                                    })
+                                    .flatten()
+                                    .collect();
+
+                                Some(list.into())
+                            }
+                            _ => None,
+                        }
+                    }
+                }
+                Box::new(Impl(Arguments::new(args)))
+            })
+                .add_description_line("Flat map a list into a new list using a function.")
+                .add_description_line(
+                    "If the first argument is a list, activate the second argument on each item, and if that returns a list, add all the items to a new list."
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("[\"a,b,c\", \"d,e\", 4, \"g\"]")
+                        .add_argument("(split . \",\")")
+                        .expected_output("[\"a\", \"b\", \"c\", \"d\", \"e\", \"g\"]")
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("[1, 2, 3, 4]")
+                        .add_argument("(.len)")
+                        .expected_output("[]")
+                )
+                .add_example(Example::new().add_argument("{}").add_argument("true"))
+        )
+        .add_function(
+            FunctionDefinitions::new("range", 1, 1, |args| {
+                struct Impl(Arguments);
+                impl Get for Impl {
+                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                        match self.0.apply(value, 0) {
+                            Some(JsonValue::Number(n)) => {
+                                if let Ok(size) = TryInto::<usize>::try_into(n) {
+                                    let mut vec = vec![];
+                                    for i in 0..size {
+                                        vec.push(i.into());
+                                    }
+                                    Some(vec.into())
+                                } else {
+                                    None
+                                }
+                            }
+                            _ => None,
+                        }
+                    }
+                }
+                Box::new(Impl(Arguments::new(args)))
+            })
+                .add_description_line("Create a new list with items from 0 to the second argument.")
+                .add_description_line(
+                    "If the second argument is not a positive integer, return nothing."
+                )
+                .add_example(Example::new().add_argument("4").expected_output("[0, 1, 2, 3]"))
+                .add_example(Example::new().add_argument("-4"))
+                .add_example(Example::new().add_argument("[1, 2, 3, 4]"))
+        )
 }

@@ -6,6 +6,7 @@ use crate::functions::list_functions::get_list_functions;
 use crate::functions::number_functions::get_number_functions;
 use crate::functions::object_functions::get_object_functions;
 use crate::functions::string_functions::get_string_functions;
+use crate::functions::time_functions::get_time_functions;
 use crate::functions::type_functions::get_type_functions;
 use crate::json_parser::JsonParser;
 use crate::{
@@ -30,10 +31,10 @@ pub enum FunctionDefinitionsError {
 }
 
 pub struct Example {
-    pub input: Option<&'static str>,
+    input: Option<&'static str>,
     pub arguments: Vec<&'static str>,
     // For test only
-    pub output: Option<&'static str>,
+    output: Option<&'static str>,
 }
 
 impl Example {
@@ -59,13 +60,13 @@ impl Example {
 }
 
 pub struct FunctionDefinitions {
-    pub name: &'static str,
-    pub aliases: Vec<&'static str>,
-    pub min_args_count: usize,
-    pub max_args_count: usize,
-    pub build_extractor: Factory,
-    pub description: Vec<&'static str>,
-    pub examples: Vec<Example>,
+    name: &'static str,
+    aliases: Vec<&'static str>,
+    min_args_count: usize,
+    max_args_count: usize,
+    build_extractor: Factory,
+    description: Vec<&'static str>,
+    examples: Vec<Example>,
 }
 
 impl FunctionDefinitions {
@@ -132,8 +133,8 @@ impl FunctionDefinitions {
 }
 
 pub struct FunctionsGroup {
-    pub name: &'static str,
-    pub functions: Vec<FunctionDefinitions>,
+    name: &'static str,
+    functions: Vec<FunctionDefinitions>,
 }
 
 impl FunctionsGroup {
@@ -174,6 +175,7 @@ lazy_static! {
     static ref LIST_FUNCTIONS: FunctionsGroup = get_list_functions();
     static ref STRING_FUNCTIONS: FunctionsGroup = get_string_functions();
     static ref BOOLEAN_FUNCTIONS: FunctionsGroup = get_boolean_functions();
+    static ref TIME_FUNCTIONS: FunctionsGroup = get_time_functions();
     static ref ALL_FUNCTIONS: Vec<&'static FunctionsGroup> = vec![
         &BASIC_FUNCTIONS,
         &TYPES_FUNCTIONS,
@@ -182,6 +184,7 @@ lazy_static! {
         &NUMBER_FUNCTIONS,
         &STRING_FUNCTIONS,
         &BOOLEAN_FUNCTIONS,
+        &TIME_FUNCTIONS,
     ];
     static ref NAME_TO_FUNCTION: HashMap<&'static str, &'static FunctionDefinitions> =
         ALL_FUNCTIONS

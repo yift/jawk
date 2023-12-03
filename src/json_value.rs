@@ -204,6 +204,11 @@ impl From<&String> for JsonValue {
         JsonValue::String(value.clone())
     }
 }
+impl From<&str> for JsonValue {
+    fn from(value: &str) -> Self {
+        JsonValue::String(value.to_string())
+    }
+}
 impl From<Vec<JsonValue>> for JsonValue {
     fn from(value: Vec<JsonValue>) -> Self {
         JsonValue::Array(value)

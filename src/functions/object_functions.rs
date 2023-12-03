@@ -1,3 +1,5 @@
+use indexmap::IndexMap;
+
 use crate::{
     functions_definitions::{Arguments, Example, FunctionDefinitions, FunctionsGroup},
     json_value::JsonValue,
@@ -160,5 +162,156 @@ pub fn get_object_functions() -> FunctionsGroup {
                         )
                 )
                 .add_example(Example::new().add_argument("false").add_argument("."))
+        )
+
+        .add_function(
+            FunctionDefinitions::new("filter_keys", 2, 2, |args| {
+                struct Impl(Arguments);
+                impl Get for Impl {
+                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                        if let Some(JsonValue::Object(map)) = self.0.apply(value, 0) {
+                            Some(
+                                map
+                                    .into_iter()
+                                    .filter(|(k, _)| {
+                                        self.0.apply(&Some(k.into()), 1) == Some(true.into())
+                                    })
+                                    .collect::<IndexMap<_, _>>()
+                                    .into()
+                            )
+                        } else {
+                            None
+                        }
+                    }
+                }
+                Box::new(Impl(Arguments::new(args)))
+            })
+                .add_description_line("Filter an object by keys.")
+                .add_description_line(
+                    "The first argument should be the object and the second should be a function to filter the keys by."
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("{\"a\": 1, \"aa\": 2, \"aaa\": 3, \"aaaa\": 4}")
+                        .add_argument("(>= (len .) 3)")
+                        .expected_output("{\"aaa\": 3, \"aaaa\": 4}")
+                )
+                .add_example(Example::new().add_argument("[1, 2, 4]").add_argument("false"))
+        )
+
+        .add_function(
+            FunctionDefinitions::new("filter_values", 2, 2, |args| {
+                struct Impl(Arguments);
+                impl Get for Impl {
+                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                        if let Some(JsonValue::Object(map)) = self.0.apply(value, 0) {
+                            Some(
+                                map
+                                    .into_iter()
+                                    .filter(|(_, v)| {
+                                        self.0.apply(&Some(v.clone()), 1) == Some(true.into())
+                                    })
+                                    .collect::<IndexMap<_, _>>()
+                                    .into()
+                            )
+                        } else {
+                            None
+                        }
+                    }
+                }
+                Box::new(Impl(Arguments::new(args)))
+            })
+                .add_description_line("Filter an object by values.")
+                .add_description_line(
+                    "The first argument should be the object and the second should be a function to filter the values by."
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("{\"a\": 1, \"aa\": 2, \"aaa\": 3, \"aaaa\": 4}")
+                        .add_argument("(= 0 (% . 2))")
+                        .expected_output("{\"aa\": 2, \"aaaa\": 4}")
+                )
+                .add_example(Example::new().add_argument("[1, 2, 4]").add_argument("false"))
+        )
+
+        .add_function(
+            FunctionDefinitions::new("map_values", 2, 2, |args| {
+                struct Impl(Arguments);
+                impl Get for Impl {
+                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                        if let Some(JsonValue::Object(map)) = self.0.apply(value, 0) {
+                            Some(
+                                map
+                                    .into_iter()
+                                    .filter_map(|(k, v)| {
+                                        let v = Some(v.clone());
+                                        self.0.apply(&v, 1).map(|v| (k, v))
+                                    })
+                                    .collect::<IndexMap<_, _>>()
+                                    .into()
+                            )
+                        } else {
+                            None
+                        }
+                    }
+                }
+                Box::new(Impl(Arguments::new(args)))
+            })
+                .add_description_line("Map an object values.")
+                .add_description_line(
+                    "The first argument should be the object and the second should be a function to map the values to."
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("{\"a\": 1, \"aa\": 2, \"aaa\": 3, \"aaaa\": 4}")
+                        .add_argument("(% . 2)")
+                        .expected_output("{\"a\": 1, \"aa\": 0, \"aaa\": 1, \"aaaa\": 0}")
+                )
+                .add_example(Example::new().add_argument("[1, 2, 4]").add_argument("false"))
+        )
+
+        .add_function(
+            FunctionDefinitions::new("map_keys", 2, 2, |args| {
+                struct Impl(Arguments);
+                impl Get for Impl {
+                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                        if let Some(JsonValue::Object(map)) = self.0.apply(value, 0) {
+                            Some(
+                                map
+                                    .into_iter()
+                                    .filter_map(|(k, v)| {
+                                        let k = Some(k.into());
+                                        match self.0.apply(&k, 1) {
+                                            Some(JsonValue::String(str)) => Some((str, v)),
+                                            _ => None,
+                                        }
+                                    })
+                                    .collect::<IndexMap<_, _>>()
+                                    .into()
+                            )
+                        } else {
+                            None
+                        }
+                    }
+                }
+                Box::new(Impl(Arguments::new(args)))
+            })
+                .add_description_line("Map an object keys.")
+                .add_description_line(
+                    "The first argument should be the object and the second should be a function to map the keys to."
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("{\"a\": 1, \"aa\": 2, \"aaa\": 3, \"aaaa\": 4}")
+                        .add_argument("(concat \"_\" .)")
+                        .expected_output("{\"_a\": 1, \"_aa\": 2, \"_aaa\": 3, \"_aaaa\": 4}")
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("{\"a\": 1, \"aa\": 2, \"aaa\": 3, \"aaaa\": 4}")
+                        .add_argument("(number? .)")
+                        .expected_output("{}")
+                )
+                .add_example(Example::new().add_argument("[1, 2, 4]").add_argument("false"))
         )
 }
