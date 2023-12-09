@@ -7,6 +7,7 @@ mod output;
 mod printer;
 mod reader;
 mod selection;
+mod sorters;
 
 use clap::Parser;
 use functions_definitions::print_help;
@@ -15,6 +16,7 @@ use json_parser::JsonParserError;
 use output::{get_output, Output};
 use selection::UnnamedSelection;
 use selection::{Get, Selection};
+use sorters::Sorter;
 use std::fmt::Error as FormatError;
 use std::fs::read_dir;
 use std::io::Error as IoEror;
@@ -44,8 +46,8 @@ struct Cli {
     output_style: OutputStyle,
 
     /// What to output
-    #[arg(long, short, value_parser = Selection::from_str)]
-    select: Vec<Selection>,
+    #[arg(long, short, value_parser = Selection::from_str, visible_alias = "select")]
+    choose: Vec<Selection>,
 
     /// Filter the output
     #[arg(long, short, value_parser = UnnamedSelection::from_str, visible_alias = "where")]
@@ -55,6 +57,11 @@ struct Cli {
     /// Be careful, the grouping is done in memory
     #[arg(long, short, value_parser = Grouper::from_str, visible_alias = "groupBy")]
     group_by: Option<Grouper>,
+
+    /// How to order the output
+    /// Be careful, the sorting is done in memory
+    #[arg(long, short, value_parser = Sorter::from_str, visible_alias = "sortBy", visible_alias = "order-by", visible_alias = "orderBy")]
+    sort_by: Vec<Sorter>,
 
     /// Row seperator
     #[arg(long, short, default_value = "\n")]
@@ -96,7 +103,7 @@ impl Cli {
             return Ok(());
         }
         let rows_titles: Vec<_> = self
-            .select
+            .choose
             .iter()
             .map(|select| select.name().clone())
             .collect();
@@ -106,6 +113,9 @@ impl Cli {
             rows_titles.clone(),
             self.row_seperator.clone(),
         );
+        for sorter in &self.sort_by {
+            output = sorter.start(output);
+        }
         if let Some(group_by) = &self.group_by {
             output = group_by.start(rows_titles.clone(), output);
         }
@@ -147,7 +157,7 @@ impl Cli {
                         }
                     }
                     let value = Some(val.clone());
-                    let row = self.select.iter().map(|v| v.get(&value)).collect();
+                    let row = self.choose.iter().map(|v| v.get(&value)).collect();
                     output.output_row(&val, row)?;
                 }
                 Ok(None) => {

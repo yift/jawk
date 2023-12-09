@@ -170,7 +170,7 @@ impl Get for SingleExtract {
         }
     }
 }
-fn read_getter<R: Read>(reader: &mut Reader<R>) -> Result<Box<dyn Get>> {
+pub fn read_getter<R: Read>(reader: &mut Reader<R>) -> Result<Box<dyn Get>> {
     reader.eat_whitespace()?;
     match reader.peek()? {
         None => Err(SelectionParseError::UnexpectedEof),

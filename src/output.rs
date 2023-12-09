@@ -25,47 +25,41 @@ struct JsonOutput {
     printer: Arc<JsonPrinter>,
 }
 
-impl Output for JsonOutput {
-    fn output_row(&mut self, _: &JsonValue, row: Vec<Option<JsonValue>>) -> Result {
+pub fn get_value_or_values(
+    value: &JsonValue,
+    row: Vec<Option<JsonValue>>,
+    rows_titles: &Arc<Vec<String>>,
+) -> JsonValue {
+    if rows_titles.is_empty() {
+        value.clone()
+    } else {
         let mut data = IndexMap::new();
-        self.rows_titles.iter().zip(row).for_each(|(title, value)| {
+        rows_titles.iter().zip(row).for_each(|(title, value)| {
             if let Some(value) = value {
                 data.insert(title.clone(), value);
             }
         });
+        data.into()
+    }
+}
+
+impl Output for JsonOutput {
+    fn output_row(&mut self, value: &JsonValue, row: Vec<Option<JsonValue>>) -> Result {
+        let data = get_value_or_values(value, row, &self.rows_titles);
         let mut str = String::new();
-        let value = data.into();
-        self.printer.print(&mut str, &value)?;
+        self.printer.print(&mut str, &data)?;
         print!("{}", str);
         print!("{}", self.line_seperator);
         Ok(())
     }
 
     fn without_titles(&self) -> Option<Box<dyn Output>> {
-        let printer = EmptyJsonOutput {
+        let printer = JsonOutput {
             line_seperator: self.line_seperator.clone(),
             printer: self.printer.clone(),
+            rows_titles: Arc::new(vec![]),
         };
         Some(Box::new(printer))
-    }
-}
-
-struct EmptyJsonOutput {
-    line_seperator: String,
-    printer: Arc<JsonPrinter>,
-}
-
-impl Output for EmptyJsonOutput {
-    fn output_row(&mut self, value: &JsonValue, _: Vec<Option<JsonValue>>) -> Result {
-        let mut str = String::new();
-        self.printer.print(&mut str, value)?;
-        print!("{}", str);
-        print!("{}", self.line_seperator);
-        Ok(())
-    }
-
-    fn without_titles(&self) -> Option<Box<dyn Output>> {
-        None
     }
 }
 
@@ -166,42 +160,28 @@ pub fn get_output(
     rows_titles: Arc<Vec<String>>,
     line_seperator: String,
 ) -> Box<dyn Output> {
-    if rows_titles.is_empty() {
-        match style {
-            OutputStyle::ConsiseJson => Box::new(EmptyJsonOutput {
-                line_seperator,
-                printer: Arc::new(JsonPrinter::new(false, false)),
-            }),
-            OutputStyle::Json => Box::new(EmptyJsonOutput {
-                line_seperator,
-                printer: Arc::new(JsonPrinter::new(true, false)),
-            }),
-            OutputStyle::OneLineJson => Box::new(EmptyJsonOutput {
-                line_seperator,
-                printer: Arc::new(JsonPrinter::new(false, true)),
-            }),
-            OutputStyle::Csv => panic!("CSV output must contain a selection"),
-            OutputStyle::Text => Box::new(RawOutput::new(line_seperator, rows_titles)),
+    match style {
+        OutputStyle::ConsiseJson => Box::new(JsonOutput {
+            line_seperator,
+            printer: Arc::new(JsonPrinter::new(false, false)),
+            rows_titles,
+        }),
+        OutputStyle::Json => Box::new(JsonOutput {
+            line_seperator,
+            printer: Arc::new(JsonPrinter::new(true, false)),
+            rows_titles,
+        }),
+        OutputStyle::OneLineJson => Box::new(JsonOutput {
+            line_seperator,
+            printer: Arc::new(JsonPrinter::new(false, true)),
+            rows_titles,
+        }),
+        OutputStyle::Csv => {
+            if rows_titles.is_empty() {
+                panic!("CSV output must contain a selection")
+            }
+            Box::new(CsvOutut::new(line_seperator, rows_titles))
         }
-    } else {
-        match style {
-            OutputStyle::ConsiseJson => Box::new(JsonOutput {
-                line_seperator,
-                printer: Arc::new(JsonPrinter::new(false, false)),
-                rows_titles,
-            }),
-            OutputStyle::Json => Box::new(JsonOutput {
-                line_seperator,
-                printer: Arc::new(JsonPrinter::new(true, false)),
-                rows_titles,
-            }),
-            OutputStyle::OneLineJson => Box::new(JsonOutput {
-                line_seperator,
-                printer: Arc::new(JsonPrinter::new(false, true)),
-                rows_titles,
-            }),
-            OutputStyle::Csv => Box::new(CsvOutut::new(line_seperator, rows_titles)),
-            OutputStyle::Text => Box::new(RawOutput::new(line_seperator, rows_titles)),
-        }
+        OutputStyle::Text => Box::new(RawOutput::new(line_seperator, rows_titles)),
     }
 }

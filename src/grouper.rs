@@ -4,7 +4,7 @@ use indexmap::IndexMap;
 
 use crate::{
     json_value::JsonValue,
-    output::Output,
+    output::{get_value_or_values, Output},
     selection::{SelectionParseError, UnnamedSelection},
 };
 
@@ -47,16 +47,8 @@ struct ActiveGrouper {
 impl Output for ActiveGrouper {
     fn output_row(&mut self, value: &JsonValue, row: Vec<Option<JsonValue>>) -> std::fmt::Result {
         if let Some(key) = self.group_by.name(value) {
-            let mut datum = IndexMap::new();
-            self.rows_titles
-                .iter()
-                .zip(row.iter())
-                .for_each(|(key, value)| {
-                    if let Some(value) = value {
-                        datum.insert(key.clone(), value.clone());
-                    }
-                });
-            self.data.entry(key).or_default().push(datum.into());
+            let data = get_value_or_values(value, row, &self.rows_titles);
+            self.data.entry(key).or_default().push(data);
         }
 
         Ok(())
