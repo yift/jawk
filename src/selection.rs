@@ -42,6 +42,8 @@ pub enum SelectionParseError {
     MissingKey(Location),
     #[error("{0}: Expecting equals, got {1}")]
     ExpectingEquals(Location, char),
+    #[error("{0}: Expecting EOF, got {1}")]
+    ExpectingEof(Location, char),
     #[error("Unexpected end of string")]
     UnexpectedEof,
 }
@@ -78,6 +80,43 @@ impl FromStr for Selection {
     }
 }
 
+#[derive(Clone)]
+pub struct UnnamedSelection {
+    getter: Arc<Box<dyn Get>>,
+}
+impl FromStr for UnnamedSelection {
+    type Err = SelectionParseError;
+    fn from_str(s: &str) -> Result<Self> {
+        let source = s.to_string();
+        let mut reader = from_string(&source);
+        reader.eat_whitespace()?;
+        let extractors = read_getter(&mut reader)?;
+        reader.eat_whitespace()?;
+        if let Some(ch) = reader.next()? {
+            return Err(SelectionParseError::ExpectingEof(
+                reader.where_am_i(),
+                ch as char,
+            ));
+        }
+        Ok(UnnamedSelection {
+            getter: Arc::new(extractors),
+        })
+    }
+}
+impl UnnamedSelection {
+    pub fn pass(&self, value: &JsonValue) -> bool {
+        let val = Some(value.clone());
+        self.getter.get(&val) == Some(JsonValue::Boolean(true))
+    }
+    pub fn name(&self, value: &JsonValue) -> Option<String> {
+        let val = Some(value.clone());
+        if let Some(JsonValue::String(str)) = self.getter.get(&val) {
+            Some(str)
+        } else {
+            None
+        }
+    }
+}
 enum SingleExtract {
     ByKey(String),
     ByIndex(usize),

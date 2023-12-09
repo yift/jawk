@@ -1,5 +1,6 @@
 mod functions;
 mod functions_definitions;
+mod grouper;
 mod json_parser;
 mod json_value;
 mod output;
@@ -9,8 +10,10 @@ mod selection;
 
 use clap::Parser;
 use functions_definitions::print_help;
+use grouper::Grouper;
 use json_parser::JsonParserError;
 use output::{get_output, Output};
+use selection::UnnamedSelection;
 use selection::{Get, Selection};
 use std::fmt::Error as FormatError;
 use std::fs::read_dir;
@@ -18,6 +21,7 @@ use std::io::Error as IoEror;
 use std::io::Read;
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::sync::Arc;
 use thiserror::Error;
 
 use crate::json_parser::JsonParser;
@@ -42,6 +46,15 @@ struct Cli {
     /// What to output
     #[arg(long, short, value_parser = Selection::from_str)]
     select: Vec<Selection>,
+
+    /// Filter the output
+    #[arg(long, short, value_parser = UnnamedSelection::from_str, visible_alias = "where")]
+    filter: Option<UnnamedSelection>,
+
+    /// Group the output by.
+    /// Be careful, the grouping is done in memory
+    #[arg(long, short, value_parser = Grouper::from_str, visible_alias = "groupBy")]
+    group_by: Option<Grouper>,
 
     /// Row seperator
     #[arg(long, short, default_value = "\n")]
@@ -82,24 +95,34 @@ impl Cli {
             print_help();
             return Ok(());
         }
-        let rows_titles = self
+        let rows_titles: Vec<_> = self
             .select
             .iter()
             .map(|select| select.name().clone())
             .collect();
-        let output = get_output(self.output_style, rows_titles, self.row_seperator.clone());
+        let rows_titles = Arc::new(rows_titles);
+        let mut output = get_output(
+            self.output_style,
+            rows_titles.clone(),
+            self.row_seperator.clone(),
+        );
+        if let Some(group_by) = &self.group_by {
+            output = group_by.start(rows_titles.clone(), output);
+        }
+        output.start()?;
         if self.files.is_empty() {
             let mut reader = from_std_in();
-            self.read_input(&mut reader, output.as_ref())?;
+            self.read_input(&mut reader, output.as_mut())?;
         } else {
             for file in self.files.clone() {
-                self.read_file(&file, output.as_ref())?;
+                self.read_file(&file, output.as_mut())?;
             }
         }
+        output.done()?;
         Ok(())
     }
 
-    fn read_file(&self, file: &PathBuf, output: &dyn Output) -> Result<()> {
+    fn read_file(&self, file: &PathBuf, output: &mut dyn Output) -> Result<()> {
         if !file.exists() {
             panic!("File {:?} not exists", file);
         }
@@ -114,17 +137,18 @@ impl Cli {
         }
         Ok(())
     }
-    fn read_input<R: Read>(&self, reader: &mut Reader<R>, output: &dyn Output) -> Result<()> {
+    fn read_input<R: Read>(&self, reader: &mut Reader<R>, output: &mut dyn Output) -> Result<()> {
         loop {
             match reader.next_json_value() {
                 Ok(Some(val)) => {
-                    if self.select.is_empty() {
-                        output.output_row(vec![Some(val)])?;
-                    } else {
-                        let val = Some(val);
-                        let row = self.select.iter().map(|v| v.get(&val)).collect();
-                        output.output_row(row)?;
+                    if let Some(filter) = &self.filter {
+                        if !filter.pass(&val) {
+                            continue;
+                        }
                     }
+                    let value = Some(val.clone());
+                    let row = self.select.iter().map(|v| v.get(&value)).collect();
+                    output.output_row(&val, row)?;
                 }
                 Ok(None) => {
                     return Ok(());
