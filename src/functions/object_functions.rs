@@ -314,4 +314,192 @@ pub fn get_object_functions() -> FunctionsGroup {
                 )
                 .add_example(Example::new().add_argument("[1, 2, 4]").add_argument("false"))
         )
+
+        .add_function(
+            FunctionDefinitions::new("put", 3, 3, |args| {
+                struct Impl(Vec<Box<dyn Get>>);
+                impl Get for Impl {
+                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                        if
+                            let (
+                                Some(JsonValue::Object(map)),
+                                Some(JsonValue::String(key)),
+                                Some(val),
+                            ) = (
+                                self.0.apply(value, 0),
+                                self.0.apply(value, 1),
+                                self.0.apply(value, 2),
+                            )
+                        {
+                            let mut new_map = map.clone();
+                            new_map.insert(key, val);
+                            Some(new_map.into())
+                        } else {
+                            None
+                        }
+                    }
+                }
+                Box::new(Impl(args))
+            })
+                .add_alias("insert")
+                .add_alias("replace")
+                .add_alias("{}")
+                .add_description_line("Add a new entry to a map.")
+                .add_description_line("The first argument should be an object.")
+                .add_description_line("The second argument should be a key.")
+                .add_description_line("The third argument should be a value.")
+                .add_description_line("If the object has that key, it will be replaced.")
+                .add_example(
+                    Example::new()
+                        .add_argument("{}")
+                        .add_argument("\"a\"")
+                        .add_argument("1")
+                        .expected_output("{\"a\": 1}")
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("{\"a\": 10, \"b\": 22}")
+                        .add_argument("\"a\"")
+                        .add_argument("-1")
+                        .expected_output("{\"a\": -1, \"b\": 22}")
+                )
+                .add_example(
+                    Example::new().add_argument("[]").add_argument("\"a\"").add_argument("1")
+                )
+                .add_example(Example::new().add_argument("{}").add_argument("1").add_argument("1"))
+                .add_example(
+                    Example::new()
+                        .add_argument("{}")
+                        .add_argument("\"1\"")
+                        .add_argument("({} {} 1 1)")
+                )
+        )
+
+        .add_function(
+            FunctionDefinitions::new("insert-if-absent", 3, 3, |args| {
+                struct Impl(Vec<Box<dyn Get>>);
+                impl Get for Impl {
+                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                        if
+                            let (
+                                Some(JsonValue::Object(map)),
+                                Some(JsonValue::String(key)),
+                                Some(val),
+                            ) = (
+                                self.0.apply(value, 0),
+                                self.0.apply(value, 1),
+                                self.0.apply(value, 2),
+                            )
+                        {
+                            if !map.contains_key(&key) {
+                                let mut new_map = map.clone();
+                                new_map.insert(key, val);
+                                Some(new_map.into())
+                            }else {
+                                Some(map.into())
+                            }
+                        } else {
+                            None
+                        }
+                    }
+                }
+                Box::new(Impl(args))
+            })
+                .add_alias("put-if-absent")
+                .add_alias("replace-if-absent")
+                .add_alias("{-}")
+                .add_description_line("Add a new entry to a map if it has no such key.")
+                .add_description_line("The first argument should be an object.")
+                .add_description_line("The second argument should be a key.")
+                .add_description_line("The third argument should be a value.")
+                .add_description_line("If the object has that key, it will not be replaced.")
+                .add_example(
+                    Example::new()
+                        .add_argument("{}")
+                        .add_argument("\"a\"")
+                        .add_argument("1")
+                        .expected_output("{\"a\": 1}")
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("{\"a\": 10, \"b\": 22}")
+                        .add_argument("\"a\"")
+                        .add_argument("-1")
+                        .expected_output("{\"a\": 10, \"b\": 22}")
+                )
+                .add_example(
+                    Example::new().add_argument("[]").add_argument("\"a\"").add_argument("1")
+                )
+                .add_example(Example::new().add_argument("{}").add_argument("1").add_argument("1"))
+                .add_example(
+                    Example::new()
+                        .add_argument("{}")
+                        .add_argument("\"1\"")
+                        .add_argument("({} {} 1 1)")
+                )
+        )
+
+        .add_function(
+            FunctionDefinitions::new("replace-if-exists", 3, 3, |args| {
+                struct Impl(Vec<Box<dyn Get>>);
+                impl Get for Impl {
+                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                        if
+                            let (
+                                Some(JsonValue::Object(map)),
+                                Some(JsonValue::String(key)),
+                                Some(val),
+                            ) = (
+                                self.0.apply(value, 0),
+                                self.0.apply(value, 1),
+                                self.0.apply(value, 2),
+                            )
+                        {
+                            if map.contains_key(&key) {
+                                let mut new_map = map.clone();
+                                new_map.insert(key, val);
+                                Some(new_map.into())
+                            }else {
+                                Some(map.into())
+                            }
+                        } else {
+                            None
+                        }
+                    }
+                }
+                Box::new(Impl(args))
+            })
+                .add_alias("insert-if-exists")
+                .add_alias("put-if-exists")
+                .add_alias("{+}")
+                .add_description_line("Add a new entry to a map if it has such key.")
+                .add_description_line("The first argument should be an object.")
+                .add_description_line("The second argument should be a key.")
+                .add_description_line("The third argument should be a value.")
+                .add_description_line("If the object dosen't has that key, it will not be replaced.")
+                .add_example(
+                    Example::new()
+                        .add_argument("{}")
+                        .add_argument("\"a\"")
+                        .add_argument("1")
+                        .expected_output("{}")
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("{\"a\": 10, \"b\": 22}")
+                        .add_argument("\"a\"")
+                        .add_argument("-1")
+                        .expected_output("{\"a\": -1, \"b\": 22}")
+                )
+                .add_example(
+                    Example::new().add_argument("[]").add_argument("\"a\"").add_argument("1")
+                )
+                .add_example(Example::new().add_argument("{}").add_argument("1").add_argument("1"))
+                .add_example(
+                    Example::new()
+                        .add_argument("{}")
+                        .add_argument("\"1\"")
+                        .add_argument("({} {} 1 1)")
+                )
+        )
 }

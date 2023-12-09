@@ -235,6 +235,8 @@ pub fn print_help() {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashSet;
+
     use crate::selection;
 
     use super::*;
@@ -272,6 +274,22 @@ mod tests {
                     println!("\t\tPassed");
                 }
                 println!("\tPassed");
+            }
+        }
+        Ok(())
+    }
+    #[test]
+    fn test_no_dulicates() -> selection::Result<()> {
+        let mut names = HashSet::new();
+        for group in ALL_FUNCTIONS.iter() {
+            println!("Looking at group: {}", group.name);
+            for func in group.functions.iter() {
+                println!("\t looking at function: {}", func.name);
+                assert_eq!(names.insert(func.name.to_string()), true);
+                for alias in &func.aliases {
+                    println!("\t\t looking at alias: {}", alias);
+                    assert_eq!(names.insert(alias.to_string()), true);
+                }
             }
         }
         Ok(())
