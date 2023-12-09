@@ -11,7 +11,7 @@ pub fn get_object_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("keys", 1, 1, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         if let Some(JsonValue::Object(map)) = self.0.apply(value, 0) {
@@ -25,7 +25,7 @@ pub fn get_object_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
                 .add_description_line("Get the list of keys from an object.")
                 .add_example(
@@ -38,7 +38,7 @@ pub fn get_object_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("values", 1, 1, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         if let Some(JsonValue::Object(map)) = self.0.apply(value, 0) {
@@ -48,7 +48,7 @@ pub fn get_object_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
                 .add_alias("vals")
                 .add_description_line("Get the list of values from an object.")
@@ -62,7 +62,7 @@ pub fn get_object_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("sort_by_keys", 1, 1, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -76,7 +76,7 @@ pub fn get_object_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
                 .add_alias("order_by_keys")
                 .add_description_line("Sort an object by it's keys.")
@@ -93,7 +93,7 @@ pub fn get_object_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("sort_by_values", 1, 1, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -107,7 +107,7 @@ pub fn get_object_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
                 .add_alias("order_by_values")
                 .add_description_line("Sort an object by it's values.")
@@ -124,7 +124,7 @@ pub fn get_object_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("sort_by_values_by", 2, 2, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -144,7 +144,7 @@ pub fn get_object_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
                 .add_alias("order_by_values_by")
                 .add_description_line("Sort an object by a function to it's values.")
@@ -166,7 +166,7 @@ pub fn get_object_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("filter_keys", 2, 2, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         if let Some(JsonValue::Object(map)) = self.0.apply(value, 0) {
@@ -184,7 +184,7 @@ pub fn get_object_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
                 .add_description_line("Filter an object by keys.")
                 .add_description_line(
@@ -201,7 +201,7 @@ pub fn get_object_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("filter_values", 2, 2, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         if let Some(JsonValue::Object(map)) = self.0.apply(value, 0) {
@@ -219,7 +219,7 @@ pub fn get_object_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
                 .add_description_line("Filter an object by values.")
                 .add_description_line(
@@ -236,7 +236,7 @@ pub fn get_object_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("map_values", 2, 2, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         if let Some(JsonValue::Object(map)) = self.0.apply(value, 0) {
@@ -255,7 +255,7 @@ pub fn get_object_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
                 .add_description_line("Map an object values.")
                 .add_description_line(
@@ -272,7 +272,7 @@ pub fn get_object_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("map_keys", 2, 2, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         if let Some(JsonValue::Object(map)) = self.0.apply(value, 0) {
@@ -294,7 +294,7 @@ pub fn get_object_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
                 .add_description_line("Map an object keys.")
                 .add_description_line(

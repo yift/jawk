@@ -27,7 +27,7 @@ pub fn get_time_functions() -> FunctionsGroup {
         )
         .add_function(
             FunctionDefinitions::new("format_time", 2, 2, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         if let Some(JsonValue::Number(time)) = self.0.apply(value, 0) {
@@ -48,7 +48,7 @@ pub fn get_time_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
             .add_description_line("Format a date/time into a string")
             .add_description_line("The first argemnt should be the number of seconds since epoch")
@@ -70,7 +70,7 @@ pub fn get_time_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("parse_time_with_zone", 2, 2, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         if let (Some(JsonValue::String(str)), Some(JsonValue::String(format))) =
@@ -88,7 +88,7 @@ pub fn get_time_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
             .add_description_line("Parse a date/time from a string into seconds since epoc. This version expect to get the time zone as well")
             .add_description_line("The first argemnt should be the date")
@@ -116,7 +116,7 @@ pub fn get_time_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("parse_time", 2, 2, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         if let (Some(JsonValue::String(str)), Some(JsonValue::String(format))) =
@@ -134,7 +134,7 @@ pub fn get_time_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
             .add_description_line("Parse a date/time from a string into seconds since epoc")
             .add_description_line("The first argemnt should be the date")

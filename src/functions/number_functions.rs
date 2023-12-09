@@ -9,11 +9,11 @@ pub fn get_number_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("+", 2, usize::MAX, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         let mut sum = 0.0;
-                        for s in &self.0.args {
+                        for s in &self.0 {
                             if let Some(JsonValue::Number(num)) = s.get(value) {
                                 let num: f64 = num.into();
                                 sum += num;
@@ -24,7 +24,7 @@ pub fn get_number_functions() -> FunctionsGroup {
                         Some(sum.into())
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
                 .add_alias("add")
                 .add_alias("plus")
@@ -47,7 +47,7 @@ pub fn get_number_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("-", 2, 2, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         if
@@ -64,7 +64,7 @@ pub fn get_number_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
                 .add_alias("take_away")
                 .add_alias("minus")
@@ -84,11 +84,11 @@ pub fn get_number_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("*", 2, usize::MAX, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         let mut sum = 1.0;
-                        for s in &self.0.args {
+                        for s in &self.0 {
                             if let Some(JsonValue::Number(num)) = s.get(value) {
                                 let num: f64 = num.into();
                                 sum *= num;
@@ -99,7 +99,7 @@ pub fn get_number_functions() -> FunctionsGroup {
                         Some(sum.into())
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
                 .add_alias("times")
                 .add_alias("multiple")
@@ -119,7 +119,7 @@ pub fn get_number_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("/", 2, 2, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         if
@@ -140,7 +140,7 @@ pub fn get_number_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
                 .add_alias("divide")
                 .add_description_line(
@@ -158,7 +158,7 @@ pub fn get_number_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("%", 2, 2, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         if
@@ -179,7 +179,7 @@ pub fn get_number_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
                 .add_alias("mod")
                 .add_alias("modulu")

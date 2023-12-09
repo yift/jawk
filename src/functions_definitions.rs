@@ -150,16 +150,12 @@ impl FunctionsGroup {
     }
 }
 
-pub struct Arguments {
-    pub args: Vec<Box<dyn Get>>,
+pub trait Arguments {
+    fn apply(&self, value: &Option<JsonValue>, index: usize) -> Option<JsonValue>;
 }
-impl Arguments {
-    pub fn new(args: Vec<Box<dyn Get>>) -> Self {
-        Arguments { args }
-    }
-
-    pub fn apply(&self, value: &Option<JsonValue>, index: usize) -> Option<JsonValue> {
-        if let Some(arg) = self.args.get(index) {
+impl Arguments for Vec<Box<dyn Get>> {
+    fn apply(&self, value: &Option<JsonValue>, index: usize) -> Option<JsonValue> {
+        if let Some(arg) = self.get(index) {
             arg.get(value)
         } else {
             None

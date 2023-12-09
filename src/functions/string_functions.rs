@@ -18,7 +18,7 @@ pub fn get_string_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("parse", 1, 1, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -37,7 +37,7 @@ pub fn get_string_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
                 .add_alias("parse_json")
                 .add_description_line("Parse a string into JSON value.")
@@ -51,7 +51,7 @@ pub fn get_string_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("parse_selection", 1, 1, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -65,7 +65,7 @@ pub fn get_string_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
                 .add_description_line("Parse a string into a new selection.")
                 .add_example(Example::new().add_argument("\"(+ 10 11)\"").expected_output("21"))
@@ -74,7 +74,7 @@ pub fn get_string_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("env", 1, 1, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         if let Some(JsonValue::String(str)) = self.0.apply(value, 0) {
@@ -84,7 +84,7 @@ pub fn get_string_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
                 .add_alias("$")
                 .add_description_line("Get enviornment variable.")
@@ -97,11 +97,11 @@ pub fn get_string_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("concat", 2, usize::MAX, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         let mut all = String::new();
-                        for s in &self.0.args {
+                        for s in &self.0 {
                             if let Some(JsonValue::String(str)) = s.get(value) {
                                 all.push_str(str.as_str());
                             } else {
@@ -111,7 +111,7 @@ pub fn get_string_functions() -> FunctionsGroup {
                         Some(all.into())
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
                 .add_description_line("Concat all string arguments.")
                 .add_example(
@@ -128,7 +128,7 @@ pub fn get_string_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("split", 2, 2, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         if
@@ -147,7 +147,7 @@ pub fn get_string_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
                 .add_description_line("Split the string into array of strings.")
                 .add_example(
@@ -166,7 +166,7 @@ pub fn get_string_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("match", 2, 2, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         if
@@ -185,7 +185,7 @@ pub fn get_string_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
                 .add_alias("match_regex")
                 .add_description_line(
@@ -208,7 +208,7 @@ pub fn get_string_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("extract_regex_group", 3, 3, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         if
@@ -244,7 +244,7 @@ pub fn get_string_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
                 .add_description_line("Return the capture group within the string.")
                 .add_example(

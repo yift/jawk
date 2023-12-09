@@ -8,7 +8,7 @@ pub fn get_type_functions() -> FunctionsGroup {
     FunctionsGroup::new("Type functions")
         .add_function(
             FunctionDefinitions::new("array?", 1, 1, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -17,7 +17,7 @@ pub fn get_type_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
             .add_alias("list?")
             .add_description_line("return true if the argument is an array.")
@@ -30,7 +30,7 @@ pub fn get_type_functions() -> FunctionsGroup {
         )
         .add_function(
             FunctionDefinitions::new("object?", 1, 1, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -39,7 +39,7 @@ pub fn get_type_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
             .add_alias("map?")
             .add_alias("hash?")
@@ -57,7 +57,7 @@ pub fn get_type_functions() -> FunctionsGroup {
         )
         .add_function(
             FunctionDefinitions::new("null?", 1, 1, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -66,7 +66,7 @@ pub fn get_type_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
             .add_alias("nil?")
             .add_description_line("return true if the argument is a null.")
@@ -75,7 +75,7 @@ pub fn get_type_functions() -> FunctionsGroup {
         )
         .add_function(
             FunctionDefinitions::new("bool?", 1, 1, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -84,7 +84,7 @@ pub fn get_type_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
             .add_alias("boolean?")
             .add_description_line("return true if the argument is a boolean.")
@@ -97,7 +97,7 @@ pub fn get_type_functions() -> FunctionsGroup {
         )
         .add_function(
             FunctionDefinitions::new("number?", 1, 1, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -106,7 +106,7 @@ pub fn get_type_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
             .add_description_line("return true if the argument is a number.")
             .add_example(
@@ -118,7 +118,7 @@ pub fn get_type_functions() -> FunctionsGroup {
         )
         .add_function(
             FunctionDefinitions::new("string?", 1, 1, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -127,7 +127,7 @@ pub fn get_type_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
             .add_description_line("return true if the argument is a string.")
             .add_example(
@@ -139,7 +139,7 @@ pub fn get_type_functions() -> FunctionsGroup {
         )
         .add_function(
             FunctionDefinitions::new("empty?", 1, 1, |args| {
-                struct Impl(Arguments);
+                struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -148,7 +148,7 @@ pub fn get_type_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(Arguments::new(args)))
+                Box::new(Impl(args))
             })
             .add_alias("nothing?")
             .add_description_line("return true if the argument is nothing.")
