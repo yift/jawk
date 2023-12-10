@@ -110,8 +110,7 @@ impl Output for ActiveSorter {
                 }
             }
         }
-
-        Ok(())
+        self.output.done()
     }
     fn without_titles(&self) -> Option<Box<dyn Output>> {
         None

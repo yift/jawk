@@ -62,7 +62,8 @@ impl Output for ActiveGrouper {
         }
 
         let value = data.into();
-        self.output.output_row(&value, vec![])
+        self.output.output_row(&value, vec![])?;
+        self.output.done()
     }
 
     fn without_titles(&self) -> Option<Box<dyn Output>> {

@@ -113,11 +113,11 @@ impl Cli {
             rows_titles.clone(),
             self.row_seperator.clone(),
         );
-        for sorter in &self.sort_by {
-            output = sorter.start(output);
-        }
         if let Some(group_by) = &self.group_by {
             output = group_by.start(rows_titles.clone(), output);
+        }
+        for sorter in &self.sort_by {
+            output = sorter.start(output);
         }
         output.start()?;
         if self.files.is_empty() {
