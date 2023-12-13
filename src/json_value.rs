@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, fmt::Display, num::TryFromIntError};
+use std::{cmp::Ordering, fmt::Display, hash::Hash, num::TryFromIntError};
 
 use indexmap::IndexMap;
 use thiserror::Error;
@@ -72,6 +72,47 @@ pub enum NumberValue {
     Negative(i64),
     Positive(u64),
     Float(f64),
+}
+
+impl Hash for JsonValue {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        match self {
+            JsonValue::Null => state.write_i8(1),
+            JsonValue::Number(NumberValue::Float(f)) => {
+                state.write_i8(2);
+                state.write_u64(f.to_bits())
+            }
+            JsonValue::Number(NumberValue::Positive(f)) => {
+                state.write_i8(3);
+                state.write_u64(*f)
+            }
+            JsonValue::Number(NumberValue::Negative(f)) => {
+                state.write_i8(4);
+                state.write_i64(*f)
+            }
+            JsonValue::String(str) => {
+                state.write_i8(5);
+                str.hash(state)
+            }
+            JsonValue::Array(lst) => {
+                state.write_i8(6);
+                lst.hash(state)
+            }
+            JsonValue::Object(o) => {
+                state.write_i8(7);
+                for (key, value) in o {
+                    key.hash(state);
+                    value.hash(state)
+                }
+            }
+            JsonValue::Boolean(true) => {
+                state.write_i8(8);
+            }
+            JsonValue::Boolean(false) => {
+                state.write_i8(9);
+            }
+        }
+    }
 }
 
 impl NumberValue {

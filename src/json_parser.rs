@@ -206,7 +206,7 @@ impl<R: Read> JsonParserUtils for Reader<R> {
 
         if double {
             match str.parse::<f64>() {
-                Ok(f) => Ok(JsonValue::Number(NumberValue::Float(f))),
+                Ok(f) => Ok(f.into()),
                 Err(e) => Err(JsonParserError::NumberParseFloatError(self.where_am_i(), e)),
             }
         } else if negative {

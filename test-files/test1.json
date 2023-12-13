@@ -14,6 +14,16 @@
 cargo build && cargo fmt && cargo test && cargo clippy --all -- -D warnings && RUST_BACKTRACE=1 ./target/debug/jawk ./test-files -o csv --select ".b = b" 
 cargo build && cargo fmt && cargo test && cargo clippy --all -- -D warnings && RUST_BACKTRACE=1 ./target/debug/jawk ./test-files -o csv --select ".b = b" --filter "(= (% .a 2) 0)"
 cargo build && cargo fmt && cargo test && cargo clippy --all -- -D warnings && RUST_BACKTRACE=1 ./target/debug/jawk ./test-files -o text --select ".b = b" --select "(+ .a 12) = a" --group-by "(stringify (% .a 3))"
+cargo build && cargo fmt && cargo test && cargo clippy --all -- -D warnings && RUST_BACKTRACE=1 ./target/debug/jawk ./test-files -o text --group-by "(stringify (% .a 3))"
 cargo build && cargo fmt && cargo test && cargo clippy --all -- -D warnings && RUST_BACKTRACE=1 ./target/debug/jawk ./test-files -o json --select "(% .a 3) = mod3" --select ". = all" --order-by "(% .a 3) desc"
 cargo build && cargo fmt && cargo test && cargo clippy --all -- -D warnings && RUST_BACKTRACE=1 ./target/debug/jawk ./test-files -o json --select ". = data" --order-by ".a asc"
 cargo build && cargo fmt && cargo test && cargo clippy --all -- -D warnings && RUST_BACKTRACE=1 ./target/debug/jawk ./test-files -o json --select ". = data" --order-by ".a"
+
+RUST_BACKTRACE=1 ./target/debug/jawk /tmp/a.txt -o text --select ".a = a" --select ".b = b" --select ".c = c" --group-by "(stringify (% .a 2))" --order-by ".b" | jq | less
+
+RUST_BACKTRACE=1 ./target/debug/jawk /tmp/a.txt -o json --order-by ".b" --order-by ".c" --select ".b = b" --select ".c = c" --select ".index=index" | jq | less
+RUST_BACKTRACE=1 ./target/debug/jawk /tmp/a.txt -o json --order-by ".c" --select ".b = b" --select ".c = c" --select ".index=index" --group-by "(stringify (% .index 2))" | jq | less
+
+RUST_BACKTRACE=1 ./target/debug/jawk /tmp/a.txt -o json --order-by ".c" --order-by ".b" --select ".b = b" --select ".c = c" --select ".index=index" --group-by "(stringify (% .index 2))" --where "(or (= .index 30) (> .b 40))" | jq | less
+
+RUST_BACKTRACE=1 ./target/debug/jawk /tmp/a.txt -o json --select ".b = b" --select ".c = c" --where "(and (> .b 20) (< .b 40))" | jq | less

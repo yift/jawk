@@ -1,3 +1,4 @@
+mod duplication_remover;
 mod functions;
 mod functions_definitions;
 mod grouper;
@@ -10,6 +11,7 @@ mod selection;
 mod sorters;
 
 use clap::Parser;
+use duplication_remover::DupilicationRemover;
 use functions_definitions::print_help;
 use grouper::Grouper;
 use json_parser::JsonParserError;
@@ -70,6 +72,11 @@ struct Cli {
     /// List of available functions
     #[arg(long, short, default_value_t = false)]
     available_functions: bool,
+
+    /// Avoid posting the same output more than once.
+    /// Be careful, the data is kept in memory.
+    #[arg(long, short)]
+    unique: bool,
 }
 
 #[derive(clap::ValueEnum, Debug, Clone, PartialEq)]
@@ -118,6 +125,9 @@ impl Cli {
         }
         for sorter in &self.sort_by {
             output = sorter.start(output);
+        }
+        if self.unique {
+            output = DupilicationRemover::new(output);
         }
         output.start()?;
         if self.files.is_empty() {
