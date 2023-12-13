@@ -3,6 +3,7 @@ use indexmap::IndexMap;
 use crate::{
     functions_definitions::{Arguments, Example, FunctionDefinitions, FunctionsGroup},
     json_value::JsonValue,
+    processor::Context,
     selection::Get,
 };
 
@@ -13,7 +14,7 @@ pub fn get_object_functions() -> FunctionsGroup {
             FunctionDefinitions::new("keys", 1, 1, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if let Some(JsonValue::Object(map)) = self.0.apply(value, 0) {
                             Some(
                                 JsonValue::Array(
@@ -40,7 +41,7 @@ pub fn get_object_functions() -> FunctionsGroup {
             FunctionDefinitions::new("values", 1, 1, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if let Some(JsonValue::Object(map)) = self.0.apply(value, 0) {
                             Some(JsonValue::Array(map.values().cloned().collect()))
                         } else {
@@ -64,7 +65,7 @@ pub fn get_object_functions() -> FunctionsGroup {
             FunctionDefinitions::new("sort_by_keys", 1, 1, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
                             Some(JsonValue::Object(map)) => {
                                 let mut map = map.clone();
@@ -95,7 +96,7 @@ pub fn get_object_functions() -> FunctionsGroup {
             FunctionDefinitions::new("sort_by_values", 1, 1, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
                             Some(JsonValue::Object(map)) => {
                                 let mut map = map.clone();
@@ -126,14 +127,14 @@ pub fn get_object_functions() -> FunctionsGroup {
             FunctionDefinitions::new("sort_by_values_by", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
                             Some(JsonValue::Object(map)) => {
                                 let mut map = map.clone();
                                 map.sort_by(|_, v1, _, v2| {
-                                    let v1 = Some(v1.clone());
+                                    let v1 = Context::new(v1.clone());
                                     let v1 = self.0.apply(&v1, 1);
-                                    let v2 = Some(v2.clone());
+                                    let v2 = Context::new(v2.clone());
                                     let v2 = self.0.apply(&v2, 1);
                                     v1.cmp(&v2)
                                 });
@@ -168,13 +169,14 @@ pub fn get_object_functions() -> FunctionsGroup {
             FunctionDefinitions::new("filter_keys", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if let Some(JsonValue::Object(map)) = self.0.apply(value, 0) {
                             Some(
                                 map
                                     .into_iter()
                                     .filter(|(k, _)| {
-                                        self.0.apply(&Some(k.into()), 1) == Some(true.into())
+                                        let k = Context::new(k.into());
+                                        self.0.apply(&k, 1) == Some(true.into())
                                     })
                                     .collect::<IndexMap<_, _>>()
                                     .into()
@@ -203,13 +205,14 @@ pub fn get_object_functions() -> FunctionsGroup {
             FunctionDefinitions::new("filter_values", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if let Some(JsonValue::Object(map)) = self.0.apply(value, 0) {
                             Some(
                                 map
                                     .into_iter()
                                     .filter(|(_, v)| {
-                                        self.0.apply(&Some(v.clone()), 1) == Some(true.into())
+                                        let v = Context::new(v.clone());
+                                        self.0.apply(&v, 1) == Some(true.into())
                                     })
                                     .collect::<IndexMap<_, _>>()
                                     .into()
@@ -238,13 +241,13 @@ pub fn get_object_functions() -> FunctionsGroup {
             FunctionDefinitions::new("map_values", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if let Some(JsonValue::Object(map)) = self.0.apply(value, 0) {
                             Some(
                                 map
                                     .into_iter()
                                     .filter_map(|(k, v)| {
-                                        let v = Some(v.clone());
+                                        let v = Context::new(v);
                                         self.0.apply(&v, 1).map(|v| (k, v))
                                     })
                                     .collect::<IndexMap<_, _>>()
@@ -274,13 +277,13 @@ pub fn get_object_functions() -> FunctionsGroup {
             FunctionDefinitions::new("map_keys", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if let Some(JsonValue::Object(map)) = self.0.apply(value, 0) {
                             Some(
                                 map
                                     .into_iter()
                                     .filter_map(|(k, v)| {
-                                        let k = Some(k.into());
+                                        let k = Context::new(k.into());
                                         match self.0.apply(&k, 1) {
                                             Some(JsonValue::String(str)) => Some((str, v)),
                                             _ => None,
@@ -319,7 +322,7 @@ pub fn get_object_functions() -> FunctionsGroup {
             FunctionDefinitions::new("put", 3, 3, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
                             let (
                                 Some(JsonValue::Object(map)),
@@ -379,7 +382,7 @@ pub fn get_object_functions() -> FunctionsGroup {
             FunctionDefinitions::new("insert-if-absent", 3, 3, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
                             let (
                                 Some(JsonValue::Object(map)),
@@ -443,7 +446,7 @@ pub fn get_object_functions() -> FunctionsGroup {
             FunctionDefinitions::new("replace-if-exists", 3, 3, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
                             let (
                                 Some(JsonValue::Object(map)),

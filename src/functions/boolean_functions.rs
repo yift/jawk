@@ -1,6 +1,7 @@
 use crate::{
     functions_definitions::{Arguments, Example, FunctionDefinitions, FunctionsGroup},
     json_value::JsonValue,
+    processor::Context,
     selection::Get,
 };
 
@@ -11,7 +12,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
             FunctionDefinitions::new("=", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
                             let (Some(val1), Some(val2)) = (
                                 self.0.apply(value, 0),
@@ -49,7 +50,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
             FunctionDefinitions::new("!=", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
                             let (Some(val1), Some(val2)) = (
                                 self.0.apply(value, 0),
@@ -88,7 +89,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
             FunctionDefinitions::new("<", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
                             let (Some(val1), Some(val2)) = (
                                 self.0.apply(value, 0),
@@ -122,7 +123,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
             FunctionDefinitions::new("<=", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
                             let (Some(val1), Some(val2)) = (
                                 self.0.apply(value, 0),
@@ -156,7 +157,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
             FunctionDefinitions::new(">=", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
                             let (Some(val1), Some(val2)) = (
                                 self.0.apply(value, 0),
@@ -190,7 +191,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
             FunctionDefinitions::new(">", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
                             let (Some(val1), Some(val2)) = (
                                 self.0.apply(value, 0),
@@ -224,7 +225,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
             FunctionDefinitions::new("and", 2, usize::MAX, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         for s in &self.0 {
                             match s.get(value) {
                                 Some(JsonValue::Boolean(true)) => {}
@@ -274,7 +275,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
             FunctionDefinitions::new("or", 2, usize::MAX, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         for s in &self.0 {
                             match s.get(value) {
                                 Some(JsonValue::Boolean(false)) => {}
@@ -329,7 +330,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
             FunctionDefinitions::new("xor", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
                             let (Some(JsonValue::Boolean(val1)), Some(JsonValue::Boolean(val2))) = (
                                 self.0.apply(value, 0),
@@ -379,7 +380,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
             FunctionDefinitions::new("not", 1, 1, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if let Some(JsonValue::Boolean(val1)) = self.0.apply(value, 0) {
                             let eq = !val1;
                             Some(eq.into())

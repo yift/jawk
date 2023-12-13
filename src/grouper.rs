@@ -1,4 +1,4 @@
-use std::{ops::Deref, str::FromStr};
+use std::str::FromStr;
 
 use indexmap::IndexMap;
 
@@ -52,9 +52,7 @@ impl Process for GrouperProcess {
         self.next.process(context)
     }
     fn process(&mut self, context: Context) -> crate::processor::Result {
-        if let (Some(key), Some(titles)) =
-            (self.group_by.name(context.input().deref()), &self.titles)
-        {
+        if let (Some(key), Some(titles)) = (self.group_by.name(&context), &self.titles) {
             if let Some(value) = context.build(titles) {
                 self.data.entry(key).or_default().push(value);
             }

@@ -12,6 +12,7 @@ use crate::reader::Reader;
 use std::io::Error as IoError;
 use std::io::Read;
 use std::num::ParseIntError;
+use std::ops::Deref;
 use std::str::FromStr;
 use std::string::FromUtf8Error;
 use std::sync::Arc;
@@ -19,7 +20,7 @@ use std::vec;
 use thiserror::Error;
 
 pub trait Get: Sync + Send {
-    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue>;
+    fn get(&self, value: &Context) -> Option<JsonValue>;
 }
 
 #[derive(Clone)]
@@ -97,9 +98,7 @@ impl Process for SelectionProcess {
         self.next.complete()
     }
     fn process(&mut self, context: Context) -> crate::processor::Result {
-        let input = context.input().as_ref().clone();
-
-        let result = self.getter.get(&Some(input));
+        let result = self.getter.get(&context);
         let new_context = context.with_result(result);
 
         self.next.process(new_context)
@@ -130,13 +129,11 @@ impl FromStr for UnnamedSelection {
     }
 }
 impl UnnamedSelection {
-    pub fn pass(&self, value: &JsonValue) -> bool {
-        let val = Some(value.clone());
-        self.getter.get(&val) == Some(JsonValue::Boolean(true))
+    pub fn pass(&self, context: &Context) -> bool {
+        self.getter.get(context) == Some(JsonValue::Boolean(true))
     }
-    pub fn name(&self, value: &JsonValue) -> Option<String> {
-        let val = Some(value.clone());
-        if let Some(JsonValue::String(str)) = self.getter.get(&val) {
+    pub fn name(&self, context: &Context) -> Option<String> {
+        if let Some(JsonValue::String(str)) = self.getter.get(context) {
             Some(str)
         } else {
             None
@@ -155,24 +152,25 @@ struct ConstGetters {
     value: JsonValue,
 }
 impl Get for ConstGetters {
-    fn get(&self, _: &Option<JsonValue>) -> Option<JsonValue> {
+    fn get(&self, _: &Context) -> Option<JsonValue> {
         let val = self.value.clone();
         Some(val)
     }
 }
 impl Get for Extract {
-    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+    fn get(&self, context: &Context) -> Option<JsonValue> {
+        let value = context.input();
         match self {
-            Extract::Root => value.clone(),
+            Extract::Root => Some(value.deref().clone()),
             Extract::Element(es) => {
-                let mut val = value.clone();
+                let mut val = Some(value.deref().clone());
                 for e in es {
                     match val {
                         None => {
                             break;
                         }
-                        Some(_) => {
-                            val = e.get(&val);
+                        Some(value) => {
+                            val = e.get(&Context::new(value));
                         }
                     }
                 }
@@ -182,13 +180,13 @@ impl Get for Extract {
     }
 }
 impl Get for SingleExtract {
-    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
-        match value {
-            Some(JsonValue::Array(list)) => match self {
+    fn get(&self, value: &Context) -> Option<JsonValue> {
+        match value.input().deref() {
+            JsonValue::Array(list) => match self {
                 SingleExtract::ByIndex(index) => list.get(*index).cloned(),
                 _ => None,
             },
-            Some(JsonValue::Object(map)) => match self {
+            JsonValue::Object(map) => match self {
                 SingleExtract::ByKey(key) => map.get(key).cloned(),
                 _ => None,
             },
@@ -360,7 +358,7 @@ impl Selection {
     }
 }
 impl Get for Selection {
-    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
-        self.getter.get(value)
+    fn get(&self, context: &Context) -> Option<JsonValue> {
+        self.getter.get(context)
     }
 }

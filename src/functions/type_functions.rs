@@ -1,6 +1,7 @@
 use crate::{
     functions_definitions::{Arguments, Example, FunctionDefinitions, FunctionsGroup},
     json_value::JsonValue,
+    processor::Context,
     selection::Get,
 };
 
@@ -10,7 +11,7 @@ pub fn get_type_functions() -> FunctionsGroup {
             FunctionDefinitions::new("array?", 1, 1, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
                             Some(JsonValue::Array(_)) => Some(true.into()),
                             _ => Some(false.into()),
@@ -32,7 +33,7 @@ pub fn get_type_functions() -> FunctionsGroup {
             FunctionDefinitions::new("object?", 1, 1, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
                             Some(JsonValue::Object(_)) => Some(true.into()),
                             _ => Some(false.into()),
@@ -59,7 +60,7 @@ pub fn get_type_functions() -> FunctionsGroup {
             FunctionDefinitions::new("null?", 1, 1, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
                             Some(JsonValue::Null) => Some(true.into()),
                             _ => Some(false.into()),
@@ -77,7 +78,7 @@ pub fn get_type_functions() -> FunctionsGroup {
             FunctionDefinitions::new("bool?", 1, 1, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
                             Some(JsonValue::Boolean(_)) => Some(true.into()),
                             _ => Some(false.into()),
@@ -99,7 +100,7 @@ pub fn get_type_functions() -> FunctionsGroup {
             FunctionDefinitions::new("number?", 1, 1, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
                             Some(JsonValue::Number(_)) => Some(true.into()),
                             _ => Some(false.into()),
@@ -120,7 +121,7 @@ pub fn get_type_functions() -> FunctionsGroup {
             FunctionDefinitions::new("string?", 1, 1, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
                             Some(JsonValue::String(_)) => Some(true.into()),
                             _ => Some(false.into()),
@@ -141,7 +142,7 @@ pub fn get_type_functions() -> FunctionsGroup {
             FunctionDefinitions::new("empty?", 1, 1, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
                             Some(_) => Some(false.into()),
                             _ => Some(true.into()),

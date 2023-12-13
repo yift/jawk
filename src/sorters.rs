@@ -1,6 +1,5 @@
 use std::collections::{BTreeMap, VecDeque};
 use std::io::Error as IoError;
-use std::ops::Deref;
 use std::{str::FromStr, sync::Arc};
 
 use thiserror::Error;
@@ -93,8 +92,7 @@ impl Process for SortProcess {
         self.next.start(titles_so_far)
     }
     fn process(&mut self, context: Context) -> crate::processor::Result {
-        let input = context.input().deref();
-        if let Some(key) = self.sort_by.get(&Some(input.clone())) {
+        if let Some(key) = self.sort_by.get(&context) {
             self.data.entry(key).or_default().push_back(context);
         }
         Ok(())

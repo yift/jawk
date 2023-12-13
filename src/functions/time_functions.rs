@@ -5,6 +5,7 @@ use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 use crate::{
     functions_definitions::{Arguments, Example, FunctionDefinitions, FunctionsGroup},
     json_value::JsonValue,
+    processor::Context,
     selection::Get,
 };
 
@@ -14,7 +15,7 @@ pub fn get_time_functions() -> FunctionsGroup {
             FunctionDefinitions::new("now", 0, 0, |_| {
                 struct Impl;
                 impl Get for Impl {
-                    fn get(&self, _: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, _: &Context) -> Option<JsonValue> {
                         match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
                             Ok(d) => Some(d.as_secs_f64().into()),
                             _ => None,
@@ -29,7 +30,7 @@ pub fn get_time_functions() -> FunctionsGroup {
             FunctionDefinitions::new("format_time", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if let Some(JsonValue::Number(time)) = self.0.apply(value, 0) {
                             let since_epoch: f64 = time.into();
                             let seconds = since_epoch as i64;
@@ -72,7 +73,7 @@ pub fn get_time_functions() -> FunctionsGroup {
             FunctionDefinitions::new("parse_time_with_zone", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if let (Some(JsonValue::String(str)), Some(JsonValue::String(format))) =
                             (self.0.apply(value, 0), self.0.apply(value, 1))
                         {
@@ -118,7 +119,7 @@ pub fn get_time_functions() -> FunctionsGroup {
             FunctionDefinitions::new("parse_time", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if let (Some(JsonValue::String(str)), Some(JsonValue::String(format))) =
                             (self.0.apply(value, 0), self.0.apply(value, 1))
                         {

@@ -1,6 +1,7 @@
 use crate::{
     functions_definitions::{Arguments, Example, FunctionDefinitions, FunctionsGroup},
     json_value::JsonValue,
+    processor::Context,
     selection::Get,
 };
 
@@ -11,7 +12,7 @@ pub fn get_number_functions() -> FunctionsGroup {
             FunctionDefinitions::new("+", 2, usize::MAX, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         let mut sum = 0.0;
                         for s in &self.0 {
                             if let Some(JsonValue::Number(num)) = s.get(value) {
@@ -49,7 +50,7 @@ pub fn get_number_functions() -> FunctionsGroup {
             FunctionDefinitions::new("-", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
                             let (Some(JsonValue::Number(num1)), Some(JsonValue::Number(num2))) = (
                                 self.0.apply(value, 0),
@@ -86,7 +87,7 @@ pub fn get_number_functions() -> FunctionsGroup {
             FunctionDefinitions::new("*", 2, usize::MAX, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         let mut sum = 1.0;
                         for s in &self.0 {
                             if let Some(JsonValue::Number(num)) = s.get(value) {
@@ -121,7 +122,7 @@ pub fn get_number_functions() -> FunctionsGroup {
             FunctionDefinitions::new("/", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
                             let (Some(JsonValue::Number(num1)), Some(JsonValue::Number(num2))) = (
                                 self.0.apply(value, 0),
@@ -160,7 +161,7 @@ pub fn get_number_functions() -> FunctionsGroup {
             FunctionDefinitions::new("%", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
                             let (Some(JsonValue::Number(num1)), Some(JsonValue::Number(num2))) = (
                                 self.0.apply(value, 0),

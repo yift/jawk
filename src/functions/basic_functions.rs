@@ -1,6 +1,9 @@
+use std::ops::Deref;
+
 use crate::{
     functions_definitions::{Arguments, Example, FunctionDefinitions, FunctionsGroup},
     json_value::JsonValue,
+    processor::Context,
     selection::Get,
 };
 
@@ -12,7 +15,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
             FunctionDefinitions::new("get", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
                             Some(JsonValue::Object(map)) => {
                                 if let Some(JsonValue::String(key)) = self.0.apply(value, 1) {
@@ -61,12 +64,17 @@ pub fn get_basic_functions() -> FunctionsGroup {
             FunctionDefinitions::new("|", 2, usize::MAX, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
-                        let mut value = value.clone();
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
+                        let mut value = value.input().deref().clone();
                         for e in &self.0 {
-                            value = e.get(&value);
+                            let context = Context::new(value);
+                            if let Some(val) = e.get(&context) {
+                                value = val;
+                            } else {
+                                return None;
+                            }
                         }
-                        value
+                        Some(value)
                     }
                 }
                 Box::new(Impl(args))
@@ -86,7 +94,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
             FunctionDefinitions::new("size", 1, 1, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
                             Some(JsonValue::Object(map)) => { Some(map.len().into()) }
                             Some(JsonValue::Array(list)) => { Some(list.len().into()) }
@@ -117,7 +125,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
             FunctionDefinitions::new("take", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if let Some(JsonValue::Number(n)) = self.0.apply(value, 1) {
                             if let Ok(size) = TryInto::<usize>::try_into(n) {
                                 match self.0.apply(value, 0) {
@@ -217,7 +225,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
             FunctionDefinitions::new("take_last", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if let Some(JsonValue::Number(n)) = self.0.apply(value, 1) {
                             if let Ok(size) = TryInto::<usize>::try_into(n) {
                                 match self.0.apply(value, 0) {
@@ -318,7 +326,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
             FunctionDefinitions::new("sub", 3, 3, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         let start = if let Some(JsonValue::Number(n)) = self.0.apply(value, 1) {
                             if let Ok(start) = TryInto::<usize>::try_into(n) {
                                 start
@@ -503,7 +511,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
             FunctionDefinitions::new("default", 1, usize::MAX, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         for e in &self.0 {
                             let val = e.get(value);
                             if val.is_some() {
@@ -540,7 +548,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
             FunctionDefinitions::new("?", 3, 3, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
                             Some(JsonValue::Boolean(true)) => self.0.apply(value, 1),
                             Some(JsonValue::Boolean(false)) => self.0.apply(value, 2),
@@ -593,7 +601,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
             FunctionDefinitions::new("stringify", 1, 1, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         self.0.apply(value, 0).map(|val| format!("{}", val).into())
                     }
                 }

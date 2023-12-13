@@ -5,6 +5,7 @@ use const_format::formatcp;
 use regex::Regex;
 
 use crate::json_parser::JsonParser;
+use crate::processor::Context;
 use crate::selection::Selection;
 use crate::{
     functions_definitions::{Arguments, Example, FunctionDefinitions, FunctionsGroup},
@@ -20,7 +21,7 @@ pub fn get_string_functions() -> FunctionsGroup {
             FunctionDefinitions::new("parse", 1, 1, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
                             Some(JsonValue::String(str)) => {
                                 let mut reader = from_string(&str);
@@ -53,7 +54,7 @@ pub fn get_string_functions() -> FunctionsGroup {
             FunctionDefinitions::new("parse_selection", 1, 1, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
                             Some(JsonValue::String(str)) => {
                                 match Selection::from_str(str.as_str()) {
@@ -76,7 +77,7 @@ pub fn get_string_functions() -> FunctionsGroup {
             FunctionDefinitions::new("env", 1, 1, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if let Some(JsonValue::String(str)) = self.0.apply(value, 0) {
                             if let Ok(value) = var(str) { Some(value.into()) } else { None }
                         } else {
@@ -99,7 +100,7 @@ pub fn get_string_functions() -> FunctionsGroup {
             FunctionDefinitions::new("concat", 2, usize::MAX, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         let mut all = String::new();
                         for s in &self.0 {
                             if let Some(JsonValue::String(str)) = s.get(value) {
@@ -130,7 +131,7 @@ pub fn get_string_functions() -> FunctionsGroup {
             FunctionDefinitions::new("split", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
                             let (Some(JsonValue::String(str)), Some(JsonValue::String(splitter))) =
                                 (self.0.apply(value, 0), self.0.apply(value, 1))
@@ -168,7 +169,7 @@ pub fn get_string_functions() -> FunctionsGroup {
             FunctionDefinitions::new("match", 2, 2, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
                             let (Some(JsonValue::String(str)), Some(JsonValue::String(regex))) = (
                                 self.0.apply(value, 0),
@@ -210,7 +211,7 @@ pub fn get_string_functions() -> FunctionsGroup {
             FunctionDefinitions::new("extract_regex_group", 3, 3, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Option<JsonValue>) -> Option<JsonValue> {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
                             let (
                                 Some(JsonValue::String(str)),

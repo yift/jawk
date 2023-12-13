@@ -9,6 +9,7 @@ use crate::functions::string_functions::get_string_functions;
 use crate::functions::time_functions::get_time_functions;
 use crate::functions::type_functions::get_type_functions;
 use crate::json_parser::JsonParser;
+use crate::processor::Context;
 use crate::{
     json_value::JsonValue,
     reader::from_string,
@@ -151,12 +152,12 @@ impl FunctionsGroup {
 }
 
 pub trait Arguments {
-    fn apply(&self, value: &Option<JsonValue>, index: usize) -> Option<JsonValue>;
+    fn apply(&self, value: &Context, index: usize) -> Option<JsonValue>;
 }
 impl Arguments for Vec<Box<dyn Get>> {
-    fn apply(&self, value: &Option<JsonValue>, index: usize) -> Option<JsonValue> {
+    fn apply(&self, context: &Context, index: usize) -> Option<JsonValue> {
         if let Some(arg) = self.get(index) {
-            arg.get(value)
+            arg.get(context)
         } else {
             None
         }
@@ -216,15 +217,15 @@ pub fn print_help() {
                     let mut reader = from_string(&input);
                     let json = reader.next_json_value().unwrap().unwrap();
                     println!("      for input: \"{}\"", json);
-                    Some(json)
+                    json
                 } else {
-                    None
+                    JsonValue::null()
                 };
                 let args = example.arguments.join(", ");
                 let run = format!("({} {})", name, args);
                 println!("        running: \"{}\"", run);
                 let selection = Selection::from_str(&run).unwrap();
-                match selection.get(&json) {
+                match selection.get(&Context::new(json)) {
                     None => println!("        will return nothing"),
                     Some(result) => println!("        will give: \"{}\"", result),
                 };
@@ -252,9 +253,9 @@ mod tests {
                         let input = input.to_string();
                         let mut reader = from_string(&input);
                         let json = reader.next_json_value()?;
-                        Some(json.unwrap())
+                        json.unwrap()
                     } else {
-                        None
+                        JsonValue::Null
                     };
                     let args = example.arguments.join(", ");
                     println!("\t\tRunning examplt: {}...", args);
@@ -265,7 +266,7 @@ mod tests {
                         let mut reader = from_string(&input);
                         reader.next_json_value().unwrap().unwrap()
                     });
-                    let result = selection.get(&json);
+                    let result = selection.get(&Context::new(json));
                     match &result {
                         Some(result) => println!("\t\t\tgot: {}", result),
                         None => println!("\t\t\tgot nothing"),
