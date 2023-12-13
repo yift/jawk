@@ -102,7 +102,7 @@ impl Hash for JsonValue {
                 state.write_i8(7);
                 for (key, value) in o {
                     key.hash(state);
-                    value.hash(state)
+                    value.hash(state);
                 }
             }
             JsonValue::Boolean(true) => {

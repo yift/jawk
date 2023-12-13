@@ -1,4 +1,5 @@
 mod duplication_remover;
+mod filter;
 mod functions;
 mod functions_definitions;
 mod grouper;
@@ -6,18 +7,19 @@ mod json_parser;
 mod json_value;
 mod output;
 mod printer;
+mod processor;
 mod reader;
 mod selection;
 mod sorters;
 
 use clap::Parser;
-use duplication_remover::DupilicationRemover;
+use duplication_remover::Uniquness;
+use filter::Filter;
 use functions_definitions::print_help;
 use grouper::Grouper;
 use json_parser::JsonParserError;
-use output::{get_output, Output};
-use selection::UnnamedSelection;
-use selection::{Get, Selection};
+use processor::{Context, Process, ProcessError, Titles};
+use selection::Selection;
 use sorters::Sorter;
 use std::fmt::Error as FormatError;
 use std::fs::read_dir;
@@ -25,7 +27,6 @@ use std::io::Error as IoEror;
 use std::io::Read;
 use std::path::PathBuf;
 use std::str::FromStr;
-use std::sync::Arc;
 use thiserror::Error;
 
 use crate::json_parser::JsonParser;
@@ -52,8 +53,8 @@ struct Cli {
     choose: Vec<Selection>,
 
     /// Filter the output
-    #[arg(long, short, value_parser = UnnamedSelection::from_str, visible_alias = "where")]
-    filter: Option<UnnamedSelection>,
+    #[arg(long, short, value_parser = Filter::from_str, visible_alias = "where")]
+    filter: Option<Filter>,
 
     /// Group the output by.
     /// Be careful, the grouping is done in memory
@@ -62,7 +63,14 @@ struct Cli {
 
     /// How to order the output
     /// Be careful, the sorting is done in memory
-    #[arg(long, short, value_parser = Sorter::from_str, visible_alias = "sortBy", visible_alias = "order-by", visible_alias = "orderBy")]
+    #[arg(
+        long,
+        short,
+        value_parser = Sorter::from_str,
+        visible_alias = "sortBy",
+        visible_alias = "order-by",
+        visible_alias = "orderBy"
+    )]
     sort_by: Vec<Sorter>,
 
     /// Row seperator
@@ -109,66 +117,57 @@ impl Cli {
             print_help();
             return Ok(());
         }
-        let rows_titles: Vec<_> = self
-            .choose
-            .iter()
-            .map(|select| select.name().clone())
-            .collect();
-        let rows_titles = Arc::new(rows_titles);
-        let mut output = get_output(
-            self.output_style,
-            rows_titles.clone(),
-            self.row_seperator.clone(),
-        );
+        let mut process = self.output_style.get_processor(self.row_seperator.clone());
         if let Some(group_by) = &self.group_by {
-            output = group_by.start(rows_titles.clone(), output);
+            process = group_by.create_process(process);
         }
         for sorter in &self.sort_by {
-            output = sorter.start(output);
+            process = sorter.create_processor(process);
         }
         if self.unique {
-            output = DupilicationRemover::new(output);
+            process = Uniquness::create_process(process);
         }
-        output.start()?;
+        for selection in &self.choose {
+            process = selection.create_process(process);
+        }
+        if let Some(filter) = &self.filter {
+            process = filter.create_process(process);
+        }
+        process.start(Titles::default())?;
+
         if self.files.is_empty() {
             let mut reader = from_std_in();
-            self.read_input(&mut reader, output.as_mut())?;
+            self.read_input(&mut reader, process.as_mut())?;
         } else {
             for file in self.files.clone() {
-                self.read_file(&file, output.as_mut())?;
+                self.read_file(&file, process.as_mut())?;
             }
         }
-        output.done()?;
+        process.complete()?;
         Ok(())
     }
 
-    fn read_file(&self, file: &PathBuf, output: &mut dyn Output) -> Result<()> {
+    fn read_file(&self, file: &PathBuf, process: &mut dyn Process) -> Result<()> {
         if !file.exists() {
             panic!("File {:?} not exists", file);
         }
         if file.is_dir() {
             for entry in read_dir(file)? {
                 let path = entry?.path();
-                self.read_file(&path, output)?;
+                self.read_file(&path, process)?;
             }
         } else {
             let mut reader = from_file(file)?;
-            self.read_input(&mut reader, output)?;
+            self.read_input(&mut reader, process)?;
         }
         Ok(())
     }
-    fn read_input<R: Read>(&self, reader: &mut Reader<R>, output: &mut dyn Output) -> Result<()> {
+    fn read_input<R: Read>(&self, reader: &mut Reader<R>, process: &mut dyn Process) -> Result<()> {
         loop {
             match reader.next_json_value() {
                 Ok(Some(val)) => {
-                    if let Some(filter) = &self.filter {
-                        if !filter.pass(&val) {
-                            continue;
-                        }
-                    }
-                    let value = Some(val.clone());
-                    let row = self.choose.iter().map(|v| v.get(&value)).collect();
-                    output.output_row(&val, row)?;
+                    let context = Context::new(val);
+                    process.process(context)?;
                 }
                 Ok(None) => {
                     return Ok(());
@@ -201,4 +200,6 @@ enum MainError {
     Format(#[from] FormatError),
     #[error("{0}")]
     Io(#[from] IoEror),
+    #[error("{0}")]
+    Processor(#[from] ProcessError),
 }

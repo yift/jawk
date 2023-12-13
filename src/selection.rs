@@ -3,12 +3,16 @@ use crate::functions_definitions::FunctionDefinitionsError;
 use crate::json_parser::JsonParser;
 use crate::json_parser::JsonParserError;
 use crate::json_value::JsonValue;
+use crate::processor::Context;
+use crate::processor::Process;
+use crate::processor::Titles;
 use crate::reader::from_string;
 use crate::reader::Location;
 use crate::reader::Reader;
 use std::io::Error as IoError;
 use std::io::Read;
 use std::num::ParseIntError;
+use std::ops::Deref;
 use std::str::FromStr;
 use std::string::FromUtf8Error;
 use std::sync::Arc;
@@ -77,6 +81,29 @@ impl FromStr for Selection {
         };
         let getter = Arc::new(extractors);
         Ok(Selection { name, getter })
+    }
+}
+
+struct SelectionProcess {
+    name: String,
+    getter: Arc<Box<dyn Get>>,
+    next: Box<dyn Process>,
+}
+impl Process for SelectionProcess {
+    fn start(&mut self, titles_so_far: Titles) -> crate::processor::Result {
+        let next_titles = titles_so_far.with_title(self.name.clone());
+        self.next.start(next_titles)
+    }
+    fn complete(&mut self) -> crate::processor::Result {
+        self.next.complete()
+    }
+    fn process(&mut self, context: Context) -> crate::processor::Result {
+        let input = context.input().as_ref().map(|val| val.deref().clone());
+
+        let result = self.getter.get(&input);
+        let new_context = context.with_result(result);
+
+        self.next.process(new_context)
     }
 }
 
@@ -324,8 +351,13 @@ fn read_function_name<R: Read>(reader: &mut Reader<R>) -> Result<String> {
 }
 
 impl Selection {
-    pub fn name(&self) -> &String {
-        &self.name
+    pub fn create_process(&self, next: Box<dyn Process>) -> Box<dyn Process> {
+        let process = SelectionProcess {
+            name: self.name.clone(),
+            getter: self.getter.clone(),
+            next,
+        };
+        Box::new(process)
     }
 }
 impl Get for Selection {

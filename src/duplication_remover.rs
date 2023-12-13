@@ -1,40 +1,30 @@
-use crate::{json_value::JsonValue, output::Output};
-use core::hash::Hash;
+use crate::processor::{Context, ContextKey, Process, Titles};
 use std::collections::HashSet;
 
-pub struct DupilicationRemover {
-    knwon_lines: HashSet<ValueOrRow>,
-    output: Box<dyn Output>,
+pub struct Uniquness {
+    knwon_lines: HashSet<ContextKey>,
+    next: Box<dyn Process>,
 }
 
-impl DupilicationRemover {
-    pub fn new(output: Box<dyn Output>) -> Box<Self> {
-        let knwon_lines = HashSet::new();
-        Box::new(DupilicationRemover {
-            knwon_lines,
-            output,
+impl Uniquness {
+    pub fn create_process(next: Box<dyn Process>) -> Box<dyn Process> {
+        Box::new(Uniquness {
+            knwon_lines: HashSet::new(),
+            next,
         })
     }
 }
-
-#[derive(Hash, PartialEq, Eq)]
-enum ValueOrRow {
-    Value(JsonValue),
-    Row(Vec<Option<JsonValue>>),
-}
-
-impl Output for DupilicationRemover {
-    fn without_titles(&self) -> Option<Box<dyn Output>> {
-        None
+impl Process for Uniquness {
+    fn complete(&mut self) -> crate::processor::Result {
+        self.knwon_lines.clear();
+        self.next.complete()
     }
-    fn output_row(&mut self, value: &JsonValue, row: Vec<Option<JsonValue>>) -> std::fmt::Result {
-        let to_keep = if row.is_empty() {
-            ValueOrRow::Value(value.clone())
-        } else {
-            ValueOrRow::Row(row.clone())
-        };
-        if self.knwon_lines.insert(to_keep) {
-            self.output.output_row(value, row)
+    fn start(&mut self, titles_so_far: Titles) -> crate::processor::Result {
+        self.next.start(titles_so_far)
+    }
+    fn process(&mut self, context: Context) -> crate::processor::Result {
+        if self.knwon_lines.insert(context.key()) {
+            self.next.process(context)
         } else {
             Ok(())
         }

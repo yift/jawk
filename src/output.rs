@@ -1,187 +1,165 @@
-use std::{fmt::Result, sync::Arc};
-
-use indexmap::IndexMap;
+use std::{
+    ops::Deref,
+    sync::{Arc, Mutex},
+};
 
 use crate::{
-    json_value::JsonValue,
     printer::{CsvPrinter, JsonPrinter, Print, RawTextPrinter},
+    processor::Result as ProcessResult,
+    processor::{Context, Process, ProcessError, Titles},
     OutputStyle,
 };
 
-pub trait Output: Sync + Send {
-    fn start(&mut self) -> Result {
-        Ok(())
-    }
-    fn output_row(&mut self, value: &JsonValue, row: Vec<Option<JsonValue>>) -> Result;
-    fn done(&mut self) -> Result {
-        Ok(())
-    }
-    fn without_titles(&self) -> Option<Box<dyn Output>>;
-}
-
-struct JsonOutput {
-    line_seperator: String,
-    rows_titles: Arc<Vec<String>>,
-    printer: Arc<JsonPrinter>,
-}
-
-pub fn get_value_or_values(
-    value: &JsonValue,
-    row: Vec<Option<JsonValue>>,
-    rows_titles: &Arc<Vec<String>>,
-) -> JsonValue {
-    if rows_titles.is_empty() {
-        value.clone()
-    } else {
-        let mut data = IndexMap::new();
-        rows_titles.iter().zip(row).for_each(|(title, value)| {
-            if let Some(value) = value {
-                data.insert(title.clone(), value);
-            }
-        });
-        data.into()
-    }
-}
-
-impl Output for JsonOutput {
-    fn output_row(&mut self, value: &JsonValue, row: Vec<Option<JsonValue>>) -> Result {
-        let data = get_value_or_values(value, row, &self.rows_titles);
-        let mut str = String::new();
-        self.printer.print(&mut str, &data)?;
-        print!("{}", str);
-        print!("{}", self.line_seperator);
-        Ok(())
-    }
-
-    fn without_titles(&self) -> Option<Box<dyn Output>> {
-        let printer = JsonOutput {
-            line_seperator: self.line_seperator.clone(),
-            printer: self.printer.clone(),
-            rows_titles: Arc::new(vec![]),
-        };
-        Some(Box::new(printer))
-    }
-}
-
-struct CsvOutut {
-    line_seperator: String,
-    printer: CsvPrinter,
-    rows_titles: Arc<Vec<String>>,
-}
-impl CsvOutut {
-    fn new(line_seperator: String, rows_titles: Arc<Vec<String>>) -> Self {
-        CsvOutut {
-            line_seperator,
-            printer: CsvPrinter {},
-            rows_titles: rows_titles.clone(),
+impl OutputStyle {
+    pub fn get_processor(&self, line_seperator: String) -> Box<dyn Process> {
+        let writer = Arc::new(Mutex::new(std::io::stdout()));
+        match self {
+            OutputStyle::ConsiseJson => Box::new(JsonProcess {
+                titles: Titles::default(),
+                line_seperator,
+                printer: JsonPrinter::new(false, false),
+                writer,
+            }),
+            OutputStyle::Json => Box::new(JsonProcess {
+                titles: Titles::default(),
+                line_seperator,
+                printer: JsonPrinter::new(true, false),
+                writer,
+            }),
+            OutputStyle::OneLineJson => Box::new(JsonProcess {
+                titles: Titles::default(),
+                line_seperator,
+                printer: JsonPrinter::new(false, true),
+                writer,
+            }),
+            OutputStyle::Csv => Box::new(CsvProcess {
+                length: 0,
+                line_seperator,
+                printer: CsvPrinter {},
+                writer,
+            }),
+            OutputStyle::Text => Box::new(RawProcess {
+                length: 0,
+                line_seperator,
+                printer: RawTextPrinter {},
+                writer,
+            }),
         }
     }
 }
-impl Output for CsvOutut {
-    fn output_row(&mut self, _: &JsonValue, row: Vec<Option<JsonValue>>) -> Result {
+
+struct CsvProcess {
+    length: usize,
+    line_seperator: String,
+    printer: CsvPrinter,
+    writer: Arc<Mutex<dyn std::io::Write + Send>>,
+}
+impl Process for CsvProcess {
+    fn start(&mut self, titles: Titles) -> ProcessResult {
+        self.length = titles.len();
+        if self.length == 0 {
+            return Err(ProcessError::InvalidInputError(
+                "CSV output must have selection and can no group by",
+            ));
+        }
+        let context = titles.as_context();
+        self.process(context)
+    }
+    fn complete(&mut self) -> ProcessResult {
+        Ok(())
+    }
+    fn process(&mut self, context: Context) -> ProcessResult {
         let mut string_row = Vec::new();
-        for value in row {
+        for index in 0..self.length {
+            let value = context.get(index);
             let str = if let Some(value) = value {
                 let mut str = String::new();
-                self.printer.print(&mut str, &value)?;
+                self.printer.print(&mut str, value)?;
                 str
             } else {
                 "".into()
             };
             string_row.push(str);
         }
-        print!("{}", string_row.join(", "));
-        print!("{}", self.line_seperator);
+        write!(
+            self.writer.lock().unwrap(),
+            "{}{}",
+            string_row.join(", "),
+            self.line_seperator
+        )?;
         Ok(())
-    }
-    fn start(&mut self) -> Result {
-        let row = self.rows_titles.iter().map(|f| Some(f.into())).collect();
-        self.output_row(&JsonValue::Null, row)
-    }
-    fn without_titles(&self) -> Option<Box<dyn Output>> {
-        panic!("CSV output must have headers")
     }
 }
 
-struct RawOutput {
+struct JsonProcess {
+    titles: Titles,
+    line_seperator: String,
+    printer: JsonPrinter,
+    writer: Arc<Mutex<dyn std::io::Write + Send>>,
+}
+
+impl Process for JsonProcess {
+    fn start(&mut self, titles: Titles) -> ProcessResult {
+        self.titles = titles;
+        Ok(())
+    }
+    fn complete(&mut self) -> ProcessResult {
+        Ok(())
+    }
+    fn process(&mut self, context: Context) -> ProcessResult {
+        if let Some(value) = context.build(&self.titles) {
+            let mut str = String::new();
+            self.printer.print(&mut str, &value)?;
+            write!(
+                self.writer.lock().unwrap(),
+                "{}{}",
+                str,
+                self.line_seperator
+            )?;
+        }
+        Ok(())
+    }
+}
+struct RawProcess {
+    length: usize,
     line_seperator: String,
     printer: RawTextPrinter,
-    rows_titles: Arc<Vec<String>>,
+    writer: Arc<Mutex<dyn std::io::Write + Send>>,
 }
-impl RawOutput {
-    fn new(line_seperator: String, rows_titles: Arc<Vec<String>>) -> Self {
-        RawOutput {
-            line_seperator,
-            printer: RawTextPrinter {},
-            rows_titles: rows_titles.clone(),
-        }
-    }
-}
-impl Output for RawOutput {
-    fn output_row(&mut self, value: &JsonValue, row: Vec<Option<JsonValue>>) -> Result {
-        if !row.is_empty() {
-            let mut string_row = Vec::new();
-            for value in row {
-                let str = if let Some(value) = value {
-                    let mut str = String::new();
-                    self.printer.print(&mut str, &value)?;
-                    str
-                } else {
-                    "".into()
-                };
-                string_row.push(str);
-            }
-            print!("{}", string_row.join("\t"));
-            print!("{}", self.line_seperator);
-        } else {
-            let mut str = String::new();
-            self.printer.print(&mut str, value)?;
-            print!("{}", str);
-            print!("{}", self.line_seperator);
-        }
+impl Process for RawProcess {
+    fn complete(&mut self) -> ProcessResult {
         Ok(())
     }
-    fn start(&mut self) -> Result {
-        let row = self.rows_titles.iter().map(|f| Some(f.into())).collect();
-        self.output_row(&JsonValue::Null, row)
-    }
-    fn without_titles(&self) -> Option<Box<dyn Output>> {
-        let output = RawOutput {
-            line_seperator: self.line_seperator.clone(),
-            printer: RawTextPrinter {},
-            rows_titles: Arc::new(vec![]),
-        };
-        Some(Box::new(output))
-    }
-}
-
-pub fn get_output(
-    style: OutputStyle,
-    rows_titles: Arc<Vec<String>>,
-    line_seperator: String,
-) -> Box<dyn Output> {
-    match style {
-        OutputStyle::ConsiseJson => Box::new(JsonOutput {
-            line_seperator,
-            printer: Arc::new(JsonPrinter::new(false, false)),
-            rows_titles,
-        }),
-        OutputStyle::Json => Box::new(JsonOutput {
-            line_seperator,
-            printer: Arc::new(JsonPrinter::new(true, false)),
-            rows_titles,
-        }),
-        OutputStyle::OneLineJson => Box::new(JsonOutput {
-            line_seperator,
-            printer: Arc::new(JsonPrinter::new(false, true)),
-            rows_titles,
-        }),
-        OutputStyle::Csv => {
-            if rows_titles.is_empty() {
-                panic!("CSV output must contain a selection")
-            }
-            Box::new(CsvOutut::new(line_seperator, rows_titles))
+    fn start(&mut self, titles: Titles) -> ProcessResult {
+        self.length = titles.len();
+        if self.length > 0 {
+            let context = titles.as_context();
+            self.process(context)
+        } else {
+            Ok(())
         }
-        OutputStyle::Text => Box::new(RawOutput::new(line_seperator, rows_titles)),
+    }
+    fn process(&mut self, context: Context) -> ProcessResult {
+        if self.length != 0 {
+            for index in 0..self.length {
+                let value = context.get(index);
+                if let Some(value) = value {
+                    let mut str = String::new();
+                    self.printer.print(&mut str, value)?;
+                    write!(self.writer.lock().unwrap(), "{}", str)?;
+                }
+            }
+            write!(self.writer.lock().unwrap(), "{}", self.line_seperator)?;
+        } else if let Some(value) = context.input() {
+            let mut str = String::new();
+            self.printer.print(&mut str, value.deref())?;
+            write!(
+                self.writer.lock().unwrap(),
+                "{}{}",
+                str,
+                self.line_seperator
+            )?;
+        }
+        Ok(())
     }
 }
