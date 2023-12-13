@@ -150,9 +150,9 @@ impl Process for RawProcess {
                 }
             }
             write!(self.writer.lock().unwrap(), "{}", self.line_seperator)?;
-        } else if let Some(value) = context.input() {
+        } else {
             let mut str = String::new();
-            self.printer.print(&mut str, value.deref())?;
+            self.printer.print(&mut str, context.input().deref())?;
             write!(
                 self.writer.lock().unwrap(),
                 "{}{}",

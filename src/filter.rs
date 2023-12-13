@@ -39,10 +39,8 @@ impl Process for ActiveFilter {
         self.next.start(titles_so_far)
     }
     fn process(&mut self, context: crate::processor::Context) -> crate::processor::Result {
-        if let Some(value) = context.input() {
-            if self.filter.pass(value) {
-                self.next.process(context)?;
-            }
+        if self.filter.pass(context.input()) {
+            self.next.process(context)?;
         }
         Ok(())
     }

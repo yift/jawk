@@ -12,7 +12,6 @@ use crate::reader::Reader;
 use std::io::Error as IoError;
 use std::io::Read;
 use std::num::ParseIntError;
-use std::ops::Deref;
 use std::str::FromStr;
 use std::string::FromUtf8Error;
 use std::sync::Arc;
@@ -98,9 +97,9 @@ impl Process for SelectionProcess {
         self.next.complete()
     }
     fn process(&mut self, context: Context) -> crate::processor::Result {
-        let input = context.input().as_ref().map(|val| val.deref().clone());
+        let input = context.input().as_ref().clone();
 
-        let result = self.getter.get(&input);
+        let result = self.getter.get(&Some(input));
         let new_context = context.with_result(result);
 
         self.next.process(new_context)

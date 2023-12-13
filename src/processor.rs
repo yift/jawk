@@ -47,18 +47,17 @@ impl Titles {
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ContextKey {
-    Empty,
     Value(JsonValue),
     Results(Vec<Option<JsonValue>>),
 }
 pub struct Context {
-    input: Option<Rc<JsonValue>>,
+    input: Rc<JsonValue>,
     results: Vec<Option<JsonValue>>,
 }
 impl Context {
     pub fn new(input: JsonValue) -> Self {
         Context {
-            input: Some(Rc::new(input)),
+            input: Rc::new(input),
             results: Vec::new(),
         }
     }
@@ -72,7 +71,7 @@ impl Context {
     }
     pub fn build(&self, titles: &Titles) -> Option<JsonValue> {
         if self.results.is_empty() {
-            self.input.as_ref().map(|f| f.as_ref().clone())
+            Some(self.input.as_ref().clone())
         } else {
             let mut mp = IndexMap::new();
             for (title, value) in titles.titles.iter().zip(&self.results) {
@@ -93,16 +92,13 @@ impl Context {
         }
     }
 
-    pub fn input(&self) -> &Option<Rc<JsonValue>> {
+    pub fn input(&self) -> &Rc<JsonValue> {
         &self.input
     }
 
     pub fn key(&self) -> ContextKey {
         if self.results.is_empty() {
-            match &self.input {
-                None => ContextKey::Empty,
-                Some(val) => ContextKey::Value(val.deref().clone()),
-            }
+            ContextKey::Value(self.input.deref().clone())
         } else {
             ContextKey::Results(self.results.clone())
         }

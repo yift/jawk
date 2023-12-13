@@ -93,8 +93,8 @@ impl Process for SortProcess {
         self.next.start(titles_so_far)
     }
     fn process(&mut self, context: Context) -> crate::processor::Result {
-        let input = context.input().as_ref().map(|val| val.deref().clone());
-        if let Some(key) = self.sort_by.get(&input) {
+        let input = context.input().deref();
+        if let Some(key) = self.sort_by.get(&Some(input.clone())) {
             self.data.entry(key).or_default().push_back(context);
         }
         Ok(())

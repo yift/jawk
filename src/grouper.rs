@@ -52,11 +52,11 @@ impl Process for GrouperProcess {
         self.next.process(context)
     }
     fn process(&mut self, context: Context) -> crate::processor::Result {
-        if let Some(val) = context.input() {
-            if let (Some(key), Some(titles)) = (self.group_by.name(val.deref()), &self.titles) {
-                if let Some(value) = context.build(titles) {
-                    self.data.entry(key).or_default().push(value);
-                }
+        if let (Some(key), Some(titles)) =
+            (self.group_by.name(context.input().deref()), &self.titles)
+        {
+            if let Some(value) = context.build(titles) {
+                self.data.entry(key).or_default().push(value);
             }
         }
         Ok(())
