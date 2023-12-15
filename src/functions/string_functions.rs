@@ -1,7 +1,6 @@
 use std::env::var;
 use std::str::FromStr;
 
-use const_format::formatcp;
 use regex::Regex;
 
 use crate::json_parser::JsonParser;
@@ -92,7 +91,7 @@ pub fn get_string_functions() -> FunctionsGroup {
                 .add_example(
                     Example::new()
                         .add_argument("\"PATH\"")
-                        .expected_output(formatcp!("\"{}\"", env!("PATH")))
+                        .expected_json(var("PATH").map(|f| f.into()).ok())
                 )
         )
 

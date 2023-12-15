@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::HashMap;
 
 use crate::functions::basic_functions::get_basic_functions;
@@ -35,7 +36,7 @@ pub struct Example {
     input: Option<&'static str>,
     pub arguments: Vec<&'static str>,
     // For test only
-    output: Option<&'static str>,
+    output: Option<Cow<'static, str>>,
 }
 
 impl Example {
@@ -55,7 +56,11 @@ impl Example {
         self
     }
     pub fn expected_output(mut self, output: &'static str) -> Self {
-        self.output = Some(output);
+        self.output = Some(output.into());
+        self
+    }
+    pub fn expected_json(mut self, output: Option<JsonValue>) -> Self {
+        self.output = output.map(|v| format!("{}", v).into());
         self
     }
 }
@@ -258,11 +263,11 @@ mod tests {
                         JsonValue::Null
                     };
                     let args = example.arguments.join(", ");
-                    println!("\t\tRunning examplt: {}...", args);
+                    println!("\t\tRunning example: {}...", args);
                     let run = format!("({} {})", func.name, args);
                     let selection = Selection::from_str(&run)?;
-                    let expected = example.output.map(|input| {
-                        let input = input.to_string();
+                    let expected = example.output.clone().map(|input| {
+                        let input = &input.to_string();
                         let mut reader = from_string(&input);
                         reader.next_json_value().unwrap().unwrap()
                     });
