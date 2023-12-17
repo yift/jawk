@@ -105,41 +105,6 @@ impl Process for SelectionProcess {
     }
 }
 
-#[derive(Clone)]
-pub struct UnnamedSelection {
-    getter: Arc<Box<dyn Get>>,
-}
-impl FromStr for UnnamedSelection {
-    type Err = SelectionParseError;
-    fn from_str(s: &str) -> Result<Self> {
-        let source = s.to_string();
-        let mut reader = from_string(&source);
-        reader.eat_whitespace()?;
-        let extractors = read_getter(&mut reader)?;
-        reader.eat_whitespace()?;
-        if let Some(ch) = reader.next()? {
-            return Err(SelectionParseError::ExpectingEof(
-                reader.where_am_i(),
-                ch as char,
-            ));
-        }
-        Ok(UnnamedSelection {
-            getter: Arc::new(extractors),
-        })
-    }
-}
-impl UnnamedSelection {
-    pub fn pass(&self, context: &Context) -> bool {
-        self.getter.get(context) == Some(JsonValue::Boolean(true))
-    }
-    pub fn name(&self, context: &Context) -> Option<String> {
-        if let Some(JsonValue::String(str)) = self.getter.get(context) {
-            Some(str)
-        } else {
-            None
-        }
-    }
-}
 enum SingleExtract {
     ByKey(String),
     ByIndex(usize),
