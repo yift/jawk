@@ -52,6 +52,12 @@ pub fn get_variable_functions() -> FunctionsGroup {
                         .add_argument("{\"key\": 100}")
                         .add_argument("(get (: \"foo\") \"key\" )")
                 )
+                .add_example(
+                    Example::new()
+                        .add_argument("\"foo\"")
+                        .add_argument("{\"key\": 100}")
+                        .add_argument("(get (: 12) \"key\" )")
+                )
         )
         .add_function(
             FunctionDefinitions::new(":", 1, 1, |args| {
@@ -68,7 +74,7 @@ pub fn get_variable_functions() -> FunctionsGroup {
                 Box::new(Impl(args))
             })
                 .add_alias("get_variable")
-                .add_description_line("Return the value of a named variable.")
+                .add_description_line("Return the value of a named variable. See set for examples.")
                 .add_example(Example::new().add_argument("\"foo\""))
         )
 }
