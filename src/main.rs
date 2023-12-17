@@ -1,4 +1,6 @@
+mod const_getter;
 mod duplication_remover;
+mod extractor;
 mod filter;
 mod functions;
 mod functions_definitions;
