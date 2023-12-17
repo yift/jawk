@@ -110,7 +110,7 @@ pub fn read_getter<R: Read>(reader: &mut Reader<R>) -> Result<Box<dyn Get>> {
     reader.eat_whitespace()?;
     match reader.peek()? {
         None => Err(SelectionParseError::UnexpectedEof),
-        Some(b'.') | Some(b'#') => parse_extractor(reader),
+        Some(b'.') | Some(b'#') | Some(b'^') => parse_extractor(reader),
         Some(b'(') => parse_function(reader),
         _ => match ConstGetters::parse(reader)? {
             None => Err(SelectionParseError::UnexpectedEof),

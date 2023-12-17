@@ -47,8 +47,8 @@ impl Example {
             output: None,
         }
     }
-    pub fn input(mut self, inpput: &'static str) -> Self {
-        self.input = Some(inpput);
+    pub fn input(mut self, input: &'static str) -> Self {
+        self.input = Some(input);
         self
     }
     pub fn add_argument(mut self, arg: &'static str) -> Self {
@@ -230,7 +230,7 @@ pub fn print_help() {
                 let run = format!("({} {})", name, args);
                 println!("        running: \"{}\"", run);
                 let selection = Selection::from_str(&run).unwrap();
-                match selection.get(&Context::new(json)) {
+                match selection.get(&Context::new_with_input(json)) {
                     None => println!("        will return nothing"),
                     Some(result) => println!("        will give: \"{}\"", result),
                 };
@@ -271,7 +271,7 @@ mod tests {
                         let mut reader = from_string(&input);
                         reader.next_json_value().unwrap().unwrap()
                     });
-                    let result = selection.get(&Context::new(json));
+                    let result = selection.get(&Context::new_with_input(json));
                     match &result {
                         Some(result) => println!("\t\t\tgot: {}", result),
                         None => println!("\t\t\tgot nothing"),

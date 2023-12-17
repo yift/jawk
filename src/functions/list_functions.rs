@@ -21,7 +21,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                                     .into_iter()
 
                                     .filter(|v| {
-                                        let v = Context::new(v.clone());
+                                        let v = value.with_inupt(v.clone());
                                         matches!(
                                             self.0.apply(&v, 1),
                                             Some(JsonValue::Boolean(true))
@@ -164,7 +164,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                             Some(JsonValue::Array(list)) => {
                                 let mut groups = IndexMap::new();
                                 for item in list {
-                                    let value = Context::new(item.clone());
+                                    let value = value.with_inupt(item.clone());
                                     let key = match self.0.apply(&value, 1) {
                                         Some(JsonValue::String(str)) => str,
                                         _ => {
@@ -213,6 +213,17 @@ pub fn get_list_functions() -> FunctionsGroup {
                             "{\"one\":[{\"g\":\"one\",\"v\":1},{\"g\":\"one\",\"v\":33}],\"two\":[{\"g\":\"two\",\"v\":2},{\"g\":\"two\",\"v\":false}]}"
                         )
                 )
+                .add_example(
+                    Example::new()
+                    .input("{\"key\": \"g\"}")
+                        .add_argument(
+                            "[{\"g\": \"one\", \"v\": 1}, {\"g\": \"two\", \"v\": 2}, {\"g\": \"one\", \"v\": 33}, {\"g\": \"two\", \"v\": false}]"
+                        )
+                        .add_argument("(get . ^.key)")
+                        .expected_output(
+                            "{\"one\":[{\"g\":\"one\",\"v\":1},{\"g\":\"one\",\"v\":33}],\"two\":[{\"g\":\"two\",\"v\":2},{\"g\":\"two\",\"v\":false}]}"
+                        )
+                )
                 .add_example(Example::new().add_argument("344").add_argument("(stringify (len .))"))
                 .add_example(
                     Example::new()
@@ -230,9 +241,9 @@ pub fn get_list_functions() -> FunctionsGroup {
                             Some(JsonValue::Array(list)) => {
                                 let mut list: Vec<JsonValue> = list.clone();
                                 list.sort_by(|v1, v2| {
-                                    let v1 = Context::new(v1.clone());
+                                    let v1 = value.with_inupt(v1.clone());
                                     let v1 = self.0.apply(&v1, 1);
-                                    let v2 = Context::new(v2.clone());
+                                    let v2 = value.with_inupt(v2.clone());
                                     let v2 = self.0.apply(&v2, 1);
                                     v1.cmp(&v2)
                                 });
@@ -471,7 +482,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                                 let list: Vec<_> = list
                                     .into_iter()
                                     .filter_map(|v| {
-                                        let v = Context::new(v);
+                                        let v = value.with_inupt(v);
                                         self.0.apply(&v, 1)
                                     })
                                     .collect();
@@ -513,6 +524,20 @@ pub fn get_list_functions() -> FunctionsGroup {
                         .expected_output("[3, 4, 6]")
                         .input("[1, 2, null, \"a\", 4]")
                 )
+                .add_example(
+                    Example::new()
+                    .input("{\"list\": [1, 2, 3, 4], \"add\": 12}")
+                        .add_argument(".list")
+                        .add_argument("(+ ^.add .)")
+                        .expected_output("[13, 14, 15, 16]")
+                )
+                .add_example(
+                    Example::new()
+                    .input("[[1, 2, 3, 4], [1, 2, 3], [6, 7]]")
+                        .add_argument(".")
+                        .add_argument("(map . (+ (len ^^.) .))")
+                        .expected_output("[[4, 5, 6, 7], [4, 5, 6], [9, 10]]")
+                )
                 .add_example(Example::new().add_argument("{}").add_argument("true"))
         )
         .add_function(
@@ -525,7 +550,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                                 let list: Vec<_> = list
                                     .into_iter()
                                     .filter_map(|v| {
-                                        let v = Context::new(v);
+                                        let v = value.with_inupt(v);
                                         if let Some(JsonValue::Array(list)) = self.0.apply(&v, 1) {
                                             Some(list)
                                         } else {

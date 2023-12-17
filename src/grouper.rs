@@ -60,7 +60,7 @@ impl Process for GrouperProcess {
         }
 
         let value = data.into();
-        let context = Context::new(value);
+        let context = Context::new_with_input(value);
         self.data.clear();
         self.next.process(context)
     }

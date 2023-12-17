@@ -1,4 +1,4 @@
-use std::{io::Read, ops::Deref};
+use std::io::Read;
 
 use crate::{
     json_value::JsonValue,
@@ -11,24 +11,27 @@ enum SingleExtract {
     ByKey(String),
     ByIndex(usize),
 }
-enum Extract {
+enum ExtractFromInput {
     Root,
     Element(Vec<SingleExtract>),
 }
-impl Get for Extract {
-    fn get(&self, context: &Context) -> Option<JsonValue> {
-        let value = context.input();
+struct Extract {
+    number_of_parents: usize,
+    extract_from_input: ExtractFromInput,
+}
+impl ExtractFromInput {
+    fn extract(&self, input: &JsonValue) -> Option<JsonValue> {
         match self {
-            Extract::Root => Some(value.deref().clone()),
-            Extract::Element(es) => {
-                let mut val = Some(value.deref().clone());
+            ExtractFromInput::Root => Some(input.clone()),
+            ExtractFromInput::Element(es) => {
+                let mut val = Some(input.clone());
                 for e in es {
                     match val {
                         None => {
                             break;
                         }
                         Some(value) => {
-                            val = e.get(&Context::new(value));
+                            val = e.extract(&value);
                         }
                     }
                 }
@@ -37,29 +40,41 @@ impl Get for Extract {
         }
     }
 }
-impl Get for SingleExtract {
+impl Get for Extract {
     fn get(&self, value: &Context) -> Option<JsonValue> {
-        match value.input().deref() {
-            JsonValue::Array(list) => match self {
-                SingleExtract::ByIndex(index) => list.get(*index).cloned(),
-                _ => None,
-            },
-            JsonValue::Object(map) => match self {
-                SingleExtract::ByKey(key) => map.get(key).cloned(),
-                _ => None,
-            },
-            _ => None,
-        }
+        let input = value.parent_input(self.number_of_parents);
+        self.extract_from_input.extract(input)
     }
 }
 pub fn parse_extractor<R: Read>(reader: &mut Reader<R>) -> Result<Box<dyn Get>> {
-    let extractor = Extract::parse(reader)?;
-    Ok(Box::new(extractor))
+    let number_of_parents = read_number_of_parents(reader)?;
+    let extract_from_input = ExtractFromInput::parse(reader)?;
+    Ok(Box::new(Extract {
+        extract_from_input,
+        number_of_parents,
+    }))
+}
+fn read_number_of_parents<R: Read>(reader: &mut Reader<R>) -> Result<usize> {
+    let mut size = 0;
+    loop {
+        match reader.peek()? {
+            Some(b'^') => {
+                size += 1;
+                reader.next()?;
+            }
+            _ => {
+                return Ok(size);
+            }
+        }
+    }
 }
 pub fn root() -> Box<dyn Get> {
-    Box::new(Extract::Root)
+    Box::new(Extract {
+        extract_from_input: ExtractFromInput::Root,
+        number_of_parents: 0,
+    })
 }
-impl Extract {
+impl ExtractFromInput {
     fn parse<R: Read>(reader: &mut Reader<R>) -> Result<Self> {
         let mut ext = vec![];
         loop {
@@ -68,7 +83,7 @@ impl Extract {
                     let key = Self::read_extract_key(reader)?;
                     if key.is_empty() {
                         if ext.is_empty() {
-                            return Ok(Extract::Root);
+                            return Ok(ExtractFromInput::Root);
                         } else {
                             return Err(SelectionParseError::MissingKey(reader.where_am_i()));
                         }
@@ -79,7 +94,7 @@ impl Extract {
                 Some(b'#') => match Self::read_extract_index(reader)? {
                     None => {
                         if ext.is_empty() {
-                            return Ok(Extract::Root);
+                            return Ok(ExtractFromInput::Root);
                         } else {
                             return Err(SelectionParseError::MissingKey(reader.where_am_i()));
                         }
@@ -90,7 +105,7 @@ impl Extract {
                     }
                 },
                 _ => {
-                    return Ok(Extract::Element(ext));
+                    return Ok(ExtractFromInput::Element(ext));
                 }
             }
         }
@@ -137,5 +152,20 @@ impl Extract {
         }
         let number = str.parse::<usize>()?;
         Ok(Some(number))
+    }
+}
+impl SingleExtract {
+    fn extract(&self, value: &JsonValue) -> Option<JsonValue> {
+        match value {
+            JsonValue::Array(list) => match self {
+                SingleExtract::ByIndex(index) => list.get(*index).cloned(),
+                _ => None,
+            },
+            JsonValue::Object(map) => match self {
+                SingleExtract::ByKey(key) => map.get(key).cloned(),
+                _ => None,
+            },
+            _ => None,
+        }
     }
 }

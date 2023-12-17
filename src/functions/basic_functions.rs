@@ -64,17 +64,16 @@ pub fn get_basic_functions() -> FunctionsGroup {
             FunctionDefinitions::new("|", 2, usize::MAX, |args| {
                 struct Impl(Vec<Box<dyn Get>>);
                 impl Get for Impl {
-                    fn get(&self, value: &Context) -> Option<JsonValue> {
-                        let mut value = value.input().deref().clone();
+                    fn get(&self, context: &Context) -> Option<JsonValue> {
+                        let mut context = Context::new_with_input(context.input().deref().clone());
                         for e in &self.0 {
-                            let context = Context::new(value);
                             if let Some(val) = e.get(&context) {
-                                value = val;
+                                context = context.with_inupt(val);
                             } else {
                                 return None;
                             }
                         }
-                        Some(value)
+                        Some(context.input().deref().clone())
                     }
                 }
                 Box::new(Impl(args))
@@ -87,6 +86,15 @@ pub fn get_basic_functions() -> FunctionsGroup {
                         .add_argument("(get . \"key-2\")")
                         .expected_output("100")
                         .input("{\"key\": [20, 40, 60, {\"key-2\": 100}]}")
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("(get . 1)")
+                        .input("[1, 2, 3, 4]")
+                        .add_argument("(+ . 4)")
+                        .add_argument("(+ . 10)")
+                        .add_argument("(+ . (len ^^^))")
+                        .expected_output("20")
                 )
         )
 

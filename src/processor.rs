@@ -37,7 +37,7 @@ impl Titles {
         self.titles.get(index)
     }
     pub fn as_context(&self) -> Context {
-        let mut headers = Context::new(JsonValue::null());
+        let mut headers = Context::new_empty();
         for str in &self.titles {
             let value = Some(str.into());
             headers = headers.with_result(value);
@@ -53,25 +53,48 @@ pub enum ContextKey {
 pub struct Context {
     input: Rc<JsonValue>,
     results: Vec<Option<JsonValue>>,
+    parent_inputs: Vec<Rc<JsonValue>>,
 }
 impl Context {
-    pub fn new(input: JsonValue) -> Self {
+    pub fn new_empty() -> Self {
+        Context {
+            input: Rc::new(JsonValue::Null),
+            results: Vec::new(),
+            parent_inputs: Vec::new(),
+        }
+    }
+    pub fn new_with_input(input: JsonValue) -> Self {
         Context {
             input: Rc::new(input),
             results: Vec::new(),
+            parent_inputs: Vec::new(),
+        }
+    }
+    pub fn with_inupt(&self, value: JsonValue) -> Self {
+        let input = Rc::new(value);
+        let mut parent_inputs = Vec::with_capacity(self.parent_inputs.len() + 1);
+        parent_inputs.push(self.input.clone());
+        for i in &self.parent_inputs {
+            parent_inputs.push(i.clone());
+        }
+        Context {
+            input,
+            results: Vec::new(),
+            parent_inputs,
         }
     }
     pub fn with_result(&self, result: Option<JsonValue>) -> Self {
         let mut results = self.results.clone();
         results.push(result);
         Context {
-            input: self.input.clone(),
+            input: self.input().clone(),
             results,
+            parent_inputs: Vec::new(),
         }
     }
     pub fn build(&self, titles: &Titles) -> Option<JsonValue> {
         if self.results.is_empty() {
-            Some(self.input.as_ref().clone())
+            Some(self.input().as_ref().clone())
         } else {
             let mut mp = IndexMap::new();
             for (title, value) in titles.titles.iter().zip(&self.results) {
@@ -96,9 +119,19 @@ impl Context {
         &self.input
     }
 
+    pub fn parent_input(&self, count: usize) -> &JsonValue {
+        if count == 0 {
+            self.input()
+        } else {
+            self.parent_inputs
+                .get(count - 1)
+                .unwrap_or_else(|| self.input())
+        }
+    }
+
     pub fn key(&self) -> ContextKey {
         if self.results.is_empty() {
-            ContextKey::Value(self.input.deref().clone())
+            ContextKey::Value(self.input().deref().clone())
         } else {
             ContextKey::Results(self.results.clone())
         }

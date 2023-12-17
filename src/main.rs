@@ -168,7 +168,7 @@ impl Cli {
         loop {
             match reader.next_json_value() {
                 Ok(Some(val)) => {
-                    let context = Context::new(val);
+                    let context = Context::new_with_input(val);
                     process.process(context)?;
                 }
                 Ok(None) => {

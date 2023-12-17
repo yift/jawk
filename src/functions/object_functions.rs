@@ -132,9 +132,9 @@ pub fn get_object_functions() -> FunctionsGroup {
                             Some(JsonValue::Object(map)) => {
                                 let mut map = map.clone();
                                 map.sort_by(|_, v1, _, v2| {
-                                    let v1 = Context::new(v1.clone());
+                                    let v1 = value.with_inupt(v1.clone());
                                     let v1 = self.0.apply(&v1, 1);
-                                    let v2 = Context::new(v2.clone());
+                                    let v2 = value.with_inupt(v2.clone());
                                     let v2 = self.0.apply(&v2, 1);
                                     v1.cmp(&v2)
                                 });
@@ -175,7 +175,7 @@ pub fn get_object_functions() -> FunctionsGroup {
                                 map
                                     .into_iter()
                                     .filter(|(k, _)| {
-                                        let k = Context::new(k.into());
+                                        let k = value.with_inupt(k.into());
                                         self.0.apply(&k, 1) == Some(true.into())
                                     })
                                     .collect::<IndexMap<_, _>>()
@@ -211,7 +211,7 @@ pub fn get_object_functions() -> FunctionsGroup {
                                 map
                                     .into_iter()
                                     .filter(|(_, v)| {
-                                        let v = Context::new(v.clone());
+                                        let v = value.with_inupt(v.clone());
                                         self.0.apply(&v, 1) == Some(true.into())
                                     })
                                     .collect::<IndexMap<_, _>>()
@@ -247,7 +247,7 @@ pub fn get_object_functions() -> FunctionsGroup {
                                 map
                                     .into_iter()
                                     .filter_map(|(k, v)| {
-                                        let v = Context::new(v);
+                                        let v = value.with_inupt(v);
                                         self.0.apply(&v, 1).map(|v| (k, v))
                                     })
                                     .collect::<IndexMap<_, _>>()
@@ -270,6 +270,13 @@ pub fn get_object_functions() -> FunctionsGroup {
                         .add_argument("(% . 2)")
                         .expected_output("{\"a\": 1, \"aa\": 0, \"aaa\": 1, \"aaaa\": 0}")
                 )
+                .add_example(
+                    Example::new()
+                    .input("3")
+                        .add_argument("{\"a\": 1, \"aa\": 2, \"aaa\": 3, \"aaaa\": 4}")
+                        .add_argument("(+ . ^.)")
+                        .expected_output("{\"a\": 4, \"aa\": 5, \"aaa\": 6, \"aaaa\": 7}")
+                )
                 .add_example(Example::new().add_argument("[1, 2, 4]").add_argument("false"))
         )
 
@@ -283,7 +290,7 @@ pub fn get_object_functions() -> FunctionsGroup {
                                 map
                                     .into_iter()
                                     .filter_map(|(k, v)| {
-                                        let k = Context::new(k.into());
+                                        let k = value.with_inupt(k.into());
                                         match self.0.apply(&k, 1) {
                                             Some(JsonValue::String(str)) => Some((str, v)),
                                             _ => None,
@@ -308,6 +315,13 @@ pub fn get_object_functions() -> FunctionsGroup {
                         .add_argument("{\"a\": 1, \"aa\": 2, \"aaa\": 3, \"aaaa\": 4}")
                         .add_argument("(concat \"_\" .)")
                         .expected_output("{\"_a\": 1, \"_aa\": 2, \"_aaa\": 3, \"_aaaa\": 4}")
+                )
+                .add_example(
+                    Example::new()
+                    .input("\"prefix-\"")
+                        .add_argument("{\"a\": 1, \"aa\": 2, \"aaa\": 3, \"aaaa\": 4}")
+                        .add_argument("(concat ^. .)")
+                        .expected_output("{\"prefix-a\": 1, \"prefix-aa\": 2, \"prefix-aaa\": 3, \"prefix-aaaa\": 4}")
                 )
                 .add_example(
                     Example::new()
