@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::ops::Deref;
 use std::rc::Rc;
 
@@ -54,6 +55,7 @@ pub struct Context {
     input: Rc<JsonValue>,
     results: Vec<Option<JsonValue>>,
     parent_inputs: Vec<Rc<JsonValue>>,
+    variables: Rc<HashMap<String, JsonValue>>,
 }
 impl Context {
     pub fn new_empty() -> Self {
@@ -61,6 +63,7 @@ impl Context {
             input: Rc::new(JsonValue::Null),
             results: Vec::new(),
             parent_inputs: Vec::new(),
+            variables: Rc::new(HashMap::new()),
         }
     }
     pub fn new_with_input(input: JsonValue) -> Self {
@@ -68,6 +71,7 @@ impl Context {
             input: Rc::new(input),
             results: Vec::new(),
             parent_inputs: Vec::new(),
+            variables: Rc::new(HashMap::new()),
         }
     }
     pub fn with_inupt(&self, value: JsonValue) -> Self {
@@ -81,6 +85,7 @@ impl Context {
             input,
             results: Vec::new(),
             parent_inputs,
+            variables: self.variables.clone(),
         }
     }
     pub fn with_result(&self, result: Option<JsonValue>) -> Self {
@@ -90,6 +95,28 @@ impl Context {
             input: self.input().clone(),
             results,
             parent_inputs: Vec::new(),
+            variables: self.variables.clone(),
+        }
+    }
+    pub fn with_variable(&self, name: String, value: JsonValue) -> Self {
+        let mut variables = HashMap::with_capacity(self.variables.len() + 1);
+        for (k, v) in self.variables.deref() {
+            variables.insert(k.clone(), v.clone());
+        }
+        variables.insert(name, value);
+        Context {
+            input: self.input().clone(),
+            results: self.results.clone(),
+            parent_inputs: Vec::new(),
+            variables: Rc::new(variables),
+        }
+    }
+    pub fn with_variables(&self, variables: &Rc<HashMap<String, JsonValue>>) -> Self {
+        Context {
+            input: self.input().clone(),
+            results: self.results.clone(),
+            parent_inputs: Vec::new(),
+            variables: variables.clone(),
         }
     }
     pub fn build(&self, titles: &Titles) -> Option<JsonValue> {
@@ -113,6 +140,10 @@ impl Context {
             None => &None,
             Some(t) => t,
         }
+    }
+
+    pub fn get_variable_value(&self, name: &String) -> Option<&JsonValue> {
+        self.variables.get(name)
     }
 
     pub fn input(&self) -> &Rc<JsonValue> {

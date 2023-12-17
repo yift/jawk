@@ -8,11 +8,13 @@ mod grouper;
 mod json_parser;
 mod json_value;
 mod output;
+mod pre_sets;
 mod printer;
 mod processor;
 mod reader;
 mod selection;
 mod sorters;
+mod variables_extractor;
 
 use clap::Parser;
 use duplication_remover::Uniquness;
@@ -20,6 +22,9 @@ use filter::Filter;
 use functions_definitions::print_help;
 use grouper::Grouper;
 use json_parser::JsonParserError;
+use pre_sets::PreSet;
+use pre_sets::PreSetCollection;
+use pre_sets::PreSetParserError;
 use processor::{Context, Process, ProcessError, Titles};
 use selection::Selection;
 use sorters::Sorter;
@@ -87,6 +92,11 @@ struct Cli {
     /// Be careful, the data is kept in memory.
     #[arg(long, short)]
     unique: bool,
+
+    /// Predefine variables.
+    /// Use key=value format. That is, `name="hello"`.
+    #[arg(long, value_parser = PreSet::from_str)]
+    set: Vec<PreSet>,
 }
 
 #[derive(clap::ValueEnum, Debug, Clone, PartialEq)]
@@ -135,6 +145,7 @@ impl Cli {
         if let Some(filter) = &self.filter {
             process = filter.create_process(process);
         }
+        process = self.set.create_process(process)?;
         process.start(Titles::default())?;
 
         if self.files.is_empty() {
@@ -204,4 +215,6 @@ enum MainError {
     Io(#[from] IoEror),
     #[error("{0}")]
     Processor(#[from] ProcessError),
+    #[error("{0}")]
+    PreSet(#[from] PreSetParserError),
 }

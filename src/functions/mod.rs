@@ -6,3 +6,4 @@ pub mod object_functions;
 pub mod string_functions;
 pub mod time_functions;
 pub mod type_functions;
+pub mod variables;

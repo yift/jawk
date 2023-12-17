@@ -9,6 +9,7 @@ use crate::functions::object_functions::get_object_functions;
 use crate::functions::string_functions::get_string_functions;
 use crate::functions::time_functions::get_time_functions;
 use crate::functions::type_functions::get_type_functions;
+use crate::functions::variables::get_variable_functions;
 use crate::json_parser::JsonParser;
 use crate::processor::Context;
 use crate::{
@@ -178,6 +179,7 @@ lazy_static! {
     static ref STRING_FUNCTIONS: FunctionsGroup = get_string_functions();
     static ref BOOLEAN_FUNCTIONS: FunctionsGroup = get_boolean_functions();
     static ref TIME_FUNCTIONS: FunctionsGroup = get_time_functions();
+    static ref VARIABLE_FUNCTIONS: FunctionsGroup = get_variable_functions();
     static ref ALL_FUNCTIONS: Vec<&'static FunctionsGroup> = vec![
         &BASIC_FUNCTIONS,
         &TYPES_FUNCTIONS,
@@ -187,6 +189,7 @@ lazy_static! {
         &STRING_FUNCTIONS,
         &BOOLEAN_FUNCTIONS,
         &TIME_FUNCTIONS,
+        &VARIABLE_FUNCTIONS,
     ];
     static ref NAME_TO_FUNCTION: HashMap<&'static str, &'static FunctionDefinitions> =
         ALL_FUNCTIONS
