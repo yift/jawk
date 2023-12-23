@@ -22,7 +22,7 @@ impl FromStr for Grouper {
         reader.eat_whitespace()?;
         let group_by = read_getter(&mut reader)?;
         reader.eat_whitespace()?;
-        if let Some(ch) = reader.next()? {
+        if let Some(ch) = reader.peek()? {
             return Err(SelectionParseError::ExpectingEof(
                 reader.where_am_i(),
                 ch as char,
@@ -82,5 +82,139 @@ impl GrouperProcess {
         } else {
             None
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::cell::RefCell;
+    use std::ops::Deref;
+    use std::rc::Rc;
+
+    use super::*;
+    use crate::json_value::JsonValue;
+    use crate::processor::{Context, Result, Titles};
+
+    #[test]
+    fn parse_parse_correctly() -> Result {
+        let str = "(.len)";
+        let grouper = Grouper::from_str(str).unwrap();
+
+        let input = Context::new_with_input("test".into());
+
+        assert_eq!(grouper.group_by.get(&input), Some((4).into()));
+
+        Ok(())
+    }
+    #[test]
+    fn parse_fail_if_too_long() -> Result {
+        let str = "(.len)3";
+        let err = Grouper::from_str(str).err().unwrap();
+
+        assert_eq!(matches!(err, SelectionParseError::ExpectingEof(_, _)), true);
+
+        Ok(())
+    }
+
+    #[test]
+    fn start_will_remove_the_title() -> Result {
+        struct Next(Rc<RefCell<bool>>);
+        let data = Rc::new(RefCell::new(false));
+        let titles = Titles::default()
+            .with_title("one".into())
+            .with_title("two".into());
+        impl Process for Next {
+            fn complete(&mut self) -> Result {
+                Ok(())
+            }
+            fn process(&mut self, _: Context) -> Result {
+                Ok(())
+            }
+            fn start(&mut self, titles: Titles) -> Result {
+                assert_eq!(titles.len(), 0);
+                *self.0.borrow_mut() = true;
+                Ok(())
+            }
+        }
+        {
+            let str = "(.len)";
+            let grouper = Grouper::from_str(str).unwrap();
+            let next = Box::new(Next(data.clone()));
+            let mut grouper = grouper.create_process(next);
+
+            grouper.start(titles)?;
+        }
+
+        let binding = data.borrow();
+        let data = binding.deref();
+        assert_eq!(data, &true);
+
+        Ok(())
+    }
+
+    #[test]
+    fn complete_will_complete_with_the_correct_values() -> Result {
+        struct Next {
+            data: Rc<RefCell<Option<JsonValue>>>,
+        }
+        let data = Rc::new(RefCell::new(Option::None));
+        impl Process for Next {
+            fn complete(&mut self) -> Result {
+                Ok(())
+            }
+            fn process(&mut self, context: Context) -> Result {
+                let input = context.input().deref().clone();
+                assert_eq!(self.data.borrow().is_none(), true);
+                *self.data.borrow_mut() = Some(input);
+                Ok(())
+            }
+            fn start(&mut self, _: Titles) -> Result {
+                Ok(())
+            }
+        }
+        {
+            let str = ".";
+            let grouper = Grouper::from_str(str).unwrap();
+            let next = Box::new(Next { data: data.clone() });
+            let titles = Titles::default()
+                .with_title("one".into())
+                .with_title("two".into());
+            let mut grouper = grouper.create_process(next);
+
+            grouper.start(titles)?;
+
+            let context = Context::new_with_input("one".into())
+                .with_result(Some((1).into()))
+                .with_result(Some((2).into()));
+            grouper.process(context)?;
+            let context = Context::new_with_input("one".into())
+                .with_result(Some((4).into()))
+                .with_result(Some((6).into()));
+            grouper.process(context)?;
+            let context = Context::new_with_input("three".into())
+                .with_result(Some((3).into()))
+                .with_result(Some((4).into()));
+            grouper.process(context)?;
+            let context = Context::new_with_input(1.into())
+                .with_result(Some((10).into()))
+                .with_result(Some((20).into()));
+            grouper.process(context)?;
+            let context = Context::new_with_input("one".into())
+                .with_result(Some((10).into()))
+                .with_result(Some((20).into()));
+            grouper.process(context)?;
+
+            grouper.complete()?;
+        }
+
+        let binding = data.borrow();
+        let data = binding.deref().clone().unwrap();
+        let data = format!("{}", data);
+        assert_eq!(
+            data,
+            r#"{"one": [{"one": 1, "two": 2}, {"one": 4, "two": 6}, {"one": 10, "two": 20}], "three": [{"one": 3, "two": 4}]}"#
+        );
+
+        Ok(())
     }
 }
