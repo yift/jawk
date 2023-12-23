@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, VecDeque};
 use std::io::Error as IoError;
-use std::{str::FromStr, sync::Arc};
+use std::rc::Rc;
+use std::str::FromStr;
 
 use thiserror::Error;
 
@@ -30,7 +31,7 @@ enum Direction {
 
 #[derive(Clone)]
 pub struct Sorter {
-    sort_by: Arc<Box<dyn Get>>,
+    sort_by: Rc<dyn Get>,
     direction: Direction,
 }
 
@@ -50,7 +51,6 @@ impl FromStr for Sorter {
                 return Err(SorterParserError::UnknownOrder(dir.to_string()));
             }
         };
-        let sort_by = Arc::new(sort_by);
 
         Ok(Sorter { sort_by, direction })
     }
@@ -83,7 +83,7 @@ type OrderedData = BTreeMap<JsonValue, VecDeque<Context>>;
 struct SortProcess {
     data: OrderedData,
     next: Box<dyn Process>,
-    sort_by: Arc<Box<dyn Get>>,
+    sort_by: Rc<dyn Get>,
     direction: Direction,
 }
 

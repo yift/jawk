@@ -15,19 +15,19 @@ use crate::variables_extractor::parse_get_variable;
 use std::io::Error as IoError;
 use std::io::Read;
 use std::num::ParseIntError;
+use std::rc::Rc;
 use std::str::FromStr;
 use std::string::FromUtf8Error;
-use std::sync::Arc;
 use std::vec;
 use thiserror::Error;
 
-pub trait Get: Sync + Send {
+pub trait Get {
     fn get(&self, value: &Context) -> Option<JsonValue>;
 }
 
 #[derive(Clone)]
 pub struct Selection {
-    getter: Arc<Box<dyn Get>>,
+    getter: Rc<dyn Get>,
     name: String,
 }
 
@@ -81,14 +81,14 @@ impl FromStr for Selection {
             }
             None => source.clone(),
         };
-        let getter = Arc::new(extractors);
+        let getter = extractors;
         Ok(Selection { name, getter })
     }
 }
 
 struct SelectionProcess {
     name: String,
-    getter: Arc<Box<dyn Get>>,
+    getter: Rc<dyn Get>,
     next: Box<dyn Process>,
 }
 impl Process for SelectionProcess {
@@ -107,7 +107,7 @@ impl Process for SelectionProcess {
     }
 }
 
-pub fn read_getter<R: Read>(reader: &mut Reader<R>) -> Result<Box<dyn Get>> {
+pub fn read_getter<R: Read>(reader: &mut Reader<R>) -> Result<Rc<dyn Get>> {
     reader.eat_whitespace()?;
     match reader.peek()? {
         None => Err(SelectionParseError::UnexpectedEof),
@@ -116,14 +116,14 @@ pub fn read_getter<R: Read>(reader: &mut Reader<R>) -> Result<Box<dyn Get>> {
         Some(b':') => parse_get_variable(reader),
         _ => match ConstGetters::parse(reader)? {
             None => Err(SelectionParseError::UnexpectedEof),
-            Some(getter) => Ok(Box::new(getter)),
+            Some(getter) => Ok(Rc::new(getter)),
         },
     }
 }
 
-fn parse_function<R: Read>(reader: &mut Reader<R>) -> Result<Box<dyn Get>> {
+fn parse_function<R: Read>(reader: &mut Reader<R>) -> Result<Rc<dyn Get>> {
     let mut name = read_function_name(reader)?;
-    let mut args: Vec<Box<dyn Get>> = Vec::new();
+    let mut args: Vec<Rc<dyn Get>> = Vec::new();
     if name.starts_with('.') {
         args.push(root());
         name = name[1..].to_string();

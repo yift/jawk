@@ -1,4 +1,4 @@
-use std::ops::Deref;
+use std::{ops::Deref, rc::Rc};
 
 use crate::{
     functions_definitions::{Arguments, Example, FunctionDefinitions, FunctionsGroup},
@@ -13,7 +13,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("get", 2, 2, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -39,7 +39,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_alias("[]")
                 .add_description_line("Get an item from an array by index or from a map by key.")
@@ -62,7 +62,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("|", 2, usize::MAX, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, context: &Context) -> Option<JsonValue> {
                         let mut context = Context::new_with_input(context.input().deref().clone());
@@ -76,7 +76,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
                         Some(context.input().deref().clone())
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line("Pipe the output of one function to the next function.")
                 .add_example(
@@ -100,7 +100,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("size", 1, 1, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -111,7 +111,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_alias("count")
                 .add_alias("length")
@@ -131,7 +131,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("take", 2, 2, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         if let Some(JsonValue::Number(n)) = self.0.apply(value, 1) {
@@ -185,7 +185,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_alias("take_first")
                 .add_description_line("Take the first N of element in an array, object of string")
@@ -231,7 +231,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("take_last", 2, 2, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         if let Some(JsonValue::Number(n)) = self.0.apply(value, 1) {
@@ -287,7 +287,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line("Take the last N of element in an array, object of string")
                 .add_example(
@@ -332,7 +332,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("sub", 3, 3, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         let start = if let Some(JsonValue::Number(n)) = self.0.apply(value, 1) {
@@ -396,7 +396,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line(
                     "If the first argument is a list, creates a new list that start from the second arguments and has the size of the third argument."
@@ -517,7 +517,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("default", 1, usize::MAX, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         for e in &self.0 {
@@ -529,7 +529,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
                         None
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_alias("defaults")
                 .add_alias("or_else")
@@ -554,7 +554,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("?", 3, 3, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -564,7 +564,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_alias("if")
                 .add_description_line(
@@ -607,13 +607,13 @@ pub fn get_basic_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("stringify", 1, 1, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         self.0.apply(value, 0).map(|val| format!("{}", val).into())
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line("Return the JSON represantation of the object.")
                 .add_example(Example::new().add_argument("true").expected_output("\"true\""))

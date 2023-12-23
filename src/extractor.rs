@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::{io::Read, rc::Rc};
 
 use crate::{
     json_value::JsonValue,
@@ -46,10 +46,10 @@ impl Get for Extract {
         self.extract_from_input.extract(input)
     }
 }
-pub fn parse_extractor<R: Read>(reader: &mut Reader<R>) -> Result<Box<dyn Get>> {
+pub fn parse_extractor<R: Read>(reader: &mut Reader<R>) -> Result<Rc<dyn Get>> {
     let number_of_parents = read_number_of_parents(reader)?;
     let extract_from_input = ExtractFromInput::parse(reader)?;
-    Ok(Box::new(Extract {
+    Ok(Rc::new(Extract {
         extract_from_input,
         number_of_parents,
     }))
@@ -68,8 +68,8 @@ fn read_number_of_parents<R: Read>(reader: &mut Reader<R>) -> Result<usize> {
         }
     }
 }
-pub fn root() -> Box<dyn Get> {
-    Box::new(Extract {
+pub fn root() -> Rc<dyn Get> {
+    Rc::new(Extract {
         extract_from_input: ExtractFromInput::Root,
         number_of_parents: 0,
     })

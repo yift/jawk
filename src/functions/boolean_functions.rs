@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::{
     functions_definitions::{Arguments, Example, FunctionDefinitions, FunctionsGroup},
     json_value::JsonValue,
@@ -10,7 +12,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("=", 2, 2, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
@@ -26,7 +28,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line("Compare two value and return true if both are equals.")
                 .add_example(
@@ -48,7 +50,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("!=", 2, 2, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
@@ -64,7 +66,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_alias("<>")
                 .add_description_line("Compare two value and return true if both are not equals.")
@@ -87,7 +89,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("<", 2, 2, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
@@ -103,7 +105,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line(
                     "Compare two value and return true if the first is smaller than the second."
@@ -121,7 +123,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("<=", 2, 2, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
@@ -137,7 +139,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line(
                     "Compare two value and return true if the first is smaller or eqauls than the second."
@@ -155,7 +157,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new(">=", 2, 2, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
@@ -171,7 +173,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line(
                     "Compare two value and return true if the first is greater or eqauls than the second."
@@ -189,7 +191,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new(">", 2, 2, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
@@ -205,7 +207,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line(
                     "Compare two value and return true if the first is greater than the second."
@@ -223,7 +225,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("and", 2, usize::MAX, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         for s in &self.0 {
@@ -240,7 +242,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
                         Some(true.into())
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_alias("&&")
                 .add_description_line(
@@ -273,7 +275,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("or", 2, usize::MAX, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         for s in &self.0 {
@@ -290,7 +292,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
                         Some(false.into())
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_alias("||")
                 .add_description_line(
@@ -328,7 +330,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("xor", 2, 2, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
@@ -344,7 +346,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_alias("^")
                 .add_description_line("Return true if one, and only one, of the argument is true.")
@@ -378,7 +380,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("not", 1, 1, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         if let Some(JsonValue::Boolean(val1)) = self.0.apply(value, 0) {
@@ -389,7 +391,7 @@ pub fn get_boolean_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_alias("!")
                 .add_description_line(

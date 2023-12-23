@@ -2,7 +2,7 @@ use crate::{
     json_parser::JsonParserError, json_value::JsonValue, processor::Context, reader::Reader,
     selection::Get, selection::Result,
 };
-use std::io::Read;
+use std::{io::Read, rc::Rc};
 
 struct VariableExtructor {
     name: String,
@@ -14,7 +14,7 @@ impl Get for VariableExtructor {
     }
 }
 
-pub fn parse_get_variable<R: Read>(reader: &mut Reader<R>) -> Result<Box<dyn Get>> {
+pub fn parse_get_variable<R: Read>(reader: &mut Reader<R>) -> Result<Rc<dyn Get>> {
     match reader.peek()? {
         None => {
             return Err(JsonParserError::UnexpectedEof(reader.where_am_i()).into());
@@ -42,5 +42,5 @@ pub fn parse_get_variable<R: Read>(reader: &mut Reader<R>) -> Result<Box<dyn Get
         return Err(JsonParserError::UnexpectedEof(reader.where_am_i()).into());
     }
     let name = String::from_utf8(name)?;
-    Ok(Box::new(VariableExtructor { name }))
+    Ok(Rc::new(VariableExtructor { name }))
 }

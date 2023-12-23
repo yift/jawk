@@ -1,4 +1,4 @@
-use std::{str::FromStr, sync::Arc};
+use std::{rc::Rc, str::FromStr};
 
 use crate::{
     json_value::JsonValue,
@@ -9,7 +9,7 @@ use crate::{
 
 #[derive(Clone)]
 pub struct Filter {
-    filter: Arc<Box<dyn Get>>,
+    filter: Rc<dyn Get>,
 }
 
 impl FromStr for Filter {
@@ -26,9 +26,7 @@ impl FromStr for Filter {
                 ch as char,
             ));
         }
-        Ok(Filter {
-            filter: Arc::new(filter),
-        })
+        Ok(Filter { filter })
     }
 }
 
@@ -41,7 +39,7 @@ impl Filter {
     }
 }
 struct ActiveFilter {
-    filter: Arc<Box<dyn Get>>,
+    filter: Rc<dyn Get>,
     next: Box<dyn Process>,
 }
 

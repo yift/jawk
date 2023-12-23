@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::{
     functions_definitions::{Arguments, Example, FunctionDefinitions, FunctionsGroup},
     json_value::JsonValue,
@@ -10,7 +12,7 @@ pub fn get_number_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("+", 2, usize::MAX, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         let mut sum = 0.0;
@@ -25,7 +27,7 @@ pub fn get_number_functions() -> FunctionsGroup {
                         Some(sum.into())
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_alias("add")
                 .add_alias("plus")
@@ -48,7 +50,7 @@ pub fn get_number_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("-", 2, 2, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
@@ -65,7 +67,7 @@ pub fn get_number_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_alias("take_away")
                 .add_alias("minus")
@@ -85,7 +87,7 @@ pub fn get_number_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("*", 2, usize::MAX, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         let mut sum = 1.0;
@@ -100,7 +102,7 @@ pub fn get_number_functions() -> FunctionsGroup {
                         Some(sum.into())
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_alias("times")
                 .add_alias("multiple")
@@ -120,7 +122,7 @@ pub fn get_number_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("/", 2, 2, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
@@ -141,7 +143,7 @@ pub fn get_number_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_alias("divide")
                 .add_description_line(
@@ -159,7 +161,7 @@ pub fn get_number_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("%", 2, 2, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         if
@@ -180,7 +182,7 @@ pub fn get_number_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_alias("mod")
                 .add_alias("modulu")

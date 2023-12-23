@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::{
     functions_definitions::{Arguments, Example, FunctionDefinitions, FunctionsGroup},
     json_value::JsonValue,
@@ -10,7 +12,7 @@ pub fn get_variable_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("set", 3, 3, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, context: &Context) -> Option<JsonValue> {
                         if
@@ -26,7 +28,7 @@ pub fn get_variable_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line(
                     "Set a variable. The first argument should be the variable name, the second one should be the value and the third"
@@ -61,7 +63,7 @@ pub fn get_variable_functions() -> FunctionsGroup {
         )
         .add_function(
             FunctionDefinitions::new(":", 1, 1, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, context: &Context) -> Option<JsonValue> {
                         if let Some(JsonValue::String(name)) = self.0.apply(context, 0) {
@@ -71,7 +73,7 @@ pub fn get_variable_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_alias("get_variable")
                 .add_description_line("Return the value of a named variable. See set for examples.")

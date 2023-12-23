@@ -27,7 +27,9 @@ use pre_sets::PreSetCollection;
 use pre_sets::PreSetParserError;
 use processor::{Context, Process, ProcessError, Titles};
 use selection::Selection;
+use selection::SelectionParseError;
 use sorters::Sorter;
+use sorters::SorterParserError;
 use std::fmt::Error as FormatError;
 use std::fs::read_dir;
 use std::io::Error as IoEror;
@@ -56,29 +58,28 @@ struct Cli {
     output_style: OutputStyle,
 
     /// What to output
-    #[arg(long, short, value_parser = Selection::from_str, visible_alias = "select")]
-    choose: Vec<Selection>,
+    #[arg(long, short, visible_alias = "select")]
+    choose: Vec<String>,
 
     /// Filter the output
-    #[arg(long, short, value_parser = Filter::from_str, visible_alias = "where")]
-    filter: Option<Filter>,
+    #[arg(long, short, visible_alias = "where")]
+    filter: Option<String>,
 
     /// Group the output by.
     /// Be careful, the grouping is done in memory
-    #[arg(long, short, value_parser = Grouper::from_str, visible_alias = "groupBy")]
-    group_by: Option<Grouper>,
+    #[arg(long, short, visible_alias = "groupBy")]
+    group_by: Option<String>,
 
     /// How to order the output
     /// Be careful, the sorting is done in memory
     #[arg(
         long,
         short,
-        value_parser = Sorter::from_str,
         visible_alias = "sortBy",
         visible_alias = "order-by",
         visible_alias = "orderBy"
     )]
-    sort_by: Vec<Sorter>,
+    sort_by: Vec<String>,
 
     /// Row seperator
     #[arg(long, short, default_value = "\n")]
@@ -131,18 +132,22 @@ impl Cli {
         }
         let mut process = self.output_style.get_processor(self.row_seperator.clone());
         if let Some(group_by) = &self.group_by {
+            let group_by = Grouper::from_str(group_by)?;
             process = group_by.create_process(process);
         }
         for sorter in &self.sort_by {
+            let sorter = Sorter::from_str(sorter)?;
             process = sorter.create_processor(process);
         }
         if self.unique {
             process = Uniquness::create_process(process);
         }
         for selection in &self.choose {
+            let selection = Selection::from_str(selection)?;
             process = selection.create_process(process);
         }
         if let Some(filter) = &self.filter {
+            let filter = Filter::from_str(filter)?;
             process = filter.create_process(process);
         }
         process = self.set.create_process(process)?;
@@ -211,6 +216,10 @@ enum MainError {
     Json(#[from] JsonParserError),
     #[error("{0}")]
     Format(#[from] FormatError),
+    #[error("{0}")]
+    SelectionParse(#[from] SelectionParseError),
+    #[error("{0}")]
+    SorterParse(#[from] SorterParserError),
     #[error("{0}")]
     Io(#[from] IoEror),
     #[error("{0}")]

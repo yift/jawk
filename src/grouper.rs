@@ -1,4 +1,4 @@
-use std::{str::FromStr, sync::Arc};
+use std::{rc::Rc, str::FromStr};
 
 use indexmap::IndexMap;
 
@@ -11,7 +11,7 @@ use crate::{
 
 #[derive(Clone)]
 pub struct Grouper {
-    group_by: Arc<Box<dyn Get>>,
+    group_by: Rc<dyn Get>,
 }
 
 impl FromStr for Grouper {
@@ -28,9 +28,7 @@ impl FromStr for Grouper {
                 ch as char,
             ));
         }
-        Ok(Grouper {
-            group_by: Arc::new(group_by),
-        })
+        Ok(Grouper { group_by })
     }
 }
 
@@ -48,7 +46,7 @@ impl Grouper {
 struct GrouperProcess {
     data: IndexMap<String, Vec<JsonValue>>,
     next: Box<dyn Process>,
-    group_by: Arc<Box<dyn Get>>,
+    group_by: Rc<dyn Get>,
     titles: Option<Titles>,
 }
 impl Process for GrouperProcess {

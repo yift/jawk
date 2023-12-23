@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use indexmap::IndexMap;
 
 use crate::{
@@ -12,7 +14,7 @@ pub fn get_list_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("filter", 2, 2, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -34,7 +36,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line("Filter a list.")
                 .add_description_line(
@@ -70,7 +72,7 @@ pub fn get_list_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("sort", 1, 1, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -84,7 +86,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_alias("order")
                 .add_description_line("Sort a list.")
@@ -113,7 +115,7 @@ pub fn get_list_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("sort-unique", 1, 1, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -128,7 +130,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_alias("order-unique")
                 .add_description_line("Sort a list and remove duplicates.")
@@ -157,7 +159,7 @@ pub fn get_list_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("group_by", 2, 2, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -189,7 +191,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line("Group items by function.")
                 .add_description_line(
@@ -234,7 +236,7 @@ pub fn get_list_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("sort_by", 2, 2, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -254,7 +256,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_alias("order_by")
                 .add_description_line("Filter a list.")
@@ -272,7 +274,7 @@ pub fn get_list_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("sum", 1, 1, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -295,7 +297,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line("Sum all the items in the list.")
                 .add_description_line("If list have non numeric items, it will return nuthing.")
@@ -306,7 +308,7 @@ pub fn get_list_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("any", 1, 1, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -322,7 +324,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line("Check if any of item in a list is ture.")
                 .add_example(
@@ -337,7 +339,7 @@ pub fn get_list_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("all", 1, 1, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -356,7 +358,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line("Check if all the items in a list are true.")
                 .add_description_line("Will return false if the list is empty .")
@@ -382,7 +384,7 @@ pub fn get_list_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("join", 1, 2, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         let sepetator = self.0
@@ -412,7 +414,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line("Join all the items in the list into a String.")
                 .add_description_line("If list have non string items, it will return nuthing.")
@@ -435,7 +437,7 @@ pub fn get_list_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("first", 1, 1, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -444,7 +446,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line("The first item in a list.")
                 .add_example(Example::new().add_argument("[1, 5, 1.1]").expected_output("1"))
@@ -455,7 +457,7 @@ pub fn get_list_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("last", 1, 1, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -464,7 +466,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line("The last item in a list.")
                 .add_example(Example::new().add_argument("[1, 5, 1.1]").expected_output("1.1"))
@@ -474,7 +476,7 @@ pub fn get_list_functions() -> FunctionsGroup {
         )
         .add_function(
             FunctionDefinitions::new("map", 2, 2, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -493,7 +495,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line("Map a list into a new list using a function.")
                 .add_description_line(
@@ -542,7 +544,7 @@ pub fn get_list_functions() -> FunctionsGroup {
         )
         .add_function(
             FunctionDefinitions::new("flat_map", 2, 2, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -566,7 +568,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line("Flat map a list into a new list using a function.")
                 .add_description_line(
@@ -588,7 +590,7 @@ pub fn get_list_functions() -> FunctionsGroup {
         )
         .add_function(
             FunctionDefinitions::new("range", 1, 1, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -607,7 +609,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line("Create a new list with items from 0 to the second argument.")
                 .add_description_line(
@@ -621,7 +623,7 @@ pub fn get_list_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("zip", 2, usize::MAX, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         let mut zipped_list = vec![];
@@ -649,7 +651,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                         Some(zipped_list.into())
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line("Zip a few list into a new list.")
                 .add_description_line("All the arguments must be lists.")
@@ -683,7 +685,7 @@ pub fn get_list_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("cross", 2, usize::MAX, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         let mut joined_list = vec![IndexMap::new()];
@@ -714,7 +716,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                         Some(joined_list.into())
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line("Join a few list (i.e. Cartesian product) into a new list.")
                 .add_description_line("All the arguments must be lists.")
@@ -741,7 +743,7 @@ pub fn get_list_functions() -> FunctionsGroup {
 
         .add_function(
             FunctionDefinitions::new("push", 2, usize::MAX, |args| {
-                struct Impl(Vec<Box<dyn Get>>);
+                struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         match self.0.apply(value, 0) {
@@ -758,7 +760,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                         }
                     }
                 }
-                Box::new(Impl(args))
+                Rc::new(Impl(args))
             })
                 .add_description_line("Add items to a list.")
                 .add_description_line(

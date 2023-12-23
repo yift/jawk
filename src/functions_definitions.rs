@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 use crate::functions::basic_functions::get_basic_functions;
 use crate::functions::boolean_functions::get_boolean_functions;
@@ -21,7 +22,7 @@ use lazy_static::lazy_static;
 use std::str::FromStr;
 use thiserror::Error;
 
-type Factory = fn(args: Vec<Box<dyn Get>>) -> Box<dyn Get>;
+type Factory = fn(args: Vec<Rc<dyn Get>>) -> Rc<dyn Get>;
 
 #[derive(Debug, Error)]
 pub enum FunctionDefinitionsError {
@@ -117,10 +118,7 @@ impl FunctionDefinitions {
         }
         vec
     }
-    pub fn create(
-        &self,
-        args: Vec<Box<dyn Get>>,
-    ) -> Result<Box<dyn Get>, FunctionDefinitionsError> {
+    pub fn create(&self, args: Vec<Rc<dyn Get>>) -> Result<Rc<dyn Get>, FunctionDefinitionsError> {
         if args.len() < self.min_args_count {
             return Err(FunctionDefinitionsError::MissingArgument(
                 self.name(),
@@ -160,7 +158,7 @@ impl FunctionsGroup {
 pub trait Arguments {
     fn apply(&self, value: &Context, index: usize) -> Option<JsonValue>;
 }
-impl Arguments for Vec<Box<dyn Get>> {
+impl Arguments for Vec<Rc<dyn Get>> {
     fn apply(&self, context: &Context, index: usize) -> Option<JsonValue> {
         if let Some(arg) = self.get(index) {
             arg.get(context)
