@@ -8,6 +8,7 @@ use std::io::Error as IoEror;
 use thiserror::Error;
 
 use crate::json_value::JsonValue;
+use crate::selection::Get;
 
 #[derive(Debug, Error)]
 pub enum ProcessError {
@@ -56,6 +57,7 @@ pub struct Context {
     results: Vec<Option<JsonValue>>,
     parent_inputs: Vec<Rc<JsonValue>>,
     variables: Rc<HashMap<String, JsonValue>>,
+    definitions: Rc<HashMap<String, Rc<dyn Get>>>,
 }
 impl Context {
     pub fn new_empty() -> Self {
@@ -64,6 +66,7 @@ impl Context {
             results: Vec::new(),
             parent_inputs: Vec::new(),
             variables: Rc::new(HashMap::new()),
+            definitions: Rc::new(HashMap::new()),
         }
     }
     pub fn new_with_input(input: JsonValue) -> Self {
@@ -72,6 +75,7 @@ impl Context {
             results: Vec::new(),
             parent_inputs: Vec::new(),
             variables: Rc::new(HashMap::new()),
+            definitions: Rc::new(HashMap::new()),
         }
     }
     pub fn with_inupt(&self, value: JsonValue) -> Self {
@@ -86,6 +90,7 @@ impl Context {
             results: Vec::new(),
             parent_inputs,
             variables: self.variables.clone(),
+            definitions: self.definitions.clone(),
         }
     }
     pub fn with_result(&self, result: Option<JsonValue>) -> Self {
@@ -96,6 +101,7 @@ impl Context {
             results,
             parent_inputs: Vec::new(),
             variables: self.variables.clone(),
+            definitions: self.definitions.clone(),
         }
     }
     pub fn with_variable(&self, name: String, value: JsonValue) -> Self {
@@ -109,6 +115,7 @@ impl Context {
             results: self.results.clone(),
             parent_inputs: Vec::new(),
             variables: Rc::new(variables),
+            definitions: self.definitions.clone(),
         }
     }
     pub fn with_variables(&self, variables: &Rc<HashMap<String, JsonValue>>) -> Self {
@@ -117,6 +124,30 @@ impl Context {
             results: self.results.clone(),
             parent_inputs: Vec::new(),
             variables: variables.clone(),
+            definitions: self.definitions.clone(),
+        }
+    }
+    pub fn with_definition(&self, name: String, definition: &Rc<dyn Get>) -> Self {
+        let mut definitions = HashMap::with_capacity(self.definitions.len() + 1);
+        for (k, d) in self.definitions.deref() {
+            definitions.insert(k.clone(), d.clone());
+        }
+        definitions.insert(name, definition.clone());
+        Context {
+            input: self.input().clone(),
+            results: self.results.clone(),
+            parent_inputs: Vec::new(),
+            variables: self.variables.clone(),
+            definitions: Rc::new(definitions),
+        }
+    }
+    pub fn with_definitions(&self, definitions: &Rc<HashMap<String, Rc<dyn Get>>>) -> Self {
+        Context {
+            input: self.input().clone(),
+            results: self.results.clone(),
+            parent_inputs: Vec::new(),
+            variables: self.variables.clone(),
+            definitions: definitions.clone(),
         }
     }
     pub fn build(&self, titles: &Titles) -> Option<JsonValue> {
@@ -144,6 +175,10 @@ impl Context {
 
     pub fn get_variable_value(&self, name: &String) -> Option<&JsonValue> {
         self.variables.get(name)
+    }
+
+    pub fn get_definition(&self, name: &String) -> Option<&Rc<dyn Get>> {
+        self.definitions.get(name)
     }
 
     pub fn input(&self) -> &Rc<JsonValue> {

@@ -22,7 +22,6 @@ use filter::Filter;
 use functions_definitions::print_help;
 use grouper::Grouper;
 use json_parser::JsonParserError;
-use pre_sets::PreSet;
 use pre_sets::PreSetCollection;
 use pre_sets::PreSetParserError;
 use processor::{Context, Process, ProcessError, Titles};
@@ -96,8 +95,8 @@ struct Cli {
 
     /// Predefine variables.
     /// Use key=value format. That is, `name="hello"`.
-    #[arg(long, value_parser = PreSet::from_str)]
-    set: Vec<PreSet>,
+    #[arg(long)]
+    set: Vec<String>,
 }
 
 #[derive(clap::ValueEnum, Debug, Clone, PartialEq)]
