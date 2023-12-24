@@ -122,46 +122,60 @@ pub enum OutputStyle {
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
-    let writer = Arc::new(Mutex::new(std::io::stdout()));
-    cli.go(writer)
+    let stdout = Arc::new(Mutex::new(std::io::stdout()));
+    let stdin = std::io::stdin;
+    let stderr = Arc::new(Mutex::new(std::io::stdout()));
+    let master = Master {
+        cli,
+        stderr,
+        stdin,
+        stdout,
+    };
+    master.go()
 }
-
-impl Cli {
-    fn go(&self, writer: Arc<Mutex<dyn std::io::Write + Send>>) -> Result<()> {
-        if self.available_functions {
+struct Master<R: Read> {
+    cli: Cli,
+    stdout: Arc<Mutex<dyn std::io::Write + Send>>,
+    stderr: Arc<Mutex<dyn std::io::Write + Send>>,
+    stdin: fn() -> R,
+}
+impl<S: Read> Master<S> {
+    fn go(&self) -> Result<()> {
+        if self.cli.available_functions {
             print_help();
             return Ok(());
         }
         let mut process = self
+            .cli
             .output_style
-            .get_processor(self.row_seperator.clone(), writer);
-        if let Some(group_by) = &self.group_by {
+            .get_processor(self.cli.row_seperator.clone(), self.stdout.clone());
+        if let Some(group_by) = &self.cli.group_by {
             let group_by = Grouper::from_str(group_by)?;
             process = group_by.create_process(process);
         }
-        for sorter in &self.sort_by {
+        for sorter in &self.cli.sort_by {
             let sorter = Sorter::from_str(sorter)?;
             process = sorter.create_processor(process);
         }
-        if self.unique {
+        if self.cli.unique {
             process = Uniquness::create_process(process);
         }
-        for selection in &self.choose {
+        for selection in &self.cli.choose {
             let selection = Selection::from_str(selection)?;
             process = selection.create_process(process);
         }
-        if let Some(filter) = &self.filter {
+        if let Some(filter) = &self.cli.filter {
             let filter = Filter::from_str(filter)?;
             process = filter.create_process(process);
         }
-        process = self.set.create_process(process)?;
+        process = self.cli.set.create_process(process)?;
         process.start(Titles::default())?;
 
-        if self.files.is_empty() {
-            let mut reader = from_std_in();
+        if self.cli.files.is_empty() {
+            let mut reader = from_std_in((self.stdin)());
             self.read_input(&mut reader, process.as_mut())?;
         } else {
-            for file in self.files.clone() {
+            for file in self.cli.files.clone() {
                 self.read_file(&file, process.as_mut())?;
             }
         }
@@ -198,13 +212,13 @@ impl Cli {
                     if !e.can_recover() {
                         return Err(e.into());
                     }
-                    match self.on_error {
+                    match self.cli.on_error {
                         OnError::Ignore => {}
                         OnError::Panic => {
                             return Err(e.into());
                         }
-                        OnError::Stdout => println!("error:{}", e),
-                        OnError::Stderr => eprintln!("error:{}", e),
+                        OnError::Stdout => writeln!(self.stdout.lock().unwrap(), "error:{}", e)?,
+                        OnError::Stderr => writeln!(self.stderr.lock().unwrap(), "error:{}", e)?,
                     }
                 }
             };

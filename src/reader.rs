@@ -1,7 +1,7 @@
 use std::{
     fmt::Display,
     fs::File,
-    io::{stdin, BufReader, Bytes, Read, Result, Stdin},
+    io::{BufReader, Bytes, Read, Result},
     path::PathBuf,
 };
 
@@ -27,8 +27,8 @@ pub fn from_file(file_name: &PathBuf) -> Result<Reader<BufReader<File>>> {
             .map(|f| format!("File: {}", f)),
     ))
 }
-pub fn from_std_in() -> Reader<Stdin> {
-    Reader::new(stdin(), None)
+pub fn from_std_in<R: Read>(stdin: R) -> Reader<R> {
+    Reader::new(stdin, None)
 }
 pub fn from_string(source: &String) -> Reader<&[u8]> {
     let reader = source.as_bytes();
@@ -127,6 +127,7 @@ impl Display for Location {
         }
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
