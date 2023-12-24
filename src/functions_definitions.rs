@@ -225,7 +225,7 @@ pub fn print_help() {
                     println!("      for input: \"{}\"", json);
                     json
                 } else {
-                    JsonValue::null()
+                    JsonValue::Null
                 };
                 let args = example.arguments.join(", ");
                 let run = format!("({} {})", name, args);
@@ -285,6 +285,7 @@ mod tests {
         }
         Ok(())
     }
+
     #[test]
     fn test_no_dulicates() -> selection::Result<()> {
         let mut names = HashSet::new();
@@ -299,6 +300,48 @@ mod tests {
                 }
             }
         }
+        Ok(())
+    }
+
+    #[test]
+    fn test_create_with_missing_of_arguments() -> selection::Result<()> {
+        let func = find_function("?")?;
+        let error = func.create(Vec::new()).err().unwrap();
+
+        assert_eq!(
+            matches!(error, FunctionDefinitionsError::MissingArgument(_, _, _)),
+            true
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_create_with_too_many_of_arguments() -> selection::Result<()> {
+        let now = find_function("now")?.create(Vec::new()).unwrap();
+        let func = find_function("?")?;
+        let error = func
+            .create(vec![
+                now.clone(),
+                now.clone(),
+                now.clone(),
+                now.clone(),
+                now.clone(),
+            ])
+            .err()
+            .unwrap();
+
+        assert_eq!(
+            matches!(error, FunctionDefinitionsError::TooManyArgument(_, _, _)),
+            true
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn name_return_the_function_name() -> selection::Result<()> {
+        let func = find_function("if")?;
+
+        assert_eq!(func.name(), "?".to_string(),);
         Ok(())
     }
 }

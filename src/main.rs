@@ -35,6 +35,8 @@ use std::io::Error as IoEror;
 use std::io::Read;
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::sync::Arc;
+use std::sync::Mutex;
 use thiserror::Error;
 
 use crate::json_parser::JsonParser;
@@ -120,16 +122,19 @@ pub enum OutputStyle {
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
-    cli.go()
+    let writer = Arc::new(Mutex::new(std::io::stdout()));
+    cli.go(writer)
 }
 
 impl Cli {
-    fn go(&self) -> Result<()> {
+    fn go(&self, writer: Arc<Mutex<dyn std::io::Write + Send>>) -> Result<()> {
         if self.available_functions {
             print_help();
             return Ok(());
         }
-        let mut process = self.output_style.get_processor(self.row_seperator.clone());
+        let mut process = self
+            .output_style
+            .get_processor(self.row_seperator.clone(), writer);
         if let Some(group_by) = &self.group_by {
             let group_by = Grouper::from_str(group_by)?;
             process = group_by.create_process(process);

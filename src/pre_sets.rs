@@ -129,3 +129,169 @@ impl Process for PreSetProcessor {
         self.next.start(titles_so_far)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::cell::RefCell;
+    use std::ops::Deref;
+    use std::rc::Rc;
+
+    use super::*;
+    use crate::json_value::JsonValue;
+    use crate::processor::{Context, Result, Titles};
+
+    #[test]
+    fn parse_parse_correctly() -> Result {
+        let list = vec!["ten=10".to_string(), "@eleven=11".to_string()];
+        struct Next(Rc<RefCell<bool>>);
+        let data = Rc::new(RefCell::new(false));
+        impl Process for Next {
+            fn complete(&mut self) -> Result {
+                Ok(())
+            }
+            fn start(&mut self, _: Titles) -> Result {
+                Ok(())
+            }
+            fn process(&mut self, context: Context) -> Result {
+                assert_eq!(
+                    context.get_variable_value(&"ten".to_string()).cloned(),
+                    JsonValue::from_str("10").ok()
+                );
+                let mac = context.get_definition(&"eleven".to_string()).unwrap();
+                assert_eq!(mac.get(&context), JsonValue::from_str("11").ok());
+                *self.0.borrow_mut() = true;
+                Ok(())
+            }
+        }
+
+        let next = Box::new(Next(data.clone()));
+        let mut preseters = list.create_process(next).unwrap();
+        let context = Context::new_with_input(JsonValue::Null);
+
+        preseters.process(context)?;
+
+        let binding = data.borrow();
+        let data = binding.deref();
+        assert_eq!(data, &true);
+
+        Ok(())
+    }
+
+    #[test]
+    fn no_equal_return_error() -> Result {
+        let list = vec!["name".to_string()];
+        struct Next;
+        impl Process for Next {
+            fn complete(&mut self) -> Result {
+                Ok(())
+            }
+            fn start(&mut self, _: Titles) -> Result {
+                Ok(())
+            }
+            fn process(&mut self, _: Context) -> Result {
+                Ok(())
+            }
+        }
+
+        let next = Box::new(Next);
+        let error = list.create_process(next).err().unwrap();
+
+        assert_eq!(matches!(error, PreSetParserError::NoEqualsError(_)), true);
+
+        Ok(())
+    }
+
+    #[test]
+    fn no_name_variable_return_error() -> Result {
+        let list = vec!["=1".to_string()];
+        struct Next;
+        impl Process for Next {
+            fn complete(&mut self) -> Result {
+                Ok(())
+            }
+            fn start(&mut self, _: Titles) -> Result {
+                Ok(())
+            }
+            fn process(&mut self, _: Context) -> Result {
+                Ok(())
+            }
+        }
+
+        let next = Box::new(Next);
+        let error = list.create_process(next).err().unwrap();
+
+        assert_eq!(matches!(error, PreSetParserError::EmptyName(_)), true);
+
+        Ok(())
+    }
+
+    #[test]
+    fn no_name_def_return_error() -> Result {
+        let list = vec!["@=1".to_string()];
+        struct Next;
+        impl Process for Next {
+            fn complete(&mut self) -> Result {
+                Ok(())
+            }
+            fn start(&mut self, _: Titles) -> Result {
+                Ok(())
+            }
+            fn process(&mut self, _: Context) -> Result {
+                Ok(())
+            }
+        }
+
+        let next = Box::new(Next);
+        let error = list.create_process(next).err().unwrap();
+
+        assert_eq!(matches!(error, PreSetParserError::EmptyName(_)), true);
+
+        Ok(())
+    }
+    #[test]
+    fn duplicate_name_return_error() -> Result {
+        let list = vec!["name=1".to_string(), "name=2".to_string()];
+        struct Next;
+        impl Process for Next {
+            fn complete(&mut self) -> Result {
+                Ok(())
+            }
+            fn start(&mut self, _: Titles) -> Result {
+                Ok(())
+            }
+            fn process(&mut self, _: Context) -> Result {
+                Ok(())
+            }
+        }
+
+        let next = Box::new(Next);
+        let error = list.create_process(next).err().unwrap();
+
+        assert_eq!(matches!(error, PreSetParserError::DuplicateKeys(_)), true);
+
+        Ok(())
+    }
+    #[test]
+    fn duplicate_def_name_return_error() -> Result {
+        let list = vec!["@name=1".to_string(), "@name=2".to_string()];
+        struct Next;
+        impl Process for Next {
+            fn complete(&mut self) -> Result {
+                Ok(())
+            }
+            fn start(&mut self, _: Titles) -> Result {
+                Ok(())
+            }
+            fn process(&mut self, _: Context) -> Result {
+                Ok(())
+            }
+        }
+
+        let next = Box::new(Next);
+        let error = list.create_process(next).err().unwrap();
+
+        assert_eq!(matches!(error, PreSetParserError::DuplicateKeys(_)), true);
+
+        Ok(())
+    }
+}

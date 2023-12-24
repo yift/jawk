@@ -56,3 +56,114 @@ pub fn parse_get_variable<R: Read>(reader: &mut Reader<R>) -> Result<Rc<dyn Get>
         variable_type,
     }))
 }
+
+#[cfg(test)]
+mod tests {
+    use std::{cell::RefCell, ops::Deref, str::FromStr};
+
+    use super::*;
+    use crate::{json_value::JsonValue, reader::from_string, selection::SelectionParseError};
+
+    #[test]
+    fn parse_return_error_for_nothing() -> Result<()> {
+        let text = String::new();
+        let mut reader = from_string(&text);
+        let error = parse_get_variable(&mut reader).err().unwrap();
+
+        assert_eq!(
+            matches!(
+                error,
+                SelectionParseError::JsonError(JsonParserError::UnexpectedEof(_))
+            ),
+            true
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn parse_return_error_for_unexpected_char() -> Result<()> {
+        let text = "hi".to_string();
+        let mut reader = from_string(&text);
+        let error = parse_get_variable(&mut reader).err().unwrap();
+
+        assert_eq!(
+            matches!(
+                error,
+                SelectionParseError::JsonError(JsonParserError::UnexpectedCharacter(_, _, _))
+            ),
+            true
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn parse_return_error_for_empty_name() -> Result<()> {
+        let text = ":".to_string();
+        let mut reader = from_string(&text);
+        let error = parse_get_variable(&mut reader).err().unwrap();
+
+        assert_eq!(
+            matches!(
+                error,
+                SelectionParseError::JsonError(JsonParserError::UnexpectedEof(_))
+            ),
+            true
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn macro_will_apply_getter() -> Result<()> {
+        let text = "@name".to_string();
+        let mut reader = from_string(&text);
+        let getter = parse_get_variable(&mut reader)?;
+
+        struct Caller(Rc<RefCell<usize>>);
+        let data = Rc::new(RefCell::new(0));
+        impl Get for Caller {
+            fn get(&self, _: &Context) -> Option<JsonValue> {
+                *self.0.borrow_mut() += 1;
+                JsonValue::from_str("12").ok()
+            }
+        }
+        let caller: Rc<dyn Get> = Rc::new(Caller(data.clone()));
+        let context = Context::new_empty().with_definition("name".to_string(), &caller);
+
+        let value = getter.get(&context);
+
+        {
+            assert_eq!(value, JsonValue::from_str("12").ok());
+            let binding = data.borrow();
+            let data = binding.deref();
+            assert_eq!(data, &1);
+        }
+
+        {
+            let value = getter.get(&context);
+            assert_eq!(value, JsonValue::from_str("12").ok());
+            let binding = data.borrow();
+            let data = binding.deref();
+            assert_eq!(data, &2);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn macro_will_get_variable() -> Result<()> {
+        let text = ":name".to_string();
+        let mut reader = from_string(&text);
+        let getter = parse_get_variable(&mut reader)?;
+
+        let context = Context::new_empty().with_variable("name".to_string(), 22.into());
+
+        let value = getter.get(&context);
+
+        assert_eq!(value, JsonValue::from_str("22").ok());
+
+        Ok(())
+    }
+}

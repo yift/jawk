@@ -1,9 +1,13 @@
-use std::{cmp::Ordering, fmt::Display, hash::Hash, num::TryFromIntError};
+use std::{cmp::Ordering, fmt::Display, hash::Hash, num::TryFromIntError, str::FromStr};
 
 use indexmap::IndexMap;
 use thiserror::Error;
 
-use crate::printer::{JsonPrinter, Print};
+use crate::{
+    json_parser::{JsonParser, JsonParserError},
+    printer::{JsonPrinter, Print},
+    reader::from_string,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum JsonValue {
@@ -25,28 +29,6 @@ impl JsonValue {
             JsonValue::Object(_) => "object".to_string(),
             JsonValue::Array(_) => "array".to_string(),
         }
-    }
-
-    pub fn null() -> Self {
-        JsonValue::Null
-    }
-    pub fn is_null(&self) -> bool {
-        matches!(self, JsonValue::Null)
-    }
-    pub fn is_number(&self) -> bool {
-        matches!(self, JsonValue::Number(_))
-    }
-    pub fn is_boolean(&self) -> bool {
-        matches!(self, JsonValue::Boolean(_))
-    }
-    pub fn is_string(&self) -> bool {
-        matches!(self, JsonValue::String(_))
-    }
-    pub fn is_array(&self) -> bool {
-        matches!(self, JsonValue::Array(_))
-    }
-    pub fn is_object(&self) -> bool {
-        matches!(self, JsonValue::Object(_))
     }
 
     fn inner_index(&self) -> usize {
@@ -177,60 +159,11 @@ impl TryFrom<JsonValue> for f64 {
     }
 }
 
-impl TryFrom<JsonValue> for usize {
-    type Error = CastError;
-    fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
-        match value {
-            JsonValue::Number(p) => {
-                let size = p.try_into()?;
-                Ok(size)
-            }
-            _ => Err(CastError::IncorrectType(value.type_name())),
-        }
-    }
-}
-
 impl TryFrom<JsonValue> for String {
     type Error = CastError;
     fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
         match value {
             JsonValue::String(s) => Ok(s),
-            _ => Err(CastError::IncorrectType(value.type_name())),
-        }
-    }
-}
-impl TryFrom<JsonValue> for bool {
-    type Error = CastError;
-    fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
-        match value {
-            JsonValue::Boolean(s) => Ok(s),
-            _ => Err(CastError::IncorrectType(value.type_name())),
-        }
-    }
-}
-impl TryFrom<JsonValue> for NumberValue {
-    type Error = CastError;
-    fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
-        match value {
-            JsonValue::Number(s) => Ok(s),
-            _ => Err(CastError::IncorrectType(value.type_name())),
-        }
-    }
-}
-impl TryFrom<JsonValue> for Vec<JsonValue> {
-    type Error = CastError;
-    fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
-        match value {
-            JsonValue::Array(s) => Ok(s),
-            _ => Err(CastError::IncorrectType(value.type_name())),
-        }
-    }
-}
-impl TryFrom<JsonValue> for IndexMap<String, JsonValue> {
-    type Error = CastError;
-    fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
-        match value {
-            JsonValue::Object(s) => Ok(s),
             _ => Err(CastError::IncorrectType(value.type_name())),
         }
     }
@@ -398,5 +331,154 @@ impl Ord for JsonValue {
                 }
             }
         }
+    }
+}
+
+impl FromStr for JsonValue {
+    type Err = JsonParserError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let source = s.to_string();
+        let mut reader = from_string(&source);
+        reader
+            .next_json_value()?
+            .ok_or(JsonParserError::UnexpectedEof(reader.where_am_i()))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{
+        collections::hash_map::RandomState,
+        hash::{BuildHasher, Hasher},
+    };
+
+    use crate::selection;
+
+    use super::*;
+
+    #[test]
+    fn test_type_name() -> selection::Result<()> {
+        assert_eq!(JsonValue::Null.type_name(), "null");
+        assert_eq!(JsonValue::Boolean(true).type_name(), "boolean");
+        assert_eq!(JsonValue::String("".to_string()).type_name(), "string");
+        assert_eq!(
+            JsonValue::Number(NumberValue::Float(1.0)).type_name(),
+            "number"
+        );
+        assert_eq!(JsonValue::Object(IndexMap::new()).type_name(), "object");
+        assert_eq!(JsonValue::Array(Vec::new()).type_name(), "array");
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_hash() -> selection::Result<()> {
+        test_hash_value_is_same("null")?;
+        test_hash_value_is_same("true")?;
+        test_hash_value_is_same("false")?;
+        test_hash_value_is_same("\"\"")?;
+        test_hash_value_is_same("\"hello\"")?;
+        test_hash_value_is_same("\"hello2\"")?;
+        test_hash_value_is_same("5.12")?;
+        test_hash_value_is_same("5.13")?;
+        test_hash_value_is_same("500")?;
+        test_hash_value_is_same("501")?;
+        test_hash_value_is_same("-500")?;
+        test_hash_value_is_same("-501")?;
+        test_hash_value_is_same("{}")?;
+        test_hash_value_is_same("{\"key\": 1, \"key-2\": 200, \"key-3\": []}")?;
+        test_hash_value_is_same("[1, 2, \"three\", {}]")?;
+        test_hash_value_is_same("[]")?;
+
+        Ok(())
+    }
+
+    fn test_hash_value_is_same(json: &str) -> selection::Result<()> {
+        let state = RandomState::new();
+
+        let val1 = to_json(json);
+        let mut hasher = state.build_hasher();
+        val1.hash(&mut hasher);
+        let val1 = hasher.finish();
+
+        let val2 = to_json(json);
+        let mut hasher = state.build_hasher();
+        val2.hash(&mut hasher);
+        let val2 = hasher.finish();
+
+        assert_eq!(val1, val2);
+        Ok(())
+    }
+
+    #[test]
+    fn test_order() -> selection::Result<()> {
+        let mut to_sort = vec![
+            to_json("null"),
+            to_json("[]"),
+            to_json("1"),
+            to_json("2"),
+            to_json("4"),
+            to_json("true"),
+            to_json("{}"),
+            to_json("-1"),
+            to_json("-1"),
+            to_json("\"hello\""),
+            to_json("[1, 2, 3]"),
+            to_json("-1.1"),
+            to_json("{}"),
+            to_json("[1, 2, 3, 5]"),
+            to_json("\"hello\""),
+            to_json("false"),
+            to_json("-4"),
+            to_json("1.4"),
+            to_json("1.7"),
+            to_json("[1, 2, 3, {}]"),
+            to_json("\"hello-2\""),
+            to_json("{}"),
+            to_json("{\"key-1\": 12, \"key2\": null, \"key3\": [{}, 1, 2, []]}"),
+            to_json("null"),
+            to_json("[1, 2, 3, 4]"),
+            to_json("true"),
+        ];
+
+        to_sort.sort();
+
+        assert_eq!(
+            to_sort,
+            vec![
+                to_json("null"),
+                to_json("null"),
+                to_json("false"),
+                to_json("true"),
+                to_json("true"),
+                to_json(r#""hello""#),
+                to_json(r#""hello""#),
+                to_json(r#""hello-2""#),
+                to_json("-4"),
+                to_json("-1.1"),
+                to_json("-1"),
+                to_json("-1"),
+                to_json("1"),
+                to_json("1.4"),
+                to_json("1.7"),
+                to_json("2"),
+                to_json("4"),
+                to_json("{}"),
+                to_json("{}"),
+                to_json("{}"),
+                to_json(r#"{"key-1": 12, "key2": null, "key3": [{}, 1, 2, []]}"#),
+                to_json("[]"),
+                to_json("[1, 2, 3]"),
+                to_json("[1, 2, 3, 4]"),
+                to_json("[1, 2, 3, 5]"),
+                to_json("[1, 2, 3, {}]"),
+            ]
+        );
+
+        Ok(())
+    }
+
+    fn to_json(json: &str) -> JsonValue {
+        JsonValue::from_str(json).unwrap()
     }
 }
