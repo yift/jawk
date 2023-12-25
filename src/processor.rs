@@ -35,9 +35,6 @@ impl Titles {
         self.titles.len()
     }
 
-    pub fn get(&self, index: usize) -> Option<&String> {
-        self.titles.get(index)
-    }
     pub fn as_context(&self) -> Context {
         let mut headers = Context::new_empty();
         for str in &self.titles {

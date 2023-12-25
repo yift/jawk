@@ -1,0 +1,1 @@
+Err(Processor(InvalidInputError("CSV output must have selection and can no group by")))

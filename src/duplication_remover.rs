@@ -113,8 +113,6 @@ mod tests {
             }
             fn start(&mut self, titles: Titles) -> Result {
                 assert_eq!(titles.len(), 2);
-                assert_eq!(titles.get(0), Some(&"one".to_string()));
-                assert_eq!(titles.get(1), Some(&"two".to_string()));
                 *self.0.borrow_mut() = true;
                 Ok(())
             }

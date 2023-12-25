@@ -1,0 +1,1 @@
+No arguments will just print the content as is.

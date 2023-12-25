@@ -1,0 +1,21 @@
+"First name", "Last name", "Age"
+"Klaus-Peter", "Koopmann", 76
+"Lucy", "Cruz", 72
+"Fredrikke", "Furseth", 69
+"Yolanda", "Vela", 69
+"Estelle", "Fournier", 68
+"Teresa", "Soto", 67
+"Nuria", "Castro", 61
+"Fabio", "Berden", 58
+"Silvija", "Jevremović", 58
+"Gordon", "Boller", 51
+"پارمیس", "حیدری", 51
+"Angela", "Álvarez", 47
+"Margrit", "Sanchez", 42
+"Phoebe", "Lawson", 41
+"Tyra", "Smedstad", 39
+"Josephine", "Blanchard", 36
+"Adalberto", "Tapia", 36
+"Isabella", "Mackay", 34
+"Timeo", "Dubois", 29
+"Vildan", "Keçeci", 29

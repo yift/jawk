@@ -1,0 +1,7 @@
+"First name", "Last name", "Age"
+"Tyra", "Smedstad", 39
+"Isabella", "Mackay", 34
+"Phoebe", "Lawson", 41
+"Adalberto", "Tapia", 36
+"Josephine", "Blanchard", 36
+"Margrit", "Sanchez", 42

@@ -1,0 +1,3 @@
+
+--select=.name.first=First Name
+--select=.name.last=Last Name

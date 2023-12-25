@@ -1,0 +1,6 @@
+
+--select=.name.first = First name
+--select=.name.last = Last name
+--select=.location.city=City
+--where=(= .location.country "Norway")
+--output-style=csv

@@ -93,7 +93,7 @@ impl Process for SortProcess {
     }
     fn process(&mut self, context: Context) -> crate::processor::Result {
         if let Some(key) = self.sort_by.get(&context) {
-            self.data.entry(key).or_default().push_back(context);
+            self.data.entry(key).or_default().push_front(context);
         }
         Ok(())
     }
@@ -118,6 +118,7 @@ impl Process for SortProcess {
         self.next.complete()
     }
 }
+
 #[cfg(test)]
 mod tests {
     use std::cell::RefCell;

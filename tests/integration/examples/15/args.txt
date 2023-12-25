@@ -1,0 +1,12 @@
+
+--select=(concat .name.first " " .name.last) = Name
+--select=(| .dob @day-of-the-week)=Day of birth
+--select=(| .registered @day-of-the-week)=Day of registration
+--select=(| .registered @time-of-day)=Registration at
+--select=(| .dob @time-of-day)=Born at
+--set=@day-of-the-week=(format_time (parse_time_with_zone (.get "date") "%+") "%A")
+--set=before="Before Noon"
+--set=after="After Noon"
+--set=@time-of-day=(? (> (parse (extract_regex_group (.get "date") "[0-9-]+T([0-9]+):.+" 1)) 12) :before :after)
+--output-style=csv
+--sort-by=.name.last

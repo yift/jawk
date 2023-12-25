@@ -7,8 +7,17 @@ use crate::{
     printer::{CsvPrinter, JsonPrinter, Print, RawTextPrinter},
     processor::Result as ProcessResult,
     processor::{Context, Process, ProcessError, Titles},
-    OutputStyle,
 };
+
+#[derive(clap::ValueEnum, Debug, Clone, PartialEq, Copy)]
+#[clap(rename_all = "kebab_case")]
+pub enum OutputStyle {
+    Json,
+    OneLineJson,
+    ConsiseJson,
+    Csv,
+    Text,
+}
 
 impl OutputStyle {
     pub fn get_processor(

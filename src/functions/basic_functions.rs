@@ -65,7 +65,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
                 struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, context: &Context) -> Option<JsonValue> {
-                        let mut context = Context::new_with_input(context.input().deref().clone());
+                        let mut context = context.with_inupt(context.input().deref().clone());
                         for e in &self.0 {
                             if let Some(val) = e.get(&context) {
                                 context = context.with_inupt(val);

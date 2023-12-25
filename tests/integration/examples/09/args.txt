@@ -1,0 +1,6 @@
+
+--select=.name.first = First name
+--select=.name.last = Last name
+--select=.dob.age=Age
+--where=(&& (> .dob.age 30) (< .dob.age 45))
+--output-style=csv

@@ -1,0 +1,1 @@
+Group the users by year of date

@@ -1,0 +1,12 @@
+error:2:3: Reserved word 'true' started but was not completed, got 'e', should have been 'r'
+error:2:4: Got character 'e', expecting one of [n, t, f, ", -, [, {, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+error:2:5: Got character 's', expecting one of [n, t, f, ", -, [, {, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+error:3:1: Reserved word 'true' started but was not completed, got '
+', should have been 'r'
+error:6:1: Got character '?', expecting one of [n, t, f, ", -, [, {, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+error:7:1: Got character '}', expecting one of [n, t, f, ", -, [, {, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+error:9:3: Got character 'h', expecting one of [n, t, f, ", -, [, {, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+error:9:4: Got character 'e', expecting one of [n, t, f, ", -, [, {, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+error:9:5: Got character 'l', expecting one of [n, t, f, ", -, [, {, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+error:9:6: Got character 'l', expecting one of [n, t, f, ", -, [, {, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+error:10:1: Got character 'o', expecting one of [n, t, f, ", -, [, {, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]

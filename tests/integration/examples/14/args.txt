@@ -1,0 +1,6 @@
+
+--select=(concat .results#0.name.first " " .results#0.name.last) = Name
+--order-by=.results#0.name.last
+--order-by=.results#0.name.first
+--output-style=text
+./tests/integration/examples/14/files

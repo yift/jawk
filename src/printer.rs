@@ -34,7 +34,7 @@ impl JsonPrinter {
                     if (' '..='~').contains(&ch) {
                         write!(f, "{}", ch)?;
                     } else {
-                        write!(f, "\\u{:#04x}", ch as u64)?;
+                        write!(f, "\\u{:04x}", ch as u64)?;
                     }
                 }
             }
