@@ -1,0 +1,6 @@
+
+--select=(concat .name.first " " .name.last)=name
+--sort-by=.name.last
+--group-by=.nat
+--unique
+-o=json

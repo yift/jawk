@@ -1,0 +1,6 @@
+
+--filter=(&& (.number?) (.> 0))
+-o=csv
+--select=.=number
+--select=(.| @fibo)=Fibonacci
+--set=@fibo=(if (.<= 2) 1 (+ (| (.- 1) @fibo) (| (.- 2) @fibo)))
