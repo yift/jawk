@@ -12,10 +12,15 @@ use crate::{
 #[derive(clap::ValueEnum, Debug, Clone, PartialEq, Copy)]
 #[clap(rename_all = "kebab_case")]
 pub enum OutputStyle {
+    /// pretty JSON output.
     Json,
+    /// One line JSON output with spaces after commas and colons.
     OneLineJson,
+    /// One line JSON output without any unneeded spaces.
     ConsiseJson,
+    /// CSV file format. This must have selection and can not be a produce of group by as we need to know the columns.
     Csv,
+    /// Raw text output.
     Text,
 }
 

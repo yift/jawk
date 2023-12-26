@@ -13,6 +13,7 @@ mod printer;
 mod processor;
 mod reader;
 mod selection;
+mod selection_help;
 mod sorters;
 mod variables_extractor;
 
@@ -24,9 +25,10 @@ use grouper::Grouper;
 use json_parser::JsonParserError;
 use pre_sets::PreSetCollection;
 use pre_sets::PreSetParserError;
-use processor::{Context, Process, ProcessError, Titles};
+use processor::{ Context, Process, ProcessError, Titles };
 use selection::Selection;
 use selection::SelectionParseError;
+use selection_help::print_selection_help;
 use sorters::Sorter;
 use sorters::SorterParserError;
 use std::fmt::Error as FormatError;
@@ -41,7 +43,7 @@ use thiserror::Error;
 
 use crate::json_parser::JsonParser;
 use crate::output::OutputStyle;
-use crate::reader::{from_file, from_std_in, Reader};
+use crate::reader::{ from_file, from_std_in, Reader };
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = Some("JSONs AWK"))]
@@ -59,21 +61,35 @@ pub struct Cli {
     #[clap(value_enum)]
     output_style: OutputStyle,
 
-    /// What to output
+    /// What to output. Can be multpile selection. The expected format is `<selection>[=name]`.
+    /// If name is ommited, the selection will be the name.
+    /// See selection additional help for available selections format.
+    /// For example: `--select .name.first=First Name`
     #[arg(long, short, visible_alias = "select")]
     choose: Vec<String>,
 
-    /// Filter the output
+    /// Filter the output. The expected format is `<selection>`.
+    /// If the filter is not true, the input will ignored.
+    /// See selection additional help for available selections format.
+    /// For example: `--filter=(= .name.first "John")`.
     #[arg(long, short, visible_alias = "where")]
     filter: Option<String>,
 
     /// Group the output by.
-    /// Be careful, the grouping is done in memory
+    /// Be careful, the grouping is done in memory.
+    /// The expected format is `<selection>`.
+    /// If the output is not a string, the line will be ignored. One can use the `stringify` function if needed.
+    /// See selection additional help for available selections format.
+    /// For example: `--group-by=.name.first``.
     #[arg(long, short, visible_alias = "groupBy")]
     group_by: Option<String>,
 
-    /// How to order the output
-    /// Be careful, the sorting is done in memory
+    /// How to order the output. Allow muttiploe sorting.
+    /// Be careful, the sorting is done in memory.
+    /// The expected format is `<selection>[=DESC]` or `<selection>[=ASC]`. If the directioon is ommited, `ASC` is assumed.
+    /// The order is null, false, true, strings, numbers, objects, arrays.
+    /// See selection additional help for available selections format.
+    /// For example: `--sort-by=.name.last --sort-by=.name.first`.
     #[arg(
         long,
         short,
@@ -83,21 +99,22 @@ pub struct Cli {
     )]
     sort_by: Vec<String>,
 
-    /// Row seperator
+    /// Row seperator. How to seperate between each row. The default is new line, but one can use something like `--row_seperator="---\n" to use yaml style seperation.
     #[arg(long, short, default_value = "\n")]
     row_seperator: String,
 
-    /// List of available functions
-    #[arg(long, short, default_value_t = false)]
-    available_functions: bool,
+    /// Additional help. Display additional help.
+    #[arg(long, short, default_value = None)]
+    additional_help: Option<AdditionalHelpType>,
 
     /// Avoid posting the same output more than once.
     /// Be careful, the data is kept in memory.
     #[arg(long, short)]
     unique: bool,
 
-    /// Predefine variables.
-    /// Use key=value format. That is, `name="hello"`.
+    /// Predefine variables and macros. One can define multiple variables and macros.
+    /// The expected format is `key=value` for variables or `@key=value` for macros.
+    /// For example: `--set one=1 --set pi=3.14 --set name="Name" --set @pirsquare=(* :pi . .)`.
     #[arg(long)]
     set: Vec<String>,
 }
@@ -105,10 +122,23 @@ pub struct Cli {
 #[derive(clap::ValueEnum, Debug, Clone, PartialEq)]
 #[clap(rename_all = "kebab_case")]
 enum OnError {
+    /// Do nothing with the error.
     Ignore,
+    /// Exit the process on the first error.
     Panic,
+    /// Output the errors to stderr.
     Stderr,
+    /// Output the errors to stdout.
     Stdout,
+}
+
+#[derive(clap::ValueEnum, Debug, Clone, PartialEq)]
+#[clap(rename_all = "kebab_case")]
+enum AdditionalHelpType {
+    /// Functions additional help
+    Functions,
+    /// Selection additional help
+    Selection,
 }
 
 pub struct Master<R: Read> {
@@ -122,7 +152,7 @@ impl<S: Read> Master<S> {
         cli: Cli,
         stdout: Arc<Mutex<dyn std::io::Write + Send>>,
         stderr: Arc<Mutex<dyn std::io::Write + Send>>,
-        stdin: Box<dyn Fn() -> S>,
+        stdin: Box<dyn Fn() -> S>
     ) -> Self {
         Master {
             cli,
@@ -132,14 +162,21 @@ impl<S: Read> Master<S> {
         }
     }
     pub fn go(&self) -> Result<()> {
-        if self.cli.available_functions {
-            print_help();
-            return Ok(());
+        match self.cli.additional_help {
+            Some(AdditionalHelpType::Functions) => {
+                print_help();
+                return Ok(());
+            }
+            Some(AdditionalHelpType::Selection) => {
+                print_selection_help();
+                return Ok(());
+            }
+            None => {}
         }
-        let mut process = self
-            .cli
-            .output_style
-            .get_processor(self.cli.row_seperator.clone(), self.stdout.clone());
+        let mut process = self.cli.output_style.get_processor(
+            self.cli.row_seperator.clone(),
+            self.stdout.clone()
+        );
         if let Some(group_by) = &self.cli.group_by {
             let group_by = Grouper::from_str(group_by)?;
             process = group_by.create_process(process);
@@ -221,18 +258,11 @@ pub type Result<T> = std::result::Result<T, MainError>;
 
 #[derive(Debug, Error)]
 pub enum MainError {
-    #[error("{0}")]
-    Json(#[from] JsonParserError),
-    #[error("{0}")]
-    Format(#[from] FormatError),
-    #[error("{0}")]
-    SelectionParse(#[from] SelectionParseError),
-    #[error("{0}")]
-    SorterParse(#[from] SorterParserError),
-    #[error("{0}")]
-    Io(#[from] IoEror),
-    #[error("{0}")]
-    Processor(#[from] ProcessError),
-    #[error("{0}")]
-    PreSet(#[from] PreSetParserError),
+    #[error("{0}")] Json(#[from] JsonParserError),
+    #[error("{0}")] Format(#[from] FormatError),
+    #[error("{0}")] SelectionParse(#[from] SelectionParseError),
+    #[error("{0}")] SorterParse(#[from] SorterParserError),
+    #[error("{0}")] Io(#[from] IoEror),
+    #[error("{0}")] Processor(#[from] ProcessError),
+    #[error("{0}")] PreSet(#[from] PreSetParserError),
 }
