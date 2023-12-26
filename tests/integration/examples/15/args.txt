@@ -1,4 +1,4 @@
-
+jawk
 --select=(concat .name.first " " .name.last) = Name
 --select=(| .dob @day-of-the-week)=Day of birth
 --select=(| .registered @day-of-the-week)=Day of registration

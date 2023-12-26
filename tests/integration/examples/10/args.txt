@@ -1,4 +1,4 @@
-
+jawk
 --select=.name.first = First name
 --select=.name.last = Last name
 --select=(format_time (parse_time_with_zone .dob.date "%+") "%A")=Day of birth
