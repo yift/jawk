@@ -25,7 +25,7 @@ use grouper::Grouper;
 use json_parser::JsonParserError;
 use pre_sets::PreSetCollection;
 use pre_sets::PreSetParserError;
-use processor::{ Context, Process, ProcessError, Titles };
+use processor::{Context, Process, ProcessError, Titles};
 use selection::Selection;
 use selection::SelectionParseError;
 use selection_help::print_selection_help;
@@ -43,7 +43,7 @@ use thiserror::Error;
 
 use crate::json_parser::JsonParser;
 use crate::output::OutputStyle;
-use crate::reader::{ from_file, from_std_in, Reader };
+use crate::reader::{from_file, from_std_in, Reader};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = Some("JSONs AWK"))]
@@ -152,7 +152,7 @@ impl<S: Read> Master<S> {
         cli: Cli,
         stdout: Arc<Mutex<dyn std::io::Write + Send>>,
         stderr: Arc<Mutex<dyn std::io::Write + Send>>,
-        stdin: Box<dyn Fn() -> S>
+        stdin: Box<dyn Fn() -> S>,
     ) -> Self {
         Master {
             cli,
@@ -173,10 +173,10 @@ impl<S: Read> Master<S> {
             }
             None => {}
         }
-        let mut process = self.cli.output_style.get_processor(
-            self.cli.row_seperator.clone(),
-            self.stdout.clone()
-        );
+        let mut process = self
+            .cli
+            .output_style
+            .get_processor(self.cli.row_seperator.clone(), self.stdout.clone());
         if let Some(group_by) = &self.cli.group_by {
             let group_by = Grouper::from_str(group_by)?;
             process = group_by.create_process(process);
@@ -258,11 +258,18 @@ pub type Result<T> = std::result::Result<T, MainError>;
 
 #[derive(Debug, Error)]
 pub enum MainError {
-    #[error("{0}")] Json(#[from] JsonParserError),
-    #[error("{0}")] Format(#[from] FormatError),
-    #[error("{0}")] SelectionParse(#[from] SelectionParseError),
-    #[error("{0}")] SorterParse(#[from] SorterParserError),
-    #[error("{0}")] Io(#[from] IoEror),
-    #[error("{0}")] Processor(#[from] ProcessError),
-    #[error("{0}")] PreSet(#[from] PreSetParserError),
+    #[error("{0}")]
+    Json(#[from] JsonParserError),
+    #[error("{0}")]
+    Format(#[from] FormatError),
+    #[error("{0}")]
+    SelectionParse(#[from] SelectionParseError),
+    #[error("{0}")]
+    SorterParse(#[from] SorterParserError),
+    #[error("{0}")]
+    Io(#[from] IoEror),
+    #[error("{0}")]
+    Processor(#[from] ProcessError),
+    #[error("{0}")]
+    PreSet(#[from] PreSetParserError),
 }
