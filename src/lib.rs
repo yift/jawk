@@ -45,10 +45,16 @@ use crate::json_parser::JsonParser;
 use crate::output::OutputStyle;
 use crate::reader::{from_file, from_std_in, Reader};
 
+/// An AWK like toold for JSON input.
+///
+/// This tool should allow one to manipulate an input file that contains JSON values into CSV or JSON output.
 #[derive(Parser)]
-#[command(author, version, about, long_about = Some("JSONs AWK"))]
+#[command(author, version, about)]
 pub struct Cli {
-    /// Input files
+    /// Input files.
+    ///
+    /// If ommited the standart in will be used.
+    /// If any of the files is a directory, all it's files will be used.
     files: Vec<PathBuf>,
 
     /// What to do on error
@@ -61,34 +67,44 @@ pub struct Cli {
     #[clap(value_enum)]
     output_style: OutputStyle,
 
-    /// What to output. Can be multpile selection. The expected format is `<selection>[=name]`.
+    /// What to output.
+    ///
+    /// Can be multpile selection. The expected format is `<selection>[=name]`.
     /// If name is ommited, the selection will be the name.
     /// See selection additional help for available selections format.
+    ///
     /// For example: `--select .name.first=First Name`
     #[arg(long, short, visible_alias = "select")]
     choose: Vec<String>,
 
     /// Filter the output. The expected format is `<selection>`.
+    ///
     /// If the filter is not true, the input will ignored.
     /// See selection additional help for available selections format.
-    /// For example: `--filter=(= .name.first "John")`.
+    ///
+    /// For example: `--filter=(or (= .name.first "John") (= .name.first "Jane"))`.
     #[arg(long, short, visible_alias = "where")]
     filter: Option<String>,
 
     /// Group the output by.
+    ///
     /// Be careful, the grouping is done in memory.
     /// The expected format is `<selection>`.
     /// If the output is not a string, the line will be ignored. One can use the `stringify` function if needed.
     /// See selection additional help for available selections format.
+    ///
+    ///
     /// For example: `--group-by=.name.first``.
     #[arg(long, short, visible_alias = "groupBy")]
     group_by: Option<String>,
 
     /// How to order the output. Allow muttiploe sorting.
+    ///
     /// Be careful, the sorting is done in memory.
     /// The expected format is `<selection>[=DESC]` or `<selection>[=ASC]`. If the directioon is ommited, `ASC` is assumed.
     /// The order is null, false, true, strings, numbers, objects, arrays.
     /// See selection additional help for available selections format.
+    ///
     /// For example: `--sort-by=.name.last --sort-by=.name.first`.
     #[arg(
         long,
@@ -99,21 +115,29 @@ pub struct Cli {
     )]
     sort_by: Vec<String>,
 
-    /// Row seperator. How to seperate between each row. The default is new line, but one can use something like `--row_seperator="---\n" to use yaml style seperation.
+    /// Row seperator.
+    ///
+    /// How to seperate between each row. The default is new line, but one can use something like `--row_seperator="---\n" to use yaml style seperation.
     #[arg(long, short, default_value = "\n")]
     row_seperator: String,
 
-    /// Additional help. Display additional help.
+    /// Additional help.
+    ///
+    /// Display additional help.
     #[arg(long, short, default_value = None)]
     additional_help: Option<AdditionalHelpType>,
 
     /// Avoid posting the same output more than once.
+    ///
     /// Be careful, the data is kept in memory.
     #[arg(long, short)]
     unique: bool,
 
-    /// Predefine variables and macros. One can define multiple variables and macros.
+    /// Predefine variables and macros.
+    ///
+    /// One can define multiple variables and macros.
     /// The expected format is `key=value` for variables or `@key=value` for macros.
+    ///
     /// For example: `--set one=1 --set pi=3.14 --set name="Name" --set @pirsquare=(* :pi . .)`.
     #[arg(long)]
     set: Vec<String>,
