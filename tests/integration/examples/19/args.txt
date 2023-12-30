@@ -1,0 +1,4 @@
+jawk
+-o=csv
+--select=.=number
+--select=(fold (.range) 1 (* (+ 1 .index) .so_far))=factorial
