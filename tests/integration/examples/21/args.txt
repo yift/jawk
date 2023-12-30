@@ -1,0 +1,6 @@
+jawk
+-o=csv
+--select=.=number
+--sort-by=.
+--take=6
+--skip=1

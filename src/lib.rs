@@ -234,7 +234,8 @@ impl<S: Read> Master<S> {
         process = Limiter::create_process(self.cli.skip, self.cli.take, process);
         for sorter in &self.cli.sort_by {
             let sorter = Sorter::from_str(sorter)?;
-            process = sorter.create_processor(process);
+            let max_size = self.cli.take.map(|take| (self.cli.skip + take) as usize);
+            process = sorter.create_processor(process, max_size);
         }
         if self.cli.unique {
             process = Uniquness::create_process(process);
