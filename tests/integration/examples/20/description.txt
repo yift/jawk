@@ -1,0 +1,1 @@
+Merge result into a list

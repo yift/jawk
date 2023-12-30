@@ -1,0 +1,9 @@
+jawk
+--split-by=.results
+--filter=(and (> .dob.age 50) (<= .dob.age 60))
+--select=.name.first = First name
+--select=.name.last = Last name
+--select=.dob.age = Age
+--order-by=.name.last
+--merge
+-o=json

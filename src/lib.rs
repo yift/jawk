@@ -7,6 +7,7 @@ mod functions_definitions;
 mod grouper;
 mod json_parser;
 mod json_value;
+mod merger;
 mod output;
 mod pre_sets;
 mod printer;
@@ -24,6 +25,7 @@ use filter::Filter;
 use functions_definitions::print_help;
 use grouper::Grouper;
 use json_parser::JsonParserError;
+use merger::Merger;
 use pre_sets::PreSetCollection;
 use pre_sets::PreSetParserError;
 use processor::{Context, Process, ProcessError, Titles};
@@ -105,11 +107,20 @@ pub struct Cli {
     /// The expected format is `<selection>`.
     /// If the output is not a string, the data will be ignored. One can use the `stringify` function if needed.
     /// See selection additional help for available selections format.
+    /// Can not be used together with the merge.
     ///
     ///
     /// For example: `--group-by=.name.first`.
     #[arg(long, short)]
     group_by: Option<String>,
+
+    /// Merge the output to a single list.
+    /// Can not be used together with the group-by.
+    ///
+    /// Be careful, the combination is done in memory.
+    ///
+    #[arg(long, short, visible_alias = "combine")]
+    merge: bool,
 
     /// How to order the output. Allow muttiploe sorting.
     ///
@@ -209,8 +220,14 @@ impl<S: Read> Master<S> {
             .output_style
             .get_processor(self.cli.row_seperator.clone(), self.stdout.clone());
         if let Some(group_by) = &self.cli.group_by {
+            if self.cli.merge {
+                return Err(MainError::UnsupportedMergeAndGroupBy);
+            }
             let group_by = Grouper::from_str(group_by)?;
             process = group_by.create_process(process);
+        }
+        if self.cli.merge {
+            process = Merger::create_process(process);
         }
         for sorter in &self.cli.sort_by {
             let sorter = Sorter::from_str(sorter)?;
@@ -307,4 +324,6 @@ pub enum MainError {
     Processor(#[from] ProcessError),
     #[error("{0}")]
     PreSet(#[from] PreSetParserError),
+    #[error("Group by and merge are not supported")]
+    UnsupportedMergeAndGroupBy,
 }
