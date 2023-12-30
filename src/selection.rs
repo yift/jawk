@@ -7,6 +7,8 @@ use crate::json_parser::JsonParserError;
 use crate::json_value::JsonValue;
 use crate::processor::Context;
 use crate::processor::Process;
+use crate::processor::ProcessDesision;
+use crate::processor::Result as ProcessResult;
 use crate::processor::Titles;
 use crate::reader::from_string;
 use crate::reader::Location;
@@ -92,18 +94,19 @@ struct SelectionProcess {
     next: Box<dyn Process>,
 }
 impl Process for SelectionProcess {
-    fn start(&mut self, titles_so_far: Titles) -> crate::processor::Result {
+    fn start(&mut self, titles_so_far: Titles) -> ProcessResult<()> {
         let next_titles = titles_so_far.with_title(self.name.clone());
         self.next.start(next_titles)
     }
-    fn complete(&mut self) -> crate::processor::Result {
+    fn complete(&mut self) -> ProcessResult<()> {
         self.next.complete()
     }
-    fn process(&mut self, context: Context) -> crate::processor::Result {
+    fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
         let result = self.getter.get(&context);
         let new_context = context.with_result(result);
 
-        self.next.process(new_context)
+        self.next.process(new_context)?;
+        Ok(ProcessDesision::Continue)
     }
 }
 

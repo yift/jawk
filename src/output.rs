@@ -6,7 +6,7 @@ use std::{
 use crate::{
     printer::{CsvPrinter, JsonPrinter, Print, RawTextPrinter},
     processor::Result as ProcessResult,
-    processor::{Context, Process, ProcessError, Titles},
+    processor::{Context, Process, ProcessDesision, ProcessError, Titles},
 };
 
 #[derive(clap::ValueEnum, Debug, Clone, PartialEq, Copy)]
@@ -72,7 +72,7 @@ struct CsvProcess {
     writer: Arc<Mutex<dyn std::io::Write + Send>>,
 }
 impl Process for CsvProcess {
-    fn start(&mut self, titles: Titles) -> ProcessResult {
+    fn start(&mut self, titles: Titles) -> ProcessResult<()> {
         self.length = titles.len();
         if self.length == 0 {
             return Err(ProcessError::InvalidInputError(
@@ -80,12 +80,13 @@ impl Process for CsvProcess {
             ));
         }
         let context = titles.as_context();
-        self.process(context)
-    }
-    fn complete(&mut self) -> ProcessResult {
+        self.process(context)?;
         Ok(())
     }
-    fn process(&mut self, context: Context) -> ProcessResult {
+    fn complete(&mut self) -> ProcessResult<()> {
+        Ok(())
+    }
+    fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
         let mut string_row = Vec::new();
         for index in 0..self.length {
             let value = context.get(index);
@@ -104,7 +105,7 @@ impl Process for CsvProcess {
             string_row.join(", "),
             self.line_seperator
         )?;
-        Ok(())
+        Ok(ProcessDesision::Continue)
     }
 }
 
@@ -116,14 +117,14 @@ struct JsonProcess {
 }
 
 impl Process for JsonProcess {
-    fn start(&mut self, titles: Titles) -> ProcessResult {
+    fn start(&mut self, titles: Titles) -> ProcessResult<()> {
         self.titles = titles;
         Ok(())
     }
-    fn complete(&mut self) -> ProcessResult {
+    fn complete(&mut self) -> ProcessResult<()> {
         Ok(())
     }
-    fn process(&mut self, context: Context) -> ProcessResult {
+    fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
         if let Some(value) = context.build(&self.titles) {
             let mut str = String::new();
             self.printer.print(&mut str, &value)?;
@@ -134,7 +135,7 @@ impl Process for JsonProcess {
                 self.line_seperator
             )?;
         }
-        Ok(())
+        Ok(ProcessDesision::Continue)
     }
 }
 struct RawProcess {
@@ -144,19 +145,18 @@ struct RawProcess {
     writer: Arc<Mutex<dyn std::io::Write + Send>>,
 }
 impl Process for RawProcess {
-    fn complete(&mut self) -> ProcessResult {
+    fn complete(&mut self) -> ProcessResult<()> {
         Ok(())
     }
-    fn start(&mut self, titles: Titles) -> ProcessResult {
+    fn start(&mut self, titles: Titles) -> ProcessResult<()> {
         self.length = titles.len();
         if self.length > 0 {
             let context = titles.as_context();
-            self.process(context)
-        } else {
-            Ok(())
+            self.process(context)?;
         }
+        Ok(())
     }
-    fn process(&mut self, context: Context) -> ProcessResult {
+    fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
         if self.length != 0 {
             for index in 0..self.length {
                 let value = context.get(index);
@@ -180,7 +180,7 @@ impl Process for RawProcess {
                 self.line_seperator
             )?;
         }
-        Ok(())
+        Ok(ProcessDesision::Continue)
     }
 }
 
@@ -193,7 +193,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn csv_writer_start_fail_if_no_titles() -> ProcessResult {
+    fn csv_writer_start_fail_if_no_titles() -> ProcessResult<()> {
         let style = OutputStyle::Csv;
         let text = Vec::new();
         let writer = Arc::new(Mutex::new(text));
@@ -207,7 +207,7 @@ mod tests {
     }
 
     #[test]
-    fn csv_writer_start_will_print_titles_and_content() -> ProcessResult {
+    fn csv_writer_start_will_print_titles_and_content() -> ProcessResult<()> {
         let style = OutputStyle::Csv;
         let text = Vec::new();
         let writer = Arc::new(Mutex::new(text));
@@ -253,7 +253,7 @@ mod tests {
     }
 
     #[test]
-    fn consise_json_writer_start_will_print_titles_and_content() -> ProcessResult {
+    fn consise_json_writer_start_will_print_titles_and_content() -> ProcessResult<()> {
         let style = OutputStyle::ConsiseJson;
         let text = Vec::new();
         let writer = Arc::new(Mutex::new(text));
@@ -298,7 +298,7 @@ mod tests {
     }
 
     #[test]
-    fn json_writer_start_will_print_titles_and_content() -> ProcessResult {
+    fn json_writer_start_will_print_titles_and_content() -> ProcessResult<()> {
         let style = OutputStyle::Json;
         let text = Vec::new();
         let writer = Arc::new(Mutex::new(text));
@@ -378,7 +378,7 @@ mod tests {
     }
 
     #[test]
-    fn oneline_json_writer_start_will_print_titles_and_content() -> ProcessResult {
+    fn oneline_json_writer_start_will_print_titles_and_content() -> ProcessResult<()> {
         let style = OutputStyle::OneLineJson;
         let text = Vec::new();
         let writer = Arc::new(Mutex::new(text));
@@ -423,7 +423,7 @@ mod tests {
     }
 
     #[test]
-    fn no_titles_raw_writer_start_will_print_no_titles_and_content() -> ProcessResult {
+    fn no_titles_raw_writer_start_will_print_no_titles_and_content() -> ProcessResult<()> {
         let style = OutputStyle::Text;
         let text = Vec::new();
         let writer = Arc::new(Mutex::new(text));
@@ -454,7 +454,7 @@ mod tests {
         Ok(())
     }
     #[test]
-    fn titled_raw_writer_start_will_print_titles_and_content() -> ProcessResult {
+    fn titled_raw_writer_start_will_print_titles_and_content() -> ProcessResult<()> {
         let style = OutputStyle::Text;
         let text = Vec::new();
         let writer = Arc::new(Mutex::new(text));

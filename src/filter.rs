@@ -2,7 +2,7 @@ use std::{rc::Rc, str::FromStr};
 
 use crate::{
     json_value::JsonValue,
-    processor::Process,
+    processor::{Process, ProcessDesision, Result as ProcessResult},
     reader::from_string,
     selection::{read_getter, Get, SelectionParseError},
 };
@@ -44,17 +44,18 @@ struct ActiveFilter {
 }
 
 impl Process for ActiveFilter {
-    fn complete(&mut self) -> crate::processor::Result {
+    fn complete(&mut self) -> ProcessResult<()> {
         self.next.complete()
     }
-    fn start(&mut self, titles_so_far: crate::processor::Titles) -> crate::processor::Result {
+    fn start(&mut self, titles_so_far: crate::processor::Titles) -> ProcessResult<()> {
         self.next.start(titles_so_far)
     }
-    fn process(&mut self, context: crate::processor::Context) -> crate::processor::Result {
+    fn process(&mut self, context: crate::processor::Context) -> ProcessResult<ProcessDesision> {
         if self.filter.get(&context) == Some(JsonValue::Boolean(true)) {
-            self.next.process(context)?;
+            self.next.process(context)
+        } else {
+            Ok(ProcessDesision::Continue)
         }
-        Ok(())
     }
 }
 
@@ -66,10 +67,10 @@ mod tests {
 
     use super::*;
     use crate::json_value::JsonValue;
-    use crate::processor::{Context, Result, Titles};
+    use crate::processor::{Context, Titles};
 
     #[test]
-    fn parse_parse_correctly() -> Result {
+    fn parse_parse_correctly() -> ProcessResult<()> {
         let str = "(> . 0)     ";
         let filter = Filter::from_str(str).unwrap();
 
@@ -81,7 +82,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_fail_if_too_long() -> Result {
+    fn parse_fail_if_too_long() -> ProcessResult<()> {
         let str = "(> . 0)   3";
         let err = Filter::from_str(str).err().unwrap();
 
@@ -91,20 +92,20 @@ mod tests {
     }
 
     #[test]
-    fn start_will_keep_the_title() -> Result {
+    fn start_will_keep_the_title() -> ProcessResult<()> {
         struct Next(Rc<RefCell<bool>>);
         let data = Rc::new(RefCell::new(false));
         let titles = Titles::default()
             .with_title("one".into())
             .with_title("two".into());
         impl Process for Next {
-            fn complete(&mut self) -> Result {
+            fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> Result {
-                Ok(())
+            fn process(&mut self, _: Context) -> ProcessResult<ProcessDesision> {
+                Ok(ProcessDesision::Continue)
             }
-            fn start(&mut self, titles: Titles) -> Result {
+            fn start(&mut self, titles: Titles) -> ProcessResult<()> {
                 assert_eq!(titles.len(), 2);
                 *self.0.borrow_mut() = true;
                 Ok(())
@@ -127,18 +128,18 @@ mod tests {
     }
 
     #[test]
-    fn complete_will_complete() -> Result {
+    fn complete_will_complete() -> ProcessResult<()> {
         struct Next(Rc<RefCell<bool>>);
         let data = Rc::new(RefCell::new(false));
         impl Process for Next {
-            fn complete(&mut self) -> Result {
+            fn complete(&mut self) -> ProcessResult<()> {
                 *self.0.borrow_mut() = true;
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> Result {
-                Ok(())
+            fn process(&mut self, _: Context) -> ProcessResult<ProcessDesision> {
+                Ok(ProcessDesision::Continue)
             }
-            fn start(&mut self, _: Titles) -> Result {
+            fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
             }
         }
@@ -159,20 +160,20 @@ mod tests {
     }
 
     #[test]
-    fn filter_will_only_pass_passing_values() -> Result {
+    fn filter_will_only_pass_passing_values() -> ProcessResult<()> {
         struct Next(Rc<RefCell<Vec<JsonValue>>>);
         let data = Rc::new(RefCell::new(Vec::new()));
         impl Process for Next {
-            fn complete(&mut self) -> Result {
+            fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, context: Context) -> Result {
+            fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
                 let value = context.input().deref().clone();
                 let mut vec = self.0.borrow_mut();
                 vec.push(value);
-                Ok(())
+                Ok(ProcessDesision::Continue)
             }
-            fn start(&mut self, _: Titles) -> Result {
+            fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
             }
         }

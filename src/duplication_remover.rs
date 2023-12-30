@@ -1,4 +1,4 @@
-use crate::processor::{Context, ContextKey, Process, Titles};
+use crate::processor::{Context, ContextKey, Process, ProcessDesision, Result, Titles};
 use std::collections::HashSet;
 
 pub struct Uniquness {
@@ -15,18 +15,18 @@ impl Uniquness {
     }
 }
 impl Process for Uniquness {
-    fn complete(&mut self) -> crate::processor::Result {
+    fn complete(&mut self) -> Result<()> {
         self.knwon_lines.clear();
         self.next.complete()
     }
-    fn start(&mut self, titles_so_far: Titles) -> crate::processor::Result {
+    fn start(&mut self, titles_so_far: Titles) -> Result<()> {
         self.next.start(titles_so_far)
     }
-    fn process(&mut self, context: Context) -> crate::processor::Result {
+    fn process(&mut self, context: Context) -> Result<ProcessDesision> {
         if self.knwon_lines.insert(context.key()) {
             self.next.process(context)
         } else {
-            Ok(())
+            Ok(ProcessDesision::Continue)
         }
     }
 }
@@ -39,23 +39,22 @@ mod tests {
 
     use super::*;
     use crate::json_value::JsonValue;
-    use crate::processor::Result;
 
     #[test]
-    fn duplicate_lines_follow_only_once() -> Result {
+    fn duplicate_lines_follow_only_once() -> Result<()> {
         struct Next(Rc<RefCell<Vec<JsonValue>>>);
         let data = Rc::new(RefCell::new(Vec::new()));
         impl Process for Next {
-            fn complete(&mut self) -> Result {
+            fn complete(&mut self) -> Result<()> {
                 Ok(())
             }
-            fn process(&mut self, context: Context) -> Result {
+            fn process(&mut self, context: Context) -> Result<ProcessDesision> {
                 let value = context.input().deref().clone();
                 let mut vec = self.0.borrow_mut();
                 vec.push(value);
-                Ok(())
+                Ok(ProcessDesision::Continue)
             }
-            fn start(&mut self, _: Titles) -> Result {
+            fn start(&mut self, _: Titles) -> Result<()> {
                 Ok(())
             }
         }
@@ -98,20 +97,20 @@ mod tests {
     }
 
     #[test]
-    fn start_will_keep_the_title() -> Result {
+    fn start_will_keep_the_title() -> Result<()> {
         struct Next(Rc<RefCell<bool>>);
         let data = Rc::new(RefCell::new(false));
         let titles = Titles::default()
             .with_title("one".into())
             .with_title("two".into());
         impl Process for Next {
-            fn complete(&mut self) -> Result {
+            fn complete(&mut self) -> Result<()> {
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> Result {
-                Ok(())
+            fn process(&mut self, _: Context) -> Result<ProcessDesision> {
+                Ok(ProcessDesision::Continue)
             }
-            fn start(&mut self, titles: Titles) -> Result {
+            fn start(&mut self, titles: Titles) -> Result<()> {
                 assert_eq!(titles.len(), 2);
                 *self.0.borrow_mut() = true;
                 Ok(())
@@ -132,18 +131,18 @@ mod tests {
     }
 
     #[test]
-    fn complete_will_complete() -> Result {
+    fn complete_will_complete() -> Result<()> {
         struct Next(Rc<RefCell<bool>>);
         let data = Rc::new(RefCell::new(false));
         impl Process for Next {
-            fn complete(&mut self) -> Result {
+            fn complete(&mut self) -> Result<()> {
                 *self.0.borrow_mut() = true;
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> Result {
-                Ok(())
+            fn process(&mut self, _: Context) -> Result<ProcessDesision> {
+                Ok(ProcessDesision::Continue)
             }
-            fn start(&mut self, _: Titles) -> Result {
+            fn start(&mut self, _: Titles) -> Result<()> {
                 Ok(())
             }
         }

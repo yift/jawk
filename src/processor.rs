@@ -201,10 +201,15 @@ impl Context {
     }
 }
 
-pub type Result = std::result::Result<(), ProcessError>;
+#[derive(Debug, PartialEq)]
+pub enum ProcessDesision {
+    Continue,
+    Break,
+}
+pub type Result<T> = std::result::Result<T, ProcessError>;
 
 pub trait Process {
-    fn start(&mut self, titles_so_far: Titles) -> Result;
-    fn process(&mut self, context: Context) -> Result;
-    fn complete(&mut self) -> Result;
+    fn start(&mut self, titles_so_far: Titles) -> Result<()>;
+    fn process(&mut self, context: Context) -> Result<ProcessDesision>;
+    fn complete(&mut self) -> Result<()>;
 }

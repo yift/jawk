@@ -4,7 +4,7 @@ use thiserror::Error;
 
 use crate::{
     json_value::JsonValue,
-    processor::{Context, Process, Titles},
+    processor::{Context, Process, ProcessDesision, Result as ProcessResult, Titles},
     reader::from_string,
     selection::{read_getter, Get, SelectionParseError},
 };
@@ -116,16 +116,16 @@ impl PreSetCollection for Vec<String> {
 }
 
 impl Process for PreSetProcessor {
-    fn complete(&mut self) -> crate::processor::Result {
+    fn complete(&mut self) -> ProcessResult<()> {
         self.next.complete()
     }
-    fn process(&mut self, context: Context) -> crate::processor::Result {
+    fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
         let new_context = context
             .with_variables(&self.variables)
             .with_definitions(&self.macros);
         self.next.process(new_context)
     }
-    fn start(&mut self, titles_so_far: Titles) -> crate::processor::Result {
+    fn start(&mut self, titles_so_far: Titles) -> ProcessResult<()> {
         self.next.start(titles_so_far)
     }
 }
@@ -138,21 +138,21 @@ mod tests {
 
     use super::*;
     use crate::json_value::JsonValue;
-    use crate::processor::{Context, Result, Titles};
+    use crate::processor::{Context, Titles};
 
     #[test]
-    fn parse_parse_correctly() -> Result {
+    fn parse_parse_correctly() -> ProcessResult<()> {
         let list = vec!["ten=10".to_string(), "@eleven=11".to_string()];
         struct Next(Rc<RefCell<bool>>);
         let data = Rc::new(RefCell::new(false));
         impl Process for Next {
-            fn complete(&mut self) -> Result {
+            fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
             }
-            fn start(&mut self, _: Titles) -> Result {
+            fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, context: Context) -> Result {
+            fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
                 assert_eq!(
                     context.get_variable_value(&"ten".to_string()).cloned(),
                     JsonValue::from_str("10").ok()
@@ -160,7 +160,7 @@ mod tests {
                 let mac = context.get_definition(&"eleven".to_string()).unwrap();
                 assert_eq!(mac.get(&context), JsonValue::from_str("11").ok());
                 *self.0.borrow_mut() = true;
-                Ok(())
+                Ok(ProcessDesision::Continue)
             }
         }
 
@@ -178,18 +178,18 @@ mod tests {
     }
 
     #[test]
-    fn no_equal_return_error() -> Result {
+    fn no_equal_return_error() -> ProcessResult<()> {
         let list = vec!["name".to_string()];
         struct Next;
         impl Process for Next {
-            fn complete(&mut self) -> Result {
+            fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
             }
-            fn start(&mut self, _: Titles) -> Result {
+            fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> Result {
-                Ok(())
+            fn process(&mut self, _: Context) -> ProcessResult<ProcessDesision> {
+                Ok(ProcessDesision::Continue)
             }
         }
 
@@ -202,18 +202,18 @@ mod tests {
     }
 
     #[test]
-    fn no_name_variable_return_error() -> Result {
+    fn no_name_variable_return_error() -> ProcessResult<()> {
         let list = vec!["=1".to_string()];
         struct Next;
         impl Process for Next {
-            fn complete(&mut self) -> Result {
+            fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
             }
-            fn start(&mut self, _: Titles) -> Result {
+            fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> Result {
-                Ok(())
+            fn process(&mut self, _: Context) -> ProcessResult<ProcessDesision> {
+                Ok(ProcessDesision::Continue)
             }
         }
 
@@ -226,18 +226,18 @@ mod tests {
     }
 
     #[test]
-    fn no_name_def_return_error() -> Result {
+    fn no_name_def_return_error() -> ProcessResult<()> {
         let list = vec!["@=1".to_string()];
         struct Next;
         impl Process for Next {
-            fn complete(&mut self) -> Result {
+            fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
             }
-            fn start(&mut self, _: Titles) -> Result {
+            fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> Result {
-                Ok(())
+            fn process(&mut self, _: Context) -> ProcessResult<ProcessDesision> {
+                Ok(ProcessDesision::Continue)
             }
         }
 
@@ -249,18 +249,18 @@ mod tests {
         Ok(())
     }
     #[test]
-    fn duplicate_name_return_error() -> Result {
+    fn duplicate_name_return_error() -> ProcessResult<()> {
         let list = vec!["name=1".to_string(), "name=2".to_string()];
         struct Next;
         impl Process for Next {
-            fn complete(&mut self) -> Result {
+            fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
             }
-            fn start(&mut self, _: Titles) -> Result {
+            fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> Result {
-                Ok(())
+            fn process(&mut self, _: Context) -> ProcessResult<ProcessDesision> {
+                Ok(ProcessDesision::Continue)
             }
         }
 
@@ -272,18 +272,18 @@ mod tests {
         Ok(())
     }
     #[test]
-    fn duplicate_def_name_return_error() -> Result {
+    fn duplicate_def_name_return_error() -> ProcessResult<()> {
         let list = vec!["@name=1".to_string(), "@name=2".to_string()];
         struct Next;
         impl Process for Next {
-            fn complete(&mut self) -> Result {
+            fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
             }
-            fn start(&mut self, _: Titles) -> Result {
+            fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> Result {
-                Ok(())
+            fn process(&mut self, _: Context) -> ProcessResult<ProcessDesision> {
+                Ok(ProcessDesision::Continue)
             }
         }
 

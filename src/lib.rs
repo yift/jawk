@@ -7,6 +7,7 @@ mod functions_definitions;
 mod grouper;
 mod json_parser;
 mod json_value;
+mod limits;
 mod merger;
 mod output;
 mod pre_sets;
@@ -25,9 +26,11 @@ use filter::Filter;
 use functions_definitions::print_help;
 use grouper::Grouper;
 use json_parser::JsonParserError;
+use limits::Limiter;
 use merger::Merger;
 use pre_sets::PreSetCollection;
 use pre_sets::PreSetParserError;
+use processor::ProcessDesision;
 use processor::{Context, Process, ProcessError, Titles};
 use selection::Selection;
 use selection::SelectionParseError;
@@ -133,6 +136,16 @@ pub struct Cli {
     #[arg(long, short, visible_alias = "order-by")]
     sort_by: Vec<String>,
 
+    /// How many results to skip (if any).
+    ///
+    #[arg(long, short = 'k', default_value_t = 0)]
+    skip: u64,
+
+    /// Maximal number of result to process.
+    ///
+    #[arg(long, short, visible_alias = "limit")]
+    take: Option<u64>,
+
     /// Row seperator.
     ///
     /// How to seperate between each row. The default is new line, but one can use something like `--row_seperator="---\n" to use yaml style seperation.
@@ -157,7 +170,7 @@ pub struct Cli {
     /// The expected format is `key=value` for variables or `@key=value` for macros.
     ///
     /// For example: `--set one=1 --set pi=3.14 --set name="Name" --set @pirsquare=(* :pi . .)`.
-    #[arg(long)]
+    #[arg(long, short = 'e')]
     set: Vec<String>,
 }
 
@@ -229,6 +242,7 @@ impl<S: Read> Master<S> {
         if self.cli.merge {
             process = Merger::create_process(process);
         }
+        process = Limiter::create_process(self.cli.skip, self.cli.take, process);
         for sorter in &self.cli.sort_by {
             let sorter = Sorter::from_str(sorter)?;
             process = sorter.create_processor(process);
@@ -283,7 +297,10 @@ impl<S: Read> Master<S> {
             match reader.next_json_value() {
                 Ok(Some(val)) => {
                     let context = Context::new_with_input(val);
-                    process.process(context)?;
+                    match process.process(context)? {
+                        ProcessDesision::Break => break Ok(()),
+                        ProcessDesision::Continue => {}
+                    }
                 }
                 Ok(None) => {
                     return Ok(());

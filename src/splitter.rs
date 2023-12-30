@@ -2,7 +2,7 @@ use std::{rc::Rc, str::FromStr};
 
 use crate::{
     json_value::JsonValue,
-    processor::{Context, Process, Titles},
+    processor::{Context, Process, ProcessDesision, Result as ProcessResult, Titles},
     reader::from_string,
     selection::{read_getter, Get, SelectionParseError},
 };
@@ -44,19 +44,19 @@ struct SplitterProcess {
     split_by: Rc<dyn Get>,
 }
 impl Process for SplitterProcess {
-    fn complete(&mut self) -> crate::processor::Result {
+    fn complete(&mut self) -> ProcessResult<()> {
         self.next.complete()
     }
-    fn process(&mut self, context: Context) -> crate::processor::Result {
+    fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
         if let Some(JsonValue::Array(lst)) = self.split_by.get(&context) {
             for val in lst {
                 let context = context.with_inupt(val);
                 self.next.process(context)?;
             }
         }
-        Ok(())
+        Ok(ProcessDesision::Continue)
     }
-    fn start(&mut self, titles_so_far: Titles) -> crate::processor::Result {
+    fn start(&mut self, titles_so_far: Titles) -> ProcessResult<()> {
         self.next.start(titles_so_far)
     }
 }
@@ -68,10 +68,10 @@ mod tests {
     use std::rc::Rc;
 
     use super::*;
-    use crate::processor::{Context, Result, Titles};
+    use crate::processor::{Context, Titles};
 
     #[test]
-    fn parse_parse_correctly() -> Result {
+    fn parse_parse_correctly() -> ProcessResult<()> {
         let str = "(.len)";
         let splitter = Splitter::from_str(str).unwrap();
 
@@ -82,7 +82,7 @@ mod tests {
         Ok(())
     }
     #[test]
-    fn parse_fail_if_too_long() -> Result {
+    fn parse_fail_if_too_long() -> ProcessResult<()> {
         let str = "(.len)3";
         let err = Splitter::from_str(str).err().unwrap();
 
@@ -92,18 +92,18 @@ mod tests {
     }
 
     #[test]
-    fn start_will_call_next() -> Result {
+    fn start_will_call_next() -> ProcessResult<()> {
         struct Next(Rc<RefCell<bool>>);
         let data = Rc::new(RefCell::new(false));
         let titles = Titles::default();
         impl Process for Next {
-            fn complete(&mut self) -> Result {
+            fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> Result {
-                Ok(())
+            fn process(&mut self, _: Context) -> ProcessResult<ProcessDesision> {
+                Ok(ProcessDesision::Continue)
             }
-            fn start(&mut self, _: Titles) -> Result {
+            fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 *self.0.borrow_mut() = true;
                 Ok(())
             }
@@ -123,18 +123,18 @@ mod tests {
     }
 
     #[test]
-    fn complete_will_complete_next() -> Result {
+    fn complete_will_complete_next() -> ProcessResult<()> {
         struct Next(Rc<RefCell<bool>>);
         let data = Rc::new(RefCell::new(false));
         impl Process for Next {
-            fn complete(&mut self) -> Result {
+            fn complete(&mut self) -> ProcessResult<()> {
                 *self.0.borrow_mut() = true;
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> Result {
-                Ok(())
+            fn process(&mut self, _: Context) -> ProcessResult<ProcessDesision> {
+                Ok(ProcessDesision::Continue)
             }
-            fn start(&mut self, _: Titles) -> Result {
+            fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
             }
         }
@@ -153,18 +153,18 @@ mod tests {
     }
 
     #[test]
-    fn process_will_split_and_call_next() -> Result {
+    fn process_will_split_and_call_next() -> ProcessResult<()> {
         struct Next(Rc<RefCell<usize>>);
         let data = Rc::new(RefCell::new(0));
         impl Process for Next {
-            fn complete(&mut self) -> Result {
+            fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> Result {
+            fn process(&mut self, _: Context) -> ProcessResult<ProcessDesision> {
                 *self.0.borrow_mut() += 1;
-                Ok(())
+                Ok(ProcessDesision::Continue)
             }
-            fn start(&mut self, _: Titles) -> Result {
+            fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
             }
         }

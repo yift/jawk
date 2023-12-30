@@ -6,7 +6,7 @@ use std::str::FromStr;
 use thiserror::Error;
 
 use crate::json_value::JsonValue;
-use crate::processor::{Context, Process, Titles};
+use crate::processor::{Context, Process, ProcessDesision, Result as ProcessResult, Titles};
 use crate::{
     reader::{from_string, Reader},
     selection::{read_getter, Get, SelectionParseError},
@@ -88,16 +88,16 @@ struct SortProcess {
 }
 
 impl Process for SortProcess {
-    fn start(&mut self, titles_so_far: Titles) -> crate::processor::Result {
+    fn start(&mut self, titles_so_far: Titles) -> ProcessResult<()> {
         self.next.start(titles_so_far)
     }
-    fn process(&mut self, context: Context) -> crate::processor::Result {
+    fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
         if let Some(key) = self.sort_by.get(&context) {
             self.data.entry(key).or_default().push_front(context);
         }
-        Ok(())
+        Ok(ProcessDesision::Continue)
     }
-    fn complete(&mut self) -> crate::processor::Result {
+    fn complete(&mut self) -> ProcessResult<()> {
         match self.direction {
             Direction::Asc => {
                 for items in self.data.values_mut() {
@@ -127,10 +127,9 @@ mod tests {
 
     use super::*;
     use crate::json_value::JsonValue;
-    use crate::processor::Result;
 
     #[test]
-    fn sort_will_read_asc_correctly() -> Result {
+    fn sort_will_read_asc_correctly() -> ProcessResult<()> {
         let sorter = Sorter::from_str("1 AsC").unwrap();
 
         assert_eq!(sorter.direction, Direction::Asc);
@@ -139,7 +138,7 @@ mod tests {
     }
 
     #[test]
-    fn sort_will_read_desc_correctly() -> Result {
+    fn sort_will_read_desc_correctly() -> ProcessResult<()> {
         let sorter = Sorter::from_str("1 DeSc").unwrap();
 
         assert_eq!(sorter.direction, Direction::Desc);
@@ -148,7 +147,7 @@ mod tests {
     }
 
     #[test]
-    fn sort_will_default_to_asc() -> Result {
+    fn sort_will_default_to_asc() -> ProcessResult<()> {
         let sorter = Sorter::from_str(" 1 ").unwrap();
 
         assert_eq!(sorter.direction, Direction::Asc);
@@ -157,7 +156,7 @@ mod tests {
     }
 
     #[test]
-    fn sort_will_fail_with_wrong_direction() -> Result {
+    fn sort_will_fail_with_wrong_direction() -> ProcessResult<()> {
         let error = Sorter::from_str(" 1 bla").err().unwrap();
 
         assert_eq!(matches!(error, SorterParserError::UnknownOrder(_)), true);
@@ -166,20 +165,20 @@ mod tests {
     }
 
     #[test]
-    fn sort_asc_will_sort_correctly() -> Result {
+    fn sort_asc_will_sort_correctly() -> ProcessResult<()> {
         struct Next(Rc<RefCell<Vec<JsonValue>>>);
         let data = Rc::new(RefCell::new(Vec::new()));
         impl Process for Next {
-            fn complete(&mut self) -> Result {
+            fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, context: Context) -> Result {
+            fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
                 let value = context.input().deref().clone();
                 let mut vec = self.0.borrow_mut();
                 vec.push(value);
-                Ok(())
+                Ok(ProcessDesision::Continue)
             }
-            fn start(&mut self, _: Titles) -> Result {
+            fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
             }
         }
@@ -229,20 +228,20 @@ mod tests {
     }
 
     #[test]
-    fn sort_desc_will_sort_correctly() -> Result {
+    fn sort_desc_will_sort_correctly() -> ProcessResult<()> {
         struct Next(Rc<RefCell<Vec<JsonValue>>>);
         let data = Rc::new(RefCell::new(Vec::new()));
         impl Process for Next {
-            fn complete(&mut self) -> Result {
+            fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, context: Context) -> Result {
+            fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
                 let value = context.input().deref().clone();
                 let mut vec = self.0.borrow_mut();
                 vec.push(value);
-                Ok(())
+                Ok(ProcessDesision::Continue)
             }
-            fn start(&mut self, _: Titles) -> Result {
+            fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
             }
         }

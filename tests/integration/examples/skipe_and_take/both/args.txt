@@ -1,0 +1,3 @@
+jawk
+--skip=4
+--take=3

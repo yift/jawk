@@ -1,6 +1,6 @@
 use crate::{
     json_value::JsonValue,
-    processor::{Context, Process, Titles},
+    processor::{Context, Process, ProcessDesision, Result, Titles},
 };
 
 pub struct Merger {
@@ -20,7 +20,7 @@ impl Merger {
 }
 
 impl Process for Merger {
-    fn complete(&mut self) -> crate::processor::Result {
+    fn complete(&mut self) -> Result<()> {
         let mut data = Vec::new();
         for value in self.data.iter() {
             let value = value.clone();
@@ -30,17 +30,18 @@ impl Process for Merger {
         let value = data.into();
         let context = Context::new_with_input(value);
         self.data.clear();
-        self.next.process(context)
+        self.next.process(context)?;
+        Ok(())
     }
-    fn process(&mut self, context: Context) -> crate::processor::Result {
+    fn process(&mut self, context: Context) -> Result<ProcessDesision> {
         if let Some(titles) = &self.titles {
             if let Some(value) = context.build(titles) {
                 self.data.push(value);
             }
         }
-        Ok(())
+        Ok(ProcessDesision::Continue)
     }
-    fn start(&mut self, titles_so_far: Titles) -> crate::processor::Result {
+    fn start(&mut self, titles_so_far: Titles) -> Result<()> {
         self.titles = Some(titles_so_far);
         self.next.start(Titles::default())
     }
@@ -54,23 +55,23 @@ mod tests {
 
     use super::*;
     use crate::json_value::JsonValue;
-    use crate::processor::{Context, Result, Titles};
+    use crate::processor::{Context, Titles};
 
     #[test]
-    fn start_will_remove_the_title() -> Result {
+    fn start_will_remove_the_title() -> Result<()> {
         struct Next(Rc<RefCell<bool>>);
         let data = Rc::new(RefCell::new(false));
         let titles = Titles::default()
             .with_title("one".into())
             .with_title("two".into());
         impl Process for Next {
-            fn complete(&mut self) -> Result {
+            fn complete(&mut self) -> Result<()> {
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> Result {
-                Ok(())
+            fn process(&mut self, _: Context) -> Result<ProcessDesision> {
+                Ok(ProcessDesision::Continue)
             }
-            fn start(&mut self, titles: Titles) -> Result {
+            fn start(&mut self, titles: Titles) -> Result<()> {
                 assert_eq!(titles.len(), 0);
                 *self.0.borrow_mut() = true;
                 Ok(())
@@ -89,22 +90,22 @@ mod tests {
     }
 
     #[test]
-    fn complete_will_complete_with_the_correct_values() -> Result {
+    fn complete_will_complete_with_the_correct_values() -> Result<()> {
         struct Next {
             data: Rc<RefCell<Option<JsonValue>>>,
         }
         let data = Rc::new(RefCell::new(Option::None));
         impl Process for Next {
-            fn complete(&mut self) -> Result {
+            fn complete(&mut self) -> Result<()> {
                 Ok(())
             }
-            fn process(&mut self, context: Context) -> Result {
+            fn process(&mut self, context: Context) -> Result<ProcessDesision> {
                 let input = context.input().deref().clone();
                 assert_eq!(self.data.borrow().is_none(), true);
                 *self.data.borrow_mut() = Some(input);
-                Ok(())
+                Ok(ProcessDesision::Continue)
             }
-            fn start(&mut self, _: Titles) -> Result {
+            fn start(&mut self, _: Titles) -> Result<()> {
                 Ok(())
             }
         }
