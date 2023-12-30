@@ -110,20 +110,11 @@ pub struct Cli {
     /// The expected format is `<selection>`.
     /// If the output is not a string, the data will be ignored. One can use the `stringify` function if needed.
     /// See selection additional help for available selections format.
-    /// Can not be used together with the merge.
-    ///
+    /// Ommiting the selection will produce a list instead of an object.
     ///
     /// For example: `--group-by=.name.first`.
-    #[arg(long, short)]
-    group_by: Option<String>,
-
-    /// Merge the output to a single list.
-    /// Can not be used together with the group-by.
-    ///
-    /// Be careful, the combination is done in memory.
-    ///
-    #[arg(long, short, visible_alias = "combine")]
-    merge: bool,
+    #[arg(long, short, visible_alias = "combine", visible_alias = "merge")]
+    group_by: Option<Option<String>>,
 
     /// How to order the output. Allow muttiploe sorting.
     ///
@@ -233,14 +224,12 @@ impl<S: Read> Master<S> {
             .output_style
             .get_processor(self.cli.row_seperator.clone(), self.stdout.clone());
         if let Some(group_by) = &self.cli.group_by {
-            if self.cli.merge {
-                return Err(MainError::UnsupportedMergeAndGroupBy);
+            if let Some(group_by) = group_by {
+                let group_by = Grouper::from_str(group_by)?;
+                process = group_by.create_process(process);
+            } else {
+                process = Merger::create_process(process);
             }
-            let group_by = Grouper::from_str(group_by)?;
-            process = group_by.create_process(process);
-        }
-        if self.cli.merge {
-            process = Merger::create_process(process);
         }
         process = Limiter::create_process(self.cli.skip, self.cli.take, process);
         for sorter in &self.cli.sort_by {
@@ -341,6 +330,4 @@ pub enum MainError {
     Processor(#[from] ProcessError),
     #[error("{0}")]
     PreSet(#[from] PreSetParserError),
-    #[error("Group by and merge are not supported")]
-    UnsupportedMergeAndGroupBy,
 }
