@@ -1,0 +1,8 @@
+jawk
+--split-by=.results
+--filter=(and (> .dob.age 40) (<= .dob.age 70))
+-o=csv
+--select=.name.first = First name
+--select=.name.last = Last name
+--select=.dob.age = Age
+--order-by=.name.last

@@ -15,6 +15,7 @@ mod reader;
 mod selection;
 mod selection_help;
 mod sorters;
+mod splitter;
 mod variables_extractor;
 
 use clap::Parser;
@@ -31,6 +32,7 @@ use selection::SelectionParseError;
 use selection_help::print_selection_help;
 use sorters::Sorter;
 use sorters::SorterParserError;
+use splitter::Splitter;
 use std::fmt::Error as FormatError;
 use std::fs::read_dir;
 use std::io::Error as IoEror;
@@ -86,16 +88,27 @@ pub struct Cli {
     #[arg(long, short, visible_alias = "where")]
     filter: Option<String>,
 
+    /// Split the input by.
+    ///
+    /// The expected format is `<selection>`.
+    /// If the output is not an array, the data will be ignored
+    /// See selection additional help for available selections format.
+    /// This will run before the filter.
+    ///
+    /// For example: `--split-by=.results`.
+    #[arg(long, short, visible_alias = "split-by")]
+    break_by: Option<String>,
+
     /// Group the output by.
     ///
     /// Be careful, the grouping is done in memory.
     /// The expected format is `<selection>`.
-    /// If the output is not a string, the line will be ignored. One can use the `stringify` function if needed.
+    /// If the output is not a string, the data will be ignored. One can use the `stringify` function if needed.
     /// See selection additional help for available selections format.
     ///
     ///
-    /// For example: `--group-by=.name.first``.
-    #[arg(long, short, visible_alias = "groupBy")]
+    /// For example: `--group-by=.name.first`.
+    #[arg(long, short)]
     group_by: Option<String>,
 
     /// How to order the output. Allow muttiploe sorting.
@@ -106,13 +119,7 @@ pub struct Cli {
     /// See selection additional help for available selections format.
     ///
     /// For example: `--sort-by=.name.last --sort-by=.name.first`.
-    #[arg(
-        long,
-        short,
-        visible_alias = "sortBy",
-        visible_alias = "order-by",
-        visible_alias = "orderBy"
-    )]
+    #[arg(long, short, visible_alias = "order-by")]
     sort_by: Vec<String>,
 
     /// Row seperator.
@@ -219,6 +226,10 @@ impl<S: Read> Master<S> {
         if let Some(filter) = &self.cli.filter {
             let filter = Filter::from_str(filter)?;
             process = filter.create_process(process);
+        }
+        if let Some(splitter) = &self.cli.break_by {
+            let splitter = Splitter::from_str(splitter)?;
+            process = splitter.create_process(process);
         }
         process = self.cli.set.create_process(process)?;
         process.start(Titles::default())?;
