@@ -217,7 +217,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                 )
                 .add_example(
                     Example::new()
-                    .input("{\"key\": \"g\"}")
+                        .input("{\"key\": \"g\"}")
                         .add_argument(
                             "[{\"g\": \"one\", \"v\": 1}, {\"g\": \"two\", \"v\": 2}, {\"g\": \"one\", \"v\": 33}, {\"g\": \"two\", \"v\": false}]"
                         )
@@ -313,16 +313,12 @@ pub fn get_list_functions() -> FunctionsGroup {
                     fn get(&self, context: &Context) -> Option<JsonValue> {
                         if let Some(JsonValue::Array(list)) = self.0.apply(context, 0) {
                             let has_init = self.0.len() > 2;
-                            let mut current  = if has_init {
+                            let mut current = if has_init {
                                 self.0.apply(context, 1)
                             } else {
                                 None
                             };
-                            let func = if has_init {
-                                self.0.get(2)
-                            } else {
-                                self.0.get(1)
-                            };
+                            let func = if has_init { self.0.get(2) } else { self.0.get(1) };
                             if let Some(func) = func {
                                 for (index, value) in list.iter().enumerate() {
                                     let mut mp = IndexMap::with_capacity(3);
@@ -346,28 +342,29 @@ pub fn get_list_functions() -> FunctionsGroup {
                 Rc::new(Impl(args))
             })
                 .add_description_line("Fold all the items in a list into a new value.")
-                .add_description_line("The first item should be the list, the second one the initial value and the third one a function that create the fold.")
-                .add_description_line("If the fuinction has only two arguments, the initial value will not be set.")
-                .add_description_line("The function will accespt as input an hash with `value`, `index` and `so_far` keys (if the previous run returned nothing, the `so far` will be empty).")
-                .add_example(
-                    Example::new()
-                    .add_argument("[1, 10, 0.6]")
-                    .add_argument("100")
-                    .add_argument("(+ .index .so_far .value)")
-                    .expected_output("114.6")
+                .add_description_line(
+                    "The first item should be the list, the second one the initial value and the third one a function that create the fold."
+                )
+                .add_description_line(
+                    "If the fuinction has only two arguments, the initial value will not be set."
+                )
+                .add_description_line(
+                    "The function will accespt as input an hash with `value`, `index` and `so_far` keys (if the previous run returned nothing, the `so far` will be empty)."
                 )
                 .add_example(
                     Example::new()
-                    .add_argument("[1, 10, 0.6]")
-                    .add_argument("(? (number? .so_far) (+ .so_far .value) .value)")
-                    .expected_output("11.6")
+                        .add_argument("[1, 10, 0.6]")
+                        .add_argument("100")
+                        .add_argument("(+ .index .so_far .value)")
+                        .expected_output("114.6")
                 )
                 .add_example(
                     Example::new()
-                    .add_argument("{}")
-                    .add_argument("1")
-                    .add_argument("2")
+                        .add_argument("[1, 10, 0.6]")
+                        .add_argument("(? (number? .so_far) (+ .so_far .value) .value)")
+                        .expected_output("11.6")
                 )
+                .add_example(Example::new().add_argument("{}").add_argument("1").add_argument("2"))
         )
 
         .add_function(
@@ -592,14 +589,14 @@ pub fn get_list_functions() -> FunctionsGroup {
                 )
                 .add_example(
                     Example::new()
-                    .input("{\"list\": [1, 2, 3, 4], \"add\": 12}")
+                        .input("{\"list\": [1, 2, 3, 4], \"add\": 12}")
                         .add_argument(".list")
                         .add_argument("(+ ^.add .)")
                         .expected_output("[13, 14, 15, 16]")
                 )
                 .add_example(
                     Example::new()
-                    .input("[[1, 2, 3, 4], [1, 2, 3], [6, 7]]")
+                        .input("[[1, 2, 3, 4], [1, 2, 3], [6, 7]]")
                         .add_argument(".")
                         .add_argument("(map . (+ (len ^^.) .))")
                         .expected_output("[[4, 5, 6, 7], [4, 5, 6], [9, 10]]")
@@ -826,6 +823,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                 }
                 Rc::new(Impl(args))
             })
+                .add_alias("push_back")
                 .add_description_line("Add items to a list.")
                 .add_description_line(
                     "If the first argument is a list, will iterate over all the other arguments and add them to the list if they exists."
@@ -852,5 +850,166 @@ pub fn get_list_functions() -> FunctionsGroup {
                         .expected_output("[\"a\"]")
                 )
                 .add_example(Example::new().add_argument("-4").add_argument("-4"))
+        )
+
+        .add_function(
+            FunctionDefinitions::new("push_front", 2, usize::MAX, |args| {
+                struct Impl(Vec<Rc<dyn Get>>);
+                impl Get for Impl {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
+                        match self.0.apply(value, 0) {
+                            Some(JsonValue::Array(lst)) => {
+                                let mut new_list = lst.clone();
+                                for index in 1..self.0.len() {
+                                    if let Some(val) = self.0.apply(value, index) {
+                                        new_list.insert(0, val);
+                                    }
+                                }
+                                Some(new_list.into())
+                            }
+                            _ => None,
+                        }
+                    }
+                }
+                Rc::new(Impl(args))
+            })
+                .add_description_line("Add items to the from of a list.")
+                .add_description_line(
+                    "If the first argument is a list, will iterate over all the other arguments and add them to the list if they exists."
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("[]")
+                        .add_argument("1")
+                        .add_argument("2")
+                        .add_argument("3")
+                        .add_argument("4")
+                        .expected_output("[4, 3, 2, 1]")
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("[\"a\" ,1 ]")
+                        .add_argument("\"b\"")
+                        .expected_output("[\"b\", \"a\", 1]")
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("[\"a\"]")
+                        .add_argument("(push 1 1)")
+                        .expected_output("[\"a\"]")
+                )
+                .add_example(Example::new().add_argument("-4").add_argument("-4"))
+        )
+
+        .add_function(
+            FunctionDefinitions::new("reverese", 1, 1, |args| {
+                struct Impl(Vec<Rc<dyn Get>>);
+                impl Get for Impl {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
+                        match self.0.apply(value, 0) {
+                            Some(JsonValue::Array(lst)) => {
+                                let mut new_list = Vec::with_capacity(lst.len());
+                                for val in lst.iter().rev() {
+                                    new_list.push(val.clone());
+                                }
+                                Some(new_list.into())
+                            }
+                            _ => None,
+                        }
+                    }
+                }
+                Rc::new(Impl(args))
+            })
+                .add_description_line("Reveres the order of a list.")
+                .add_description_line(
+                    "If the first argument is a list, will iterate over all the other arguments and add them to the list if they exists."
+                )
+                .add_example(
+                    Example::new().add_argument("[1, 2, 3, 4]").expected_output("[4, 3, 2, 1]")
+                )
+                .add_example(Example::new().add_argument("1"))
+        )
+
+        .add_function(
+            FunctionDefinitions::new("pop", 1, 1, |args| {
+                struct Impl(Vec<Rc<dyn Get>>);
+                impl Get for Impl {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
+                        match self.0.apply(value, 0) {
+                            Some(JsonValue::Array(lst)) => {
+                                if lst.is_empty() {
+                                    Some(lst.into())
+                                } else {
+                                    let new_len = lst.len() - 1;
+                                    let mut new_list = Vec::with_capacity(new_len);
+                                    for val in lst.iter() {
+                                        if new_list.len() < new_len {
+                                            new_list.push(val.clone());
+                                        }
+                                    }
+                                    Some(new_list.into())
+                                }
+                            }
+                            _ => None,
+                        }
+                    }
+                }
+                Rc::new(Impl(args))
+            })
+            .add_alias("pop_last")
+                .add_description_line("Pop the last item from a list.")
+                .add_description_line(
+                    "If the argument is a list, will return the list without it's last argument."
+                )
+                .add_example(
+                    Example::new().add_argument("[1, 2, 3, 4]").expected_output("[1, 2, 3]")
+                )
+                .add_example(
+                    Example::new().add_argument("[]").expected_output("[]")
+                )
+                .add_example(
+                    Example::new().add_argument("false")
+                )
+        )
+
+        .add_function(
+            FunctionDefinitions::new("pop_first", 1, 1, |args| {
+                struct Impl(Vec<Rc<dyn Get>>);
+                impl Get for Impl {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
+                        match self.0.apply(value, 0) {
+                            Some(JsonValue::Array(lst)) => {
+                                if lst.is_empty() {
+                                    Some(lst.into())
+                                } else {
+                                    let new_len = lst.len() - 1;
+                                    let mut new_list = Vec::with_capacity(new_len);
+                                    for (i, val) in lst.iter().enumerate() {
+                                        if i != 0 {
+                                            new_list.push(val.clone());
+                                        }
+                                    }
+                                    Some(new_list.into())
+                                }
+                            }
+                            _ => None,
+                        }
+                    }
+                }
+                Rc::new(Impl(args))
+            })
+                .add_description_line("Pop the first item from a list.")
+                .add_description_line(
+                    "If the argument is a list, will return the list without it's first argument."
+                )
+                .add_example(
+                    Example::new().add_argument("[1, 2, 3, 4]").expected_output("[2, 3, 4]")
+                )
+                .add_example(
+                    Example::new().add_argument("[]").expected_output("[]")
+                )
+                .add_example(
+                    Example::new().add_argument("false")
+                )
         )
 }
