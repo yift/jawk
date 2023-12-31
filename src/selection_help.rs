@@ -155,14 +155,14 @@ pub fn print_selection_help() {
         }
         println!("  For example:");
         for e in t.examples {
-            println!("      * For selection: `{}:`", e.selection);
+            println!("      * For selection: `{}`:", e.selection);
             if let Some(o) = e.expected_output {
                 println!("        will produce: `{}`", o);
             } else {
                 println!("        will produce nothing");
             }
             if let Ok(i) = JsonValue::from_str(e.input.as_str()) {
-                println!("        for input: `{}.`", i);
+                println!("        for input: `{}`.", i);
             } else {
                 println!("        regardless of the input.");
             }
