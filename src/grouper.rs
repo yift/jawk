@@ -58,7 +58,7 @@ impl Process for GrouperProcess {
         }
 
         let value = data.into();
-        let context = Context::new_with_input(value);
+        let context = Context::new_with_no_context(value);
         self.data.clear();
         self.next.process(context)?;
         Ok(())
@@ -101,7 +101,7 @@ mod tests {
         let str = "(.len)";
         let grouper = Grouper::from_str(str).unwrap();
 
-        let input = Context::new_with_input("test".into());
+        let input = Context::new_with_no_context("test".into());
 
         assert_eq!(grouper.group_by.get(&input), Some((4).into()));
 
@@ -184,23 +184,23 @@ mod tests {
 
             grouper.start(titles)?;
 
-            let context = Context::new_with_input("one".into())
+            let context = Context::new_with_no_context("one".into())
                 .with_result(Some((1).into()))
                 .with_result(Some((2).into()));
             grouper.process(context)?;
-            let context = Context::new_with_input("one".into())
+            let context = Context::new_with_no_context("one".into())
                 .with_result(Some((4).into()))
                 .with_result(Some((6).into()));
             grouper.process(context)?;
-            let context = Context::new_with_input("three".into())
+            let context = Context::new_with_no_context("three".into())
                 .with_result(Some((3).into()))
                 .with_result(Some((4).into()));
             grouper.process(context)?;
-            let context = Context::new_with_input(1.into())
+            let context = Context::new_with_no_context(1.into())
                 .with_result(Some((10).into()))
                 .with_result(Some((20).into()));
             grouper.process(context)?;
-            let context = Context::new_with_input("one".into())
+            let context = Context::new_with_no_context("one".into())
                 .with_result(Some((10).into()))
                 .with_result(Some((20).into()));
             grouper.process(context)?;

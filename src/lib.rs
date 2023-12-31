@@ -5,6 +5,7 @@ mod filter;
 mod functions;
 mod functions_definitions;
 mod grouper;
+mod input_context_extractor;
 mod json_parser;
 mod json_value;
 mod limits;
@@ -255,41 +256,54 @@ impl<S: Read> Master<S> {
         process = self.cli.set.create_process(process)?;
         process.start(Titles::default())?;
 
+        let mut index = 0;
         if self.cli.files.is_empty() {
             let mut reader = from_std_in((self.stdin)());
-            self.read_input(&mut reader, process.as_mut())?;
+            self.read_input(&mut reader, &mut index, process.as_mut())?;
         } else {
             for file in self.cli.files.clone() {
-                self.read_file(&file, process.as_mut())?;
+                self.read_file(&file, &mut index, process.as_mut())?;
             }
         }
         process.complete()?;
         Ok(())
     }
 
-    fn read_file(&self, file: &PathBuf, process: &mut dyn Process) -> Result<()> {
+    fn read_file(&self, file: &PathBuf, index: &mut u64, process: &mut dyn Process) -> Result<()> {
         if !file.exists() {
             panic!("File {:?} not exists", file);
         }
         if file.is_dir() {
             for entry in read_dir(file)? {
                 let path = entry?.path();
-                self.read_file(&path, process)?;
+                self.read_file(&path, index, process)?;
             }
         } else {
             let mut reader = from_file(file)?;
-            self.read_input(&mut reader, process)?;
+            self.read_input(&mut reader, index, process)?;
         }
         Ok(())
     }
-    fn read_input<R: Read>(&self, reader: &mut Reader<R>, process: &mut dyn Process) -> Result<()> {
+    fn read_input<R: Read>(
+        &self,
+        reader: &mut Reader<R>,
+        index: &mut u64,
+        process: &mut dyn Process,
+    ) -> Result<()> {
+        let mut in_file_index: u64 = 0;
         loop {
+            let started = reader.where_am_i();
             match reader.next_json_value() {
                 Ok(Some(val)) => {
-                    let context = Context::new_with_input(val);
+                    let ended = reader.where_am_i();
+                    let context =
+                        Context::new_with_input(val, started, ended, in_file_index, *index);
                     match process.process(context)? {
                         ProcessDesision::Break => break Ok(()),
-                        ProcessDesision::Continue => {}
+                        ProcessDesision::Continue => {
+                            in_file_index += 1;
+                            *index += 1;
+                        }
                     }
                 }
                 Ok(None) => {

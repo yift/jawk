@@ -431,15 +431,15 @@ mod tests {
         let titles = Titles::default();
 
         proccsor.start(titles)?;
-        let result = Context::new_with_input(JsonValue::from_str("true").unwrap());
+        let result = Context::new_with_no_context(JsonValue::from_str("true").unwrap());
         proccsor.process(result)?;
-        let result = Context::new_with_input(JsonValue::from_str("1200").unwrap());
+        let result = Context::new_with_no_context(JsonValue::from_str("1200").unwrap());
         proccsor.process(result)?;
-        let result = Context::new_with_input(
+        let result = Context::new_with_no_context(
             JsonValue::from_str(r#"{"one": {"key": 12}, "two": [1, 2, 3]}"#).unwrap(),
         );
         proccsor.process(result)?;
-        let result = Context::new_with_input(JsonValue::from_str("[1, 2, 4]").unwrap());
+        let result = Context::new_with_no_context(JsonValue::from_str("[1, 2, 4]").unwrap());
         proccsor.process(result)?;
 
         let vec = writer.lock().unwrap().clone();

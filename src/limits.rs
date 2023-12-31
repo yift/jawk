@@ -85,7 +85,7 @@ mod tests {
         let mut limiter = Limiter::create_process(5, Some(2), next);
         let mut results = Vec::new();
         for i in 0..10 {
-            let input = Context::new_with_input(i.into());
+            let input = Context::new_with_no_context(i.into());
             let desicion = limiter.process(input)?;
             results.push(desicion);
         }
@@ -127,7 +127,7 @@ mod tests {
         let mut limiter = Limiter::create_process(5, None, next);
         let mut results = Vec::new();
         for i in 0..10 {
-            let input = Context::new_with_input(i.into());
+            let input = Context::new_with_no_context(i.into());
             let desicion = limiter.process(input)?;
             results.push(desicion);
         }

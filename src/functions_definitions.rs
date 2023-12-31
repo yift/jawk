@@ -231,7 +231,7 @@ pub fn print_help() {
                 let run = format!("({} {})", name, args);
                 println!("        running: \"{}\"", run);
                 let selection = Selection::from_str(&run).unwrap();
-                match selection.get(&Context::new_with_input(json)) {
+                match selection.get(&Context::new_with_no_context(json)) {
                     None => println!("        will return nothing"),
                     Some(result) => println!("        will give: \"{}\"", result),
                 };
@@ -272,7 +272,7 @@ mod tests {
                         let mut reader = from_string(&input);
                         reader.next_json_value().unwrap().unwrap()
                     });
-                    let result = selection.get(&Context::new_with_input(json));
+                    let result = selection.get(&Context::new_with_no_context(json));
                     match &result {
                         Some(result) => println!("\t\t\tgot: {}", result),
                         None => println!("\t\t\tgot nothing"),

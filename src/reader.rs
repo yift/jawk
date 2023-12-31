@@ -7,9 +7,9 @@ use std::{
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Location {
-    input: Option<String>,
-    line_number: usize,
-    char_number: usize,
+    pub input: Option<String>,
+    pub line_number: usize,
+    pub char_number: usize,
 }
 pub struct Reader<R: Read> {
     bytes: Bytes<R>,
@@ -21,10 +21,7 @@ pub fn from_file(file_name: &PathBuf) -> Result<Reader<BufReader<File>>> {
     let reader = BufReader::new(file);
     Ok(Reader::new(
         reader,
-        file_name
-            .to_str()
-            .map(|f| f.to_string())
-            .map(|f| format!("File: {}", f)),
+        file_name.to_str().map(|f| f.to_string()),
     ))
 }
 pub fn from_std_in<R: Read>(stdin: R) -> Reader<R> {

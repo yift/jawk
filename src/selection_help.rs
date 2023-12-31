@@ -4,13 +4,13 @@ use crate::json_value::JsonValue;
 
 struct UsageExample {
     selection: String,
-    input: Option<JsonValue>,
+    input: String,
     expected_output: Option<JsonValue>,
 }
 impl UsageExample {
     fn new(selection: &str, input: &str, expected_output: &str) -> Self {
         let expected_output = JsonValue::from_str(expected_output).ok();
-        let input = JsonValue::from_str(input).ok();
+        let input = input.to_string();
         let selection = selection.to_string();
         UsageExample {
             selection,
@@ -120,8 +120,28 @@ fn build_help() -> Vec<SelectionHelp> {
                     "[1, 2, 3, 4, 5, 6, 7]",
                     "[2, 4, 6]"
                 )
+            ),
+            SelectionHelp::new(
+                "Input context",
+                vec![
+                    "Use input context to get the context of the input. The available input types are:",
+                    "* `&index` - To get the index of the current value within the current run.",
+                    "* `&index-in-file` - To get the index of the current value within the curent file.",
+                    "* `&started-at-line-number` - To get the line number within the input file in which the input started.",
+                    "* `&started-at-char-number` - To get the char number within the line within the input file in which the input started.",
+                    "* `&ended-at-line-number` - To get the line number within the input file in which the input ended.",
+                    "* `&ended-at-char-number` - To get the char number within the line within the input file in which the input ended.",
+                    "* `&file-name` - To get the name of the input file from which the input was parsed (will be empty for stdin input).",
+                ]
             )
-    ]
+                .with_example(
+                    UsageExample::new(
+                        r#"(- &ended-at-char-number &started-at-char-number)"#,
+                        r#""test""#,
+                        "6"
+                    )
+                ),
+        ]
 }
 
 pub fn print_selection_help() {
@@ -141,7 +161,7 @@ pub fn print_selection_help() {
             } else {
                 println!("        will produce nothing");
             }
-            if let Some(i) = e.input {
+            if let Ok(i) = JsonValue::from_str(e.input.as_str()) {
                 println!("        for input: `{}.`", i);
             } else {
                 println!("        regardless of the input.");
@@ -152,6 +172,7 @@ pub fn print_selection_help() {
 #[cfg(test)]
 mod tests {
     use crate::{
+        json_parser::JsonParser,
         processor::Context,
         reader::from_string,
         selection::{self, read_getter},
@@ -168,10 +189,14 @@ mod tests {
                 println!("\tFor selection: {}", &example.selection);
                 let mut reader = from_string(&example.selection);
                 let getter = read_getter(&mut reader).unwrap();
-                let context = match example.input {
+                let mut context_reader = from_string(&example.input);
+                let started = context_reader.where_am_i();
+                let input = context_reader.next_json_value()?;
+                let ended = context_reader.where_am_i();
+                let context = match input {
                     Some(i) => {
                         println!("\tAnd input: {}", &i);
-                        Context::new_with_input(i)
+                        Context::new_with_input(i, started, ended, 0, 0)
                     }
                     None => {
                         println!("\tAnd no input");

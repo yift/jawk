@@ -28,7 +28,7 @@ impl Process for Merger {
         }
 
         let value = data.into();
-        let context = Context::new_with_input(value);
+        let context = Context::new_with_no_context(value);
         self.data.clear();
         self.next.process(context)?;
         Ok(())
@@ -116,15 +116,15 @@ mod tests {
         let mut merger = Merger::create_process(next);
         merger.start(titles)?;
 
-        let context = Context::new_with_input("one".into())
+        let context = Context::new_with_no_context("one".into())
             .with_result(Some((1).into()))
             .with_result(Some((2).into()));
         merger.process(context)?;
-        let context = Context::new_with_input("one".into())
+        let context = Context::new_with_no_context("one".into())
             .with_result(Some((4).into()))
             .with_result(Some((6).into()));
         merger.process(context)?;
-        let context = Context::new_with_input("three".into())
+        let context = Context::new_with_no_context("three".into())
             .with_result(Some((3).into()))
             .with_result(Some((4).into()));
         merger.process(context)?;

@@ -62,29 +62,29 @@ mod tests {
             let next = Box::new(Next(data.clone()));
             let mut uniquness = Uniquness::create_process(next);
 
-            let context = Context::new_with_input("text".into());
+            let context = Context::new_with_no_context("text".into());
             uniquness.process(context)?;
-            let context = Context::new_with_input("text".into());
+            let context = Context::new_with_no_context("text".into());
             uniquness.process(context)?;
-            let context = Context::new_with_input((100).into());
+            let context = Context::new_with_no_context((100).into());
             uniquness.process(context)?;
-            let context = Context::new_with_input("text2".into());
+            let context = Context::new_with_no_context("text2".into());
             uniquness.process(context)?;
-            let context = Context::new_with_input((200).into());
+            let context = Context::new_with_no_context((200).into());
             uniquness.process(context)?;
-            let context = Context::new_with_input((100).into());
+            let context = Context::new_with_no_context((100).into());
             uniquness.process(context)?;
-            let context = Context::new_with_input((200).into());
+            let context = Context::new_with_no_context((200).into());
             uniquness.process(context)?;
-            let context = Context::new_with_input("text2".into());
+            let context = Context::new_with_no_context("text2".into());
             uniquness.process(context)?;
-            let context = Context::new_with_input("text".into());
+            let context = Context::new_with_no_context("text".into());
             uniquness.process(context)?;
-            let context = Context::new_with_input((100).into());
+            let context = Context::new_with_no_context((100).into());
             uniquness.process(context)?;
-            let context = Context::new_with_input((200).into());
+            let context = Context::new_with_no_context((200).into());
             uniquness.process(context)?;
-            let context = Context::new_with_input("text2".into());
+            let context = Context::new_with_no_context("text2".into());
             uniquness.process(context)?;
         }
 

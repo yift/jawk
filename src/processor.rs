@@ -8,6 +8,7 @@ use std::io::Error as IoEror;
 use thiserror::Error;
 
 use crate::json_value::JsonValue;
+use crate::reader::Location;
 use crate::selection::Get;
 
 #[derive(Debug, Error)]
@@ -49,12 +50,21 @@ pub enum ContextKey {
     Value(JsonValue),
     Results(Vec<Option<JsonValue>>),
 }
+
+#[derive(Clone)]
+pub struct InputContext {
+    pub start_location: Location,
+    pub end_location: Location,
+    pub file_index: u64,
+    pub index: u64,
+}
 pub struct Context {
     input: Rc<JsonValue>,
     results: Vec<Option<JsonValue>>,
     parent_inputs: Vec<Rc<JsonValue>>,
     variables: Rc<HashMap<String, JsonValue>>,
     definitions: Rc<HashMap<String, Rc<dyn Get>>>,
+    input_context: Option<Rc<InputContext>>,
 }
 impl Context {
     pub fn new_empty() -> Self {
@@ -64,15 +74,39 @@ impl Context {
             parent_inputs: Vec::new(),
             variables: Rc::new(HashMap::new()),
             definitions: Rc::new(HashMap::new()),
+            input_context: None,
         }
     }
-    pub fn new_with_input(input: JsonValue) -> Self {
+    pub fn new_with_no_context(input: JsonValue) -> Self {
         Context {
             input: Rc::new(input),
             results: Vec::new(),
             parent_inputs: Vec::new(),
             variables: Rc::new(HashMap::new()),
             definitions: Rc::new(HashMap::new()),
+            input_context: None,
+        }
+    }
+    pub fn new_with_input(
+        input: JsonValue,
+        start_location: Location,
+        end_location: Location,
+        file_index: u64,
+        index: u64,
+    ) -> Self {
+        let input_context = InputContext {
+            start_location,
+            end_location,
+            file_index,
+            index,
+        };
+        Context {
+            input: Rc::new(input),
+            results: Vec::new(),
+            parent_inputs: Vec::new(),
+            variables: Rc::new(HashMap::new()),
+            definitions: Rc::new(HashMap::new()),
+            input_context: Some(Rc::new(input_context)),
         }
     }
     pub fn with_inupt(&self, value: JsonValue) -> Self {
@@ -88,6 +122,7 @@ impl Context {
             parent_inputs,
             variables: self.variables.clone(),
             definitions: self.definitions.clone(),
+            input_context: self.input_context.clone(),
         }
     }
     pub fn with_result(&self, result: Option<JsonValue>) -> Self {
@@ -99,6 +134,7 @@ impl Context {
             parent_inputs: Vec::new(),
             variables: self.variables.clone(),
             definitions: self.definitions.clone(),
+            input_context: self.input_context.clone(),
         }
     }
     pub fn with_variable(&self, name: String, value: JsonValue) -> Self {
@@ -113,6 +149,7 @@ impl Context {
             parent_inputs: Vec::new(),
             variables: Rc::new(variables),
             definitions: self.definitions.clone(),
+            input_context: self.input_context.clone(),
         }
     }
     pub fn with_variables(&self, variables: &Rc<HashMap<String, JsonValue>>) -> Self {
@@ -122,6 +159,7 @@ impl Context {
             parent_inputs: Vec::new(),
             variables: variables.clone(),
             definitions: self.definitions.clone(),
+            input_context: self.input_context.clone(),
         }
     }
     pub fn with_definition(&self, name: String, definition: &Rc<dyn Get>) -> Self {
@@ -136,6 +174,7 @@ impl Context {
             parent_inputs: Vec::new(),
             variables: self.variables.clone(),
             definitions: Rc::new(definitions),
+            input_context: self.input_context.clone(),
         }
     }
     pub fn with_definitions(&self, definitions: &Rc<HashMap<String, Rc<dyn Get>>>) -> Self {
@@ -145,6 +184,7 @@ impl Context {
             parent_inputs: Vec::new(),
             variables: self.variables.clone(),
             definitions: definitions.clone(),
+            input_context: self.input_context.clone(),
         }
     }
     pub fn build(&self, titles: &Titles) -> Option<JsonValue> {
@@ -198,6 +238,10 @@ impl Context {
         } else {
             ContextKey::Results(self.results.clone())
         }
+    }
+
+    pub fn input_context(&self) -> Option<Rc<InputContext>> {
+        self.input_context.clone()
     }
 }
 

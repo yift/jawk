@@ -74,7 +74,7 @@ mod tests {
         let str = "(> . 0)     ";
         let filter = Filter::from_str(str).unwrap();
 
-        let input = Context::new_with_input((5).into());
+        let input = Context::new_with_no_context((5).into());
 
         assert_eq!(filter.filter.get(&input), Some(true.into()));
 
@@ -183,21 +183,21 @@ mod tests {
             let next = Box::new(Next(data.clone()));
             let mut filter = filter.create_process(next);
 
-            let context = Context::new_with_input((100).into());
+            let context = Context::new_with_no_context((100).into());
             filter.process(context)?;
-            let context = Context::new_with_input((100).into());
+            let context = Context::new_with_no_context((100).into());
             filter.process(context)?;
-            let context = Context::new_with_input((10).into());
+            let context = Context::new_with_no_context((10).into());
             filter.process(context)?;
-            let context = Context::new_with_input((6).into());
+            let context = Context::new_with_no_context((6).into());
             filter.process(context)?;
-            let context = Context::new_with_input((5).into());
+            let context = Context::new_with_no_context((5).into());
             filter.process(context)?;
-            let context = Context::new_with_input((2).into());
+            let context = Context::new_with_no_context((2).into());
             filter.process(context)?;
-            let context = Context::new_with_input((0).into());
+            let context = Context::new_with_no_context((0).into());
             filter.process(context)?;
-            let context = Context::new_with_input((10).into());
+            let context = Context::new_with_no_context((10).into());
             filter.process(context)?;
         }
 

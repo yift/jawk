@@ -1,0 +1,7 @@
+"value", "index", "index in file", "from-line", "end-line", "start-char", "endchar", "file"
+"[1,2,3,true]", 0, 0, 1, 7, 1, 1, 
+"{}", 1, 1, 7, 8, 1, 1, 
+False, 2, 2, 8, 9, 1, 1, 
+"test", 3, 3, 9, 10, 1, 1, 
+"{""key"":""value""}", 4, 4, 10, 12, 1, 3, 
+122, 5, 5, 12, 12, 3, 6, 

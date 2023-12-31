@@ -1,0 +1,10 @@
+jawk
+-o=csv
+--select=.=value
+--select=&index=index
+--select=&index-in-file=index in file
+--select=&started-at-line-number=from-line
+--select=&ended-at-line-number=end-line
+--select=&started-at-char-number=start-char
+--select=&ended-at-char-number=endchar
+--select=&file-name=file

@@ -75,7 +75,7 @@ mod tests {
         let str = "(.len)";
         let splitter = Splitter::from_str(str).unwrap();
 
-        let input = Context::new_with_input("test".into());
+        let input = Context::new_with_no_context("test".into());
 
         assert_eq!(splitter.split_by.get(&input), Some((4).into()));
 

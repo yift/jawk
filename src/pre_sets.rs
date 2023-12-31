@@ -166,7 +166,7 @@ mod tests {
 
         let next = Box::new(Next(data.clone()));
         let mut preseters = list.create_process(next).unwrap();
-        let context = Context::new_with_input(JsonValue::Null);
+        let context = Context::new_with_no_context(JsonValue::Null);
 
         preseters.process(context)?;
 

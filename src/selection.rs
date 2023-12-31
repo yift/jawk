@@ -3,6 +3,8 @@ use crate::extractor::parse_extractor;
 use crate::extractor::root;
 use crate::functions_definitions::find_function;
 use crate::functions_definitions::FunctionDefinitionsError;
+use crate::input_context_extractor::parse_input_context;
+use crate::input_context_extractor::InputContextExtractorParseError;
 use crate::json_parser::JsonParserError;
 use crate::json_value::JsonValue;
 use crate::processor::Context;
@@ -46,6 +48,8 @@ pub enum SelectionParseError {
     NumberParseError(#[from] ParseIntError),
     #[error("{0}")]
     Function(#[from] FunctionDefinitionsError),
+    #[error("{0}")]
+    InputContext(#[from] InputContextExtractorParseError),
     #[error("{0}, Missing key name")]
     MissingKey(Location),
     #[error("{0}: Expecting equals, got {1}")]
@@ -117,6 +121,7 @@ pub fn read_getter<R: Read>(reader: &mut Reader<R>) -> Result<Rc<dyn Get>> {
         Some(b'.') | Some(b'#') | Some(b'^') => parse_extractor(reader),
         Some(b'(') => parse_function(reader),
         Some(b':' | b'@') => parse_get_variable(reader),
+        Some(b'&') => parse_input_context(reader),
         _ => match ConstGetters::parse(reader)? {
             None => Err(SelectionParseError::UnexpectedEof),
             Some(getter) => Ok(Rc::new(getter)),
