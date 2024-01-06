@@ -16,6 +16,7 @@ mod printer;
 mod processor;
 mod reader;
 mod selection;
+mod selection_extractor;
 mod selection_help;
 mod sorters;
 mod splitter;

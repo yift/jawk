@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
 use crate::json_value::JsonValue;
 
@@ -6,6 +6,7 @@ struct UsageExample {
     selection: String,
     input: String,
     expected_output: Option<JsonValue>,
+    previous_selection: HashMap<String, Option<JsonValue>>,
 }
 impl UsageExample {
     fn new(selection: &str, input: &str, expected_output: &str) -> Self {
@@ -16,6 +17,18 @@ impl UsageExample {
             selection,
             input,
             expected_output,
+            previous_selection: HashMap::new(),
+        }
+    }
+
+    fn with_previous_selection(self, name: &str, value: &str) -> Self {
+        let mut previous_selection = self.previous_selection.clone();
+        previous_selection.insert(name.into(), JsonValue::from_str(value).ok());
+        UsageExample {
+            selection: self.selection,
+            input: self.input,
+            expected_output: self.expected_output,
+            previous_selection,
         }
     }
 }
@@ -141,7 +154,36 @@ fn build_help() -> Vec<SelectionHelp> {
                         "6"
                     )
                 ),
-        ]
+                SelectionHelp::new(
+                    "Previous selected values",
+                    vec![
+                        "Reuse previoulsy selected value. Us this to reuse a value that had been selected previously. This is not available during filtering, ",
+                        "and one can only refere to values that had been selected before.",
+                        "The format is '<selection-name>' where the <selection-name> is the name of the selection."
+                    ]
+                )
+                    .with_example(
+                        UsageExample::new(
+                            "'name'", 
+                            "",
+                             "\"John\""
+                            ).with_previous_selection("name", "\"John\"")
+                        )
+                        .with_example(
+                            UsageExample::new(
+                                "'name'", 
+                                "",
+                                 ""
+                                ).with_previous_selection("name", "")
+                            )
+                            .with_example(
+                                UsageExample::new(
+                                    "'name'", 
+                                    "",
+                                     ""
+                                    ).with_previous_selection("Last Name", "\"Doe\"")
+                                ),
+                    ]
 }
 
 pub fn print_selection_help() {
@@ -166,11 +208,25 @@ pub fn print_selection_help() {
             } else {
                 println!("        regardless of the input.");
             }
+            if !e.previous_selection.is_empty() {
+                for (key, value) in e.previous_selection {
+                    if let Some(value) = value {
+                        println!(
+                            "        and previously selected \"{}\" as `{}`.",
+                            key, value
+                        );
+                    } else {
+                        println!("        and previously selected \"{}\" as nothing.", key);
+                    }
+                }
+            }
         }
     }
 }
 #[cfg(test)]
 mod tests {
+    use std::rc::Rc;
+
     use crate::{
         json_parser::JsonParser,
         processor::Context,
@@ -193,7 +249,7 @@ mod tests {
                 let started = context_reader.where_am_i();
                 let input = context_reader.next_json_value()?;
                 let ended = context_reader.where_am_i();
-                let context = match input {
+                let mut context = match input {
                     Some(i) => {
                         println!("\tAnd input: {}", &i);
                         Context::new_with_input(i, started, ended, 0, 0)
@@ -203,6 +259,9 @@ mod tests {
                         Context::new_empty()
                     }
                 };
+                for (key, value) in example.previous_selection {
+                    context = context.with_result(&Rc::new(key), value);
+                }
 
                 let output = getter.get(&context);
                 match &output {

@@ -15,6 +15,7 @@ use crate::processor::Titles;
 use crate::reader::from_string;
 use crate::reader::Location;
 use crate::reader::Reader;
+use crate::selection_extractor::parse_get_selection;
 use crate::variables_extractor::parse_get_variable;
 use std::io::Error as IoError;
 use std::io::Read;
@@ -123,6 +124,7 @@ pub fn read_getter<R: Read>(reader: &mut Reader<R>) -> Result<Rc<dyn Get>> {
         Some(b'(') => parse_function(reader),
         Some(b':' | b'@') => parse_get_variable(reader),
         Some(b'&') => parse_input_context(reader),
+        Some(b'\'') => parse_get_selection(reader),
         _ => match ConstGetters::parse(reader)? {
             None => Err(SelectionParseError::UnexpectedEof),
             Some(getter) => Ok(Rc::new(getter)),

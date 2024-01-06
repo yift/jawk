@@ -215,6 +215,15 @@ impl Context {
         self.definitions.get(name)
     }
 
+    pub fn get_selected(&self, name: &String) -> Option<JsonValue> {
+        for (title, result) in &self.results {
+            if title.deref() == name {
+                return result.clone();
+            }
+        }
+        None
+    }
+
     pub fn input(&self) -> &Rc<JsonValue> {
         &self.input
     }
