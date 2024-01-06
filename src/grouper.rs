@@ -38,7 +38,6 @@ impl Grouper {
             data: IndexMap::new(),
             next,
             group_by: self.group_by.clone(),
-            titles: None,
         })
     }
 }
@@ -47,7 +46,6 @@ struct GrouperProcess {
     data: IndexMap<String, Vec<JsonValue>>,
     next: Box<dyn Process>,
     group_by: Rc<dyn Get>,
-    titles: Option<Titles>,
 }
 impl Process for GrouperProcess {
     fn complete(&mut self) -> ProcessResult<()> {
@@ -64,15 +62,14 @@ impl Process for GrouperProcess {
         Ok(())
     }
     fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
-        if let (Some(key), Some(titles)) = (self.name(&context), &self.titles) {
-            if let Some(value) = context.build(titles) {
+        if let Some(key) = self.name(&context) {
+            if let Some(value) = context.build() {
                 self.data.entry(key).or_default().push(value);
             }
         }
         Ok(ProcessDesision::Continue)
     }
-    fn start(&mut self, titles_so_far: Titles) -> ProcessResult<()> {
-        self.titles = Some(titles_so_far);
+    fn start(&mut self, _: Titles) -> ProcessResult<()> {
         self.next.start(Titles::default())
     }
 }
@@ -121,9 +118,9 @@ mod tests {
     fn start_will_remove_the_title() -> ProcessResult<()> {
         struct Next(Rc<RefCell<bool>>);
         let data = Rc::new(RefCell::new(false));
-        let titles = Titles::default()
-            .with_title("one".into())
-            .with_title("two".into());
+        let one = Rc::new("one".into());
+        let two = Rc::new("two".into());
+        let titles = Titles::default().with_title(&one).with_title(&two);
         impl Process for Next {
             fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
@@ -177,32 +174,32 @@ mod tests {
             let str = ".";
             let grouper = Grouper::from_str(str).unwrap();
             let next = Box::new(Next { data: data.clone() });
-            let titles = Titles::default()
-                .with_title("one".into())
-                .with_title("two".into());
+            let one = Rc::new("one".into());
+            let two = Rc::new("two".into());
+            let titles = Titles::default().with_title(&one).with_title(&two);
             let mut grouper = grouper.create_process(next);
 
             grouper.start(titles)?;
 
             let context = Context::new_with_no_context("one".into())
-                .with_result(Some((1).into()))
-                .with_result(Some((2).into()));
+                .with_result(&one, Some((1).into()))
+                .with_result(&two, Some((2).into()));
             grouper.process(context)?;
             let context = Context::new_with_no_context("one".into())
-                .with_result(Some((4).into()))
-                .with_result(Some((6).into()));
+                .with_result(&one, Some((4).into()))
+                .with_result(&two, Some((6).into()));
             grouper.process(context)?;
             let context = Context::new_with_no_context("three".into())
-                .with_result(Some((3).into()))
-                .with_result(Some((4).into()));
+                .with_result(&one, Some((3).into()))
+                .with_result(&two, Some((4).into()));
             grouper.process(context)?;
             let context = Context::new_with_no_context(1.into())
-                .with_result(Some((10).into()))
-                .with_result(Some((20).into()));
+                .with_result(&one, Some((10).into()))
+                .with_result(&two, Some((20).into()));
             grouper.process(context)?;
             let context = Context::new_with_no_context("one".into())
-                .with_result(Some((10).into()))
-                .with_result(Some((20).into()));
+                .with_result(&one, Some((10).into()))
+                .with_result(&two, Some((20).into()));
             grouper.process(context)?;
 
             grouper.complete()?;

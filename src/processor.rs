@@ -23,12 +23,12 @@ pub enum ProcessError {
 
 #[derive(Default)]
 pub struct Titles {
-    titles: Vec<String>,
+    titles: Vec<Rc<String>>,
 }
 impl Titles {
-    pub fn with_title(&self, title: String) -> Self {
+    pub fn with_title(&self, title: &Rc<String>) -> Self {
         let mut titles = self.titles.clone();
-        titles.push(title);
+        titles.push(title.clone());
         Titles { titles }
     }
 
@@ -36,13 +36,13 @@ impl Titles {
         self.titles.len()
     }
 
-    pub fn as_context(&self) -> Context {
-        let mut headers = Context::new_empty();
+    pub fn to_list(&self) -> Vec<Option<JsonValue>> {
+        let mut lst = Vec::with_capacity(self.titles.len());
         for str in &self.titles {
-            let value = Some(str.into());
-            headers = headers.with_result(value);
+            let value = Some(str.deref().clone().into());
+            lst.push(value);
         }
-        headers
+        lst
     }
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -60,7 +60,7 @@ pub struct InputContext {
 }
 pub struct Context {
     input: Rc<JsonValue>,
-    results: Vec<Option<JsonValue>>,
+    results: Vec<(Rc<String>, Option<JsonValue>)>,
     parent_inputs: Vec<Rc<JsonValue>>,
     variables: Rc<HashMap<String, JsonValue>>,
     definitions: Rc<HashMap<String, Rc<dyn Get>>>,
@@ -125,9 +125,9 @@ impl Context {
             input_context: self.input_context.clone(),
         }
     }
-    pub fn with_result(&self, result: Option<JsonValue>) -> Self {
+    pub fn with_result(&self, title: &Rc<String>, result: Option<JsonValue>) -> Self {
         let mut results = self.results.clone();
-        results.push(result);
+        results.push((title.clone(), result));
         Context {
             input: self.input().clone(),
             results,
@@ -187,15 +187,15 @@ impl Context {
             input_context: self.input_context.clone(),
         }
     }
-    pub fn build(&self, titles: &Titles) -> Option<JsonValue> {
+    pub fn build(&self) -> Option<JsonValue> {
         if self.results.is_empty() {
-            Some(self.input().as_ref().clone())
+            Some(self.input().deref().clone())
         } else {
             let mut mp = IndexMap::new();
-            for (title, value) in titles.titles.iter().zip(&self.results) {
+            for (title, value) in &self.results {
                 match value {
                     Some(value) => {
-                        mp.insert(title.clone(), value.clone());
+                        mp.insert(title.deref().clone(), value.clone());
                     }
                     None => {}
                 }
@@ -203,11 +203,8 @@ impl Context {
             Some(JsonValue::Object(mp))
         }
     }
-    pub fn get(&self, index: usize) -> &Option<JsonValue> {
-        match self.results.get(index) {
-            None => &None,
-            Some(t) => t,
-        }
+    pub fn to_list(&self) -> Vec<Option<JsonValue>> {
+        self.results.iter().map(|i| i.1.clone()).collect()
     }
 
     pub fn get_variable_value(&self, name: &String) -> Option<&JsonValue> {
@@ -236,7 +233,7 @@ impl Context {
         if self.results.is_empty() {
             ContextKey::Value(self.input().deref().clone())
         } else {
-            ContextKey::Results(self.results.clone())
+            ContextKey::Results(self.to_list())
         }
     }
 

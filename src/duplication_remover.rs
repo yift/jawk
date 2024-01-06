@@ -100,9 +100,9 @@ mod tests {
     fn start_will_keep_the_title() -> Result<()> {
         struct Next(Rc<RefCell<bool>>);
         let data = Rc::new(RefCell::new(false));
-        let titles = Titles::default()
-            .with_title("one".into())
-            .with_title("two".into());
+        let one = Rc::new("one".into());
+        let two = Rc::new("two".into());
+        let titles = Titles::default().with_title(&one).with_title(&two);
         impl Process for Next {
             fn complete(&mut self) -> Result<()> {
                 Ok(())

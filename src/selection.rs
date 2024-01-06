@@ -32,7 +32,7 @@ pub trait Get {
 #[derive(Clone)]
 pub struct Selection {
     getter: Rc<dyn Get>,
-    name: String,
+    name: Rc<String>,
 }
 
 pub type Result<T> = std::result::Result<T, SelectionParseError>;
@@ -88,18 +88,19 @@ impl FromStr for Selection {
             None => source.clone(),
         };
         let getter = extractors;
+        let name = Rc::new(name);
         Ok(Selection { name, getter })
     }
 }
 
 struct SelectionProcess {
-    name: String,
+    name: Rc<String>,
     getter: Rc<dyn Get>,
     next: Box<dyn Process>,
 }
 impl Process for SelectionProcess {
     fn start(&mut self, titles_so_far: Titles) -> ProcessResult<()> {
-        let next_titles = titles_so_far.with_title(self.name.clone());
+        let next_titles = titles_so_far.with_title(&self.name);
         self.next.start(next_titles)
     }
     fn complete(&mut self) -> ProcessResult<()> {
@@ -107,7 +108,7 @@ impl Process for SelectionProcess {
     }
     fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
         let result = self.getter.get(&context);
-        let new_context = context.with_result(result);
+        let new_context = context.with_result(&self.name, result);
 
         self.next.process(new_context)?;
         Ok(ProcessDesision::Continue)

@@ -1,6 +1,7 @@
 use std::{cell::RefCell, ops::Deref, rc::Rc};
 
 use crate::{
+    json_value::JsonValue,
     printer::{CsvPrinter, JsonPrinter, Print, RawTextPrinter},
     processor::Result as ProcessResult,
     processor::{Context, Process, ProcessDesision, ProcessError, Titles},
@@ -29,19 +30,16 @@ impl OutputStyle {
     ) -> Box<dyn Process> {
         match self {
             OutputStyle::ConsiseJson => Box::new(JsonProcess {
-                titles: Titles::default(),
                 line_seperator,
                 printer: JsonPrinter::new(false, false),
                 writer,
             }),
             OutputStyle::Json => Box::new(JsonProcess {
-                titles: Titles::default(),
                 line_seperator,
                 printer: JsonPrinter::new(true, false),
                 writer,
             }),
             OutputStyle::OneLineJson => Box::new(JsonProcess {
-                titles: Titles::default(),
                 line_seperator,
                 printer: JsonPrinter::new(false, true),
                 writer,
@@ -68,28 +66,13 @@ struct CsvProcess {
     printer: CsvPrinter,
     writer: Rc<RefCell<dyn std::io::Write + Send>>,
 }
-impl Process for CsvProcess {
-    fn start(&mut self, titles: Titles) -> ProcessResult<()> {
-        self.length = titles.len();
-        if self.length == 0 {
-            return Err(ProcessError::InvalidInputError(
-                "CSV output must have selection and can no group by",
-            ));
-        }
-        let context = titles.as_context();
-        self.process(context)?;
-        Ok(())
-    }
-    fn complete(&mut self) -> ProcessResult<()> {
-        Ok(())
-    }
-    fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
+impl CsvProcess {
+    fn print_list(&mut self, list: Vec<Option<JsonValue>>) -> ProcessResult<ProcessDesision> {
         let mut string_row = Vec::new();
-        for index in 0..self.length {
-            let value = context.get(index);
+        for value in list {
             let str = if let Some(value) = value {
                 let mut str = String::new();
-                self.printer.print(&mut str, value)?;
+                self.printer.print(&mut str, &value)?;
                 str
             } else {
                 "".into()
@@ -105,24 +88,40 @@ impl Process for CsvProcess {
         Ok(ProcessDesision::Continue)
     }
 }
-
-struct JsonProcess {
-    titles: Titles,
-    line_seperator: String,
-    printer: JsonPrinter,
-    writer: Rc<RefCell<dyn std::io::Write + Send>>,
-}
-
-impl Process for JsonProcess {
+impl Process for CsvProcess {
     fn start(&mut self, titles: Titles) -> ProcessResult<()> {
-        self.titles = titles;
+        self.length = titles.len();
+        if self.length == 0 {
+            return Err(ProcessError::InvalidInputError(
+                "CSV output must have selection and can no group by",
+            ));
+        }
+        self.print_list(titles.to_list())?;
         Ok(())
     }
     fn complete(&mut self) -> ProcessResult<()> {
         Ok(())
     }
     fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
-        if let Some(value) = context.build(&self.titles) {
+        self.print_list(context.to_list())
+    }
+}
+
+struct JsonProcess {
+    line_seperator: String,
+    printer: JsonPrinter,
+    writer: Rc<RefCell<dyn std::io::Write + Send>>,
+}
+
+impl Process for JsonProcess {
+    fn start(&mut self, _: Titles) -> ProcessResult<()> {
+        Ok(())
+    }
+    fn complete(&mut self) -> ProcessResult<()> {
+        Ok(())
+    }
+    fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
+        if let Some(value) = context.build() {
             let mut str = String::new();
             self.printer.print(&mut str, &value)?;
             write!(self.writer.borrow_mut(), "{}{}", str, self.line_seperator)?;
@@ -136,6 +135,22 @@ struct RawProcess {
     printer: RawTextPrinter,
     writer: Rc<RefCell<dyn std::io::Write + Send>>,
 }
+impl RawProcess {
+    fn print_list(&mut self, list: Vec<Option<JsonValue>>) -> ProcessResult<ProcessDesision> {
+        for (index, value) in list.iter().enumerate() {
+            if let Some(value) = value {
+                let mut str = String::new();
+                self.printer.print(&mut str, value)?;
+                write!(self.writer.borrow_mut(), "{}", str)?;
+                if index < self.length - 1 {
+                    write!(self.writer.borrow_mut(), "\t")?;
+                }
+            }
+        }
+        write!(self.writer.borrow_mut(), "{}", self.line_seperator)?;
+        Ok(ProcessDesision::Continue)
+    }
+}
 impl Process for RawProcess {
     fn complete(&mut self) -> ProcessResult<()> {
         Ok(())
@@ -143,31 +158,19 @@ impl Process for RawProcess {
     fn start(&mut self, titles: Titles) -> ProcessResult<()> {
         self.length = titles.len();
         if self.length > 0 {
-            let context = titles.as_context();
-            self.process(context)?;
+            self.print_list(titles.to_list())?;
         }
         Ok(())
     }
     fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
         if self.length != 0 {
-            for index in 0..self.length {
-                let value = context.get(index);
-                if let Some(value) = value {
-                    let mut str = String::new();
-                    self.printer.print(&mut str, value)?;
-                    write!(self.writer.borrow_mut(), "{}", str)?;
-                    if index < self.length - 1 {
-                        write!(self.writer.borrow_mut(), "\t")?;
-                    }
-                }
-            }
-            write!(self.writer.borrow_mut(), "{}", self.line_seperator)?;
+            self.print_list(context.to_list())
         } else {
             let mut str = String::new();
             self.printer.print(&mut str, context.input().deref())?;
             write!(self.writer.borrow_mut(), "{}{}", str, self.line_seperator)?;
+            Ok(ProcessDesision::Continue)
         }
-        Ok(ProcessDesision::Continue)
     }
 }
 
@@ -199,30 +202,30 @@ mod tests {
         let text = Vec::new();
         let writer = Rc::new(RefCell::new(text));
         let mut proccsor = style.get_processor("\n".into(), writer.clone());
-        let titles = Titles::default()
-            .with_title("one".into())
-            .with_title("two".into());
+        let one = Rc::new("one".into());
+        let two = Rc::new("two".into());
+        let titles = Titles::default().with_title(&one).with_title(&two);
 
         proccsor.start(titles)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str("true").ok())
-            .with_result(JsonValue::from_str(r#""te\"st""#).ok());
+            .with_result(&one, JsonValue::from_str("true").ok())
+            .with_result(&one, JsonValue::from_str(r#""te\"st""#).ok());
         proccsor.process(result)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str("12").ok())
-            .with_result(JsonValue::from_str("1.2").ok());
+            .with_result(&one, JsonValue::from_str("12").ok())
+            .with_result(&one, JsonValue::from_str("1.2").ok());
         proccsor.process(result)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str(r#"{"key": 12}"#).ok())
-            .with_result(JsonValue::from_str("[1, 2, 3]").ok());
+            .with_result(&one, JsonValue::from_str(r#"{"key": 12}"#).ok())
+            .with_result(&one, JsonValue::from_str("[1, 2, 3]").ok());
         proccsor.process(result)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str("null").ok())
-            .with_result(JsonValue::from_str("false").ok());
+            .with_result(&one, JsonValue::from_str("null").ok())
+            .with_result(&one, JsonValue::from_str("false").ok());
         proccsor.process(result)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str("-20").ok())
-            .with_result(None);
+            .with_result(&one, JsonValue::from_str("-20").ok())
+            .with_result(&one, None);
         proccsor.process(result)?;
 
         let vec = writer.borrow().clone();
@@ -245,30 +248,30 @@ mod tests {
         let text = Vec::new();
         let writer = Rc::new(RefCell::new(text));
         let mut proccsor = style.get_processor("\n".into(), writer.clone());
-        let titles = Titles::default()
-            .with_title("one".into())
-            .with_title("two".into());
+        let one = Rc::new("one".into());
+        let two = Rc::new("two".into());
+        let titles = Titles::default().with_title(&one).with_title(&two);
 
         proccsor.start(titles)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str("true").ok())
-            .with_result(JsonValue::from_str(r#""te\"st""#).ok());
+            .with_result(&one, JsonValue::from_str("true").ok())
+            .with_result(&two, JsonValue::from_str(r#""te\"st""#).ok());
         proccsor.process(result)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str("12").ok())
-            .with_result(JsonValue::from_str("1.2").ok());
+            .with_result(&one, JsonValue::from_str("12").ok())
+            .with_result(&two, JsonValue::from_str("1.2").ok());
         proccsor.process(result)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str(r#"{"key": 12}"#).ok())
-            .with_result(JsonValue::from_str("[1, 2, 3]").ok());
+            .with_result(&one, JsonValue::from_str(r#"{"key": 12}"#).ok())
+            .with_result(&two, JsonValue::from_str("[1, 2, 3]").ok());
         proccsor.process(result)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str("null").ok())
-            .with_result(JsonValue::from_str("false").ok());
+            .with_result(&one, JsonValue::from_str("null").ok())
+            .with_result(&two, JsonValue::from_str("false").ok());
         proccsor.process(result)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str("-20").ok())
-            .with_result(None);
+            .with_result(&one, JsonValue::from_str("-20").ok())
+            .with_result(&two, None);
         proccsor.process(result)?;
 
         let vec = writer.borrow().clone();
@@ -290,30 +293,30 @@ mod tests {
         let text = Vec::new();
         let writer = Rc::new(RefCell::new(text));
         let mut proccsor = style.get_processor("---".into(), writer.clone());
-        let titles = Titles::default()
-            .with_title("one".into())
-            .with_title("two".into());
+        let one = Rc::new("one".into());
+        let two = Rc::new("two".into());
+        let titles = Titles::default().with_title(&one).with_title(&two);
 
         proccsor.start(titles)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str("true").ok())
-            .with_result(JsonValue::from_str(r#""te\"st""#).ok());
+            .with_result(&one, JsonValue::from_str("true").ok())
+            .with_result(&two, JsonValue::from_str(r#""te\"st""#).ok());
         proccsor.process(result)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str("12").ok())
-            .with_result(JsonValue::from_str("1.2").ok());
+            .with_result(&one, JsonValue::from_str("12").ok())
+            .with_result(&two, JsonValue::from_str("1.2").ok());
         proccsor.process(result)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str(r#"{"key": 12}"#).ok())
-            .with_result(JsonValue::from_str("[1, 2, 3]").ok());
+            .with_result(&one, JsonValue::from_str(r#"{"key": 12}"#).ok())
+            .with_result(&two, JsonValue::from_str("[1, 2, 3]").ok());
         proccsor.process(result)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str("null").ok())
-            .with_result(JsonValue::from_str("false").ok());
+            .with_result(&one, JsonValue::from_str("null").ok())
+            .with_result(&two, JsonValue::from_str("false").ok());
         proccsor.process(result)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str("-20").ok())
-            .with_result(None);
+            .with_result(&one, JsonValue::from_str("-20").ok())
+            .with_result(&two, None);
         proccsor.process(result)?;
 
         let vec = writer.borrow().clone();
@@ -370,30 +373,30 @@ mod tests {
         let text = Vec::new();
         let writer = Rc::new(RefCell::new(text));
         let mut proccsor = style.get_processor("\n".into(), writer.clone());
-        let titles = Titles::default()
-            .with_title("one".into())
-            .with_title("two".into());
+        let one = Rc::new("one".into());
+        let two = Rc::new("two".into());
+        let titles = Titles::default().with_title(&one).with_title(&two);
 
         proccsor.start(titles)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str("true").ok())
-            .with_result(JsonValue::from_str(r#""te\"st""#).ok());
+            .with_result(&one, JsonValue::from_str("true").ok())
+            .with_result(&two, JsonValue::from_str(r#""te\"st""#).ok());
         proccsor.process(result)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str("12").ok())
-            .with_result(JsonValue::from_str("1.2").ok());
+            .with_result(&one, JsonValue::from_str("12").ok())
+            .with_result(&two, JsonValue::from_str("1.2").ok());
         proccsor.process(result)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str(r#"{"key": 12}"#).ok())
-            .with_result(JsonValue::from_str("[1, 2, 3]").ok());
+            .with_result(&one, JsonValue::from_str(r#"{"key": 12}"#).ok())
+            .with_result(&two, JsonValue::from_str("[1, 2, 3]").ok());
         proccsor.process(result)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str("null").ok())
-            .with_result(JsonValue::from_str("false").ok());
+            .with_result(&one, JsonValue::from_str("null").ok())
+            .with_result(&two, JsonValue::from_str("false").ok());
         proccsor.process(result)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str("-20").ok())
-            .with_result(None);
+            .with_result(&one, JsonValue::from_str("-20").ok())
+            .with_result(&two, None);
         proccsor.process(result)?;
 
         let vec = writer.borrow().clone();
@@ -446,30 +449,30 @@ mod tests {
         let text = Vec::new();
         let writer = Rc::new(RefCell::new(text));
         let mut proccsor = style.get_processor("\n".into(), writer.clone());
-        let titles = Titles::default()
-            .with_title("one".into())
-            .with_title("two".into());
+        let one = Rc::new("one".into());
+        let two = Rc::new("two".into());
+        let titles = Titles::default().with_title(&one).with_title(&two);
 
         proccsor.start(titles)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str("true").ok())
-            .with_result(JsonValue::from_str(r#""te\"st""#).ok());
+            .with_result(&one, JsonValue::from_str("true").ok())
+            .with_result(&two, JsonValue::from_str(r#""te\"st""#).ok());
         proccsor.process(result)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str("12").ok())
-            .with_result(JsonValue::from_str("1.2").ok());
+            .with_result(&one, JsonValue::from_str("12").ok())
+            .with_result(&two, JsonValue::from_str("1.2").ok());
         proccsor.process(result)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str(r#"{"key": 12}"#).ok())
-            .with_result(JsonValue::from_str("[1, 2, 3]").ok());
+            .with_result(&one, JsonValue::from_str(r#"{"key": 12}"#).ok())
+            .with_result(&two, JsonValue::from_str("[1, 2, 3]").ok());
         proccsor.process(result)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str("null").ok())
-            .with_result(JsonValue::from_str("false").ok());
+            .with_result(&one, JsonValue::from_str("null").ok())
+            .with_result(&two, JsonValue::from_str("false").ok());
         proccsor.process(result)?;
         let result = Context::new_empty()
-            .with_result(JsonValue::from_str("-20").ok())
-            .with_result(None);
+            .with_result(&one, JsonValue::from_str("-20").ok())
+            .with_result(&two, None);
         proccsor.process(result)?;
 
         let vec = writer.borrow().clone();

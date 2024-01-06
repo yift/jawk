@@ -34,10 +34,8 @@ impl Process for Merger {
         Ok(())
     }
     fn process(&mut self, context: Context) -> Result<ProcessDesision> {
-        if let Some(titles) = &self.titles {
-            if let Some(value) = context.build(titles) {
-                self.data.push(value);
-            }
+        if let Some(value) = context.build() {
+            self.data.push(value);
         }
         Ok(ProcessDesision::Continue)
     }
@@ -61,9 +59,9 @@ mod tests {
     fn start_will_remove_the_title() -> Result<()> {
         struct Next(Rc<RefCell<bool>>);
         let data = Rc::new(RefCell::new(false));
-        let titles = Titles::default()
-            .with_title("one".into())
-            .with_title("two".into());
+        let one = Rc::new("one".into());
+        let two = Rc::new("two".into());
+        let titles = Titles::default().with_title(&one).with_title(&two);
         impl Process for Next {
             fn complete(&mut self) -> Result<()> {
                 Ok(())
@@ -110,23 +108,23 @@ mod tests {
             }
         }
         let next = Box::new(Next { data: data.clone() });
-        let titles = Titles::default()
-            .with_title("one".into())
-            .with_title("two".into());
+        let one = Rc::new("one".into());
+        let two = Rc::new("two".into());
+        let titles = Titles::default().with_title(&one).with_title(&two);
         let mut merger = Merger::create_process(next);
         merger.start(titles)?;
 
         let context = Context::new_with_no_context("one".into())
-            .with_result(Some((1).into()))
-            .with_result(Some((2).into()));
+            .with_result(&one, Some((1).into()))
+            .with_result(&two, Some((2).into()));
         merger.process(context)?;
         let context = Context::new_with_no_context("one".into())
-            .with_result(Some((4).into()))
-            .with_result(Some((6).into()));
+            .with_result(&one, Some((4).into()))
+            .with_result(&two, Some((6).into()));
         merger.process(context)?;
         let context = Context::new_with_no_context("three".into())
-            .with_result(Some((3).into()))
-            .with_result(Some((4).into()));
+            .with_result(&one, Some((3).into()))
+            .with_result(&two, Some((4).into()));
         merger.process(context)?;
 
         merger.complete()?;
