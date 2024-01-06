@@ -1,7 +1,4 @@
-use std::{
-    ops::Deref,
-    sync::{Arc, Mutex},
-};
+use std::{cell::RefCell, ops::Deref, rc::Rc};
 
 use crate::{
     printer::{CsvPrinter, JsonPrinter, Print, RawTextPrinter},
@@ -28,7 +25,7 @@ impl OutputStyle {
     pub fn get_processor(
         &self,
         line_seperator: String,
-        writer: Arc<Mutex<dyn std::io::Write + Send>>,
+        writer: Rc<RefCell<dyn std::io::Write + Send>>,
     ) -> Box<dyn Process> {
         match self {
             OutputStyle::ConsiseJson => Box::new(JsonProcess {
@@ -69,7 +66,7 @@ struct CsvProcess {
     length: usize,
     line_seperator: String,
     printer: CsvPrinter,
-    writer: Arc<Mutex<dyn std::io::Write + Send>>,
+    writer: Rc<RefCell<dyn std::io::Write + Send>>,
 }
 impl Process for CsvProcess {
     fn start(&mut self, titles: Titles) -> ProcessResult<()> {
@@ -100,7 +97,7 @@ impl Process for CsvProcess {
             string_row.push(str);
         }
         write!(
-            self.writer.lock().unwrap(),
+            self.writer.borrow_mut(),
             "{}{}",
             string_row.join(", "),
             self.line_seperator
@@ -113,7 +110,7 @@ struct JsonProcess {
     titles: Titles,
     line_seperator: String,
     printer: JsonPrinter,
-    writer: Arc<Mutex<dyn std::io::Write + Send>>,
+    writer: Rc<RefCell<dyn std::io::Write + Send>>,
 }
 
 impl Process for JsonProcess {
@@ -128,12 +125,7 @@ impl Process for JsonProcess {
         if let Some(value) = context.build(&self.titles) {
             let mut str = String::new();
             self.printer.print(&mut str, &value)?;
-            write!(
-                self.writer.lock().unwrap(),
-                "{}{}",
-                str,
-                self.line_seperator
-            )?;
+            write!(self.writer.borrow_mut(), "{}{}", str, self.line_seperator)?;
         }
         Ok(ProcessDesision::Continue)
     }
@@ -142,7 +134,7 @@ struct RawProcess {
     length: usize,
     line_seperator: String,
     printer: RawTextPrinter,
-    writer: Arc<Mutex<dyn std::io::Write + Send>>,
+    writer: Rc<RefCell<dyn std::io::Write + Send>>,
 }
 impl Process for RawProcess {
     fn complete(&mut self) -> ProcessResult<()> {
@@ -163,22 +155,17 @@ impl Process for RawProcess {
                 if let Some(value) = value {
                     let mut str = String::new();
                     self.printer.print(&mut str, value)?;
-                    write!(self.writer.lock().unwrap(), "{}", str)?;
+                    write!(self.writer.borrow_mut(), "{}", str)?;
                     if index < self.length - 1 {
-                        write!(self.writer.lock().unwrap(), "\t")?;
+                        write!(self.writer.borrow_mut(), "\t")?;
                     }
                 }
             }
-            write!(self.writer.lock().unwrap(), "{}", self.line_seperator)?;
+            write!(self.writer.borrow_mut(), "{}", self.line_seperator)?;
         } else {
             let mut str = String::new();
             self.printer.print(&mut str, context.input().deref())?;
-            write!(
-                self.writer.lock().unwrap(),
-                "{}{}",
-                str,
-                self.line_seperator
-            )?;
+            write!(self.writer.borrow_mut(), "{}{}", str, self.line_seperator)?;
         }
         Ok(ProcessDesision::Continue)
     }
@@ -196,7 +183,7 @@ mod tests {
     fn csv_writer_start_fail_if_no_titles() -> ProcessResult<()> {
         let style = OutputStyle::Csv;
         let text = Vec::new();
-        let writer = Arc::new(Mutex::new(text));
+        let writer = Rc::new(RefCell::new(text));
         let mut proccsor = style.get_processor(String::new(), writer);
 
         let error = proccsor.start(Titles::default()).err().unwrap();
@@ -210,7 +197,7 @@ mod tests {
     fn csv_writer_start_will_print_titles_and_content() -> ProcessResult<()> {
         let style = OutputStyle::Csv;
         let text = Vec::new();
-        let writer = Arc::new(Mutex::new(text));
+        let writer = Rc::new(RefCell::new(text));
         let mut proccsor = style.get_processor("\n".into(), writer.clone());
         let titles = Titles::default()
             .with_title("one".into())
@@ -238,7 +225,7 @@ mod tests {
             .with_result(None);
         proccsor.process(result)?;
 
-        let vec = writer.lock().unwrap().clone();
+        let vec = writer.borrow().clone();
         let lines = String::from_utf8(vec).unwrap();
         let lines = lines.lines().collect::<Vec<_>>();
 
@@ -256,7 +243,7 @@ mod tests {
     fn consise_json_writer_start_will_print_titles_and_content() -> ProcessResult<()> {
         let style = OutputStyle::ConsiseJson;
         let text = Vec::new();
-        let writer = Arc::new(Mutex::new(text));
+        let writer = Rc::new(RefCell::new(text));
         let mut proccsor = style.get_processor("\n".into(), writer.clone());
         let titles = Titles::default()
             .with_title("one".into())
@@ -284,7 +271,7 @@ mod tests {
             .with_result(None);
         proccsor.process(result)?;
 
-        let vec = writer.lock().unwrap().clone();
+        let vec = writer.borrow().clone();
         let lines = String::from_utf8(vec).unwrap();
         let lines = lines.lines().collect::<Vec<_>>();
 
@@ -301,7 +288,7 @@ mod tests {
     fn json_writer_start_will_print_titles_and_content() -> ProcessResult<()> {
         let style = OutputStyle::Json;
         let text = Vec::new();
-        let writer = Arc::new(Mutex::new(text));
+        let writer = Rc::new(RefCell::new(text));
         let mut proccsor = style.get_processor("---".into(), writer.clone());
         let titles = Titles::default()
             .with_title("one".into())
@@ -329,7 +316,7 @@ mod tests {
             .with_result(None);
         proccsor.process(result)?;
 
-        let vec = writer.lock().unwrap().clone();
+        let vec = writer.borrow().clone();
         let lines = String::from_utf8(vec).unwrap();
         let lines = lines.split("---").collect::<Vec<_>>();
 
@@ -381,7 +368,7 @@ mod tests {
     fn oneline_json_writer_start_will_print_titles_and_content() -> ProcessResult<()> {
         let style = OutputStyle::OneLineJson;
         let text = Vec::new();
-        let writer = Arc::new(Mutex::new(text));
+        let writer = Rc::new(RefCell::new(text));
         let mut proccsor = style.get_processor("\n".into(), writer.clone());
         let titles = Titles::default()
             .with_title("one".into())
@@ -409,7 +396,7 @@ mod tests {
             .with_result(None);
         proccsor.process(result)?;
 
-        let vec = writer.lock().unwrap().clone();
+        let vec = writer.borrow().clone();
         let lines = String::from_utf8(vec).unwrap();
         let lines = lines.lines().collect::<Vec<_>>();
 
@@ -426,7 +413,7 @@ mod tests {
     fn no_titles_raw_writer_start_will_print_no_titles_and_content() -> ProcessResult<()> {
         let style = OutputStyle::Text;
         let text = Vec::new();
-        let writer = Arc::new(Mutex::new(text));
+        let writer = Rc::new(RefCell::new(text));
         let mut proccsor = style.get_processor("\n".into(), writer.clone());
         let titles = Titles::default();
 
@@ -442,7 +429,7 @@ mod tests {
         let result = Context::new_with_no_context(JsonValue::from_str("[1, 2, 4]").unwrap());
         proccsor.process(result)?;
 
-        let vec = writer.lock().unwrap().clone();
+        let vec = writer.borrow().clone();
         let lines = String::from_utf8(vec).unwrap();
         let lines = lines.lines().collect::<Vec<_>>();
 
@@ -457,7 +444,7 @@ mod tests {
     fn titled_raw_writer_start_will_print_titles_and_content() -> ProcessResult<()> {
         let style = OutputStyle::Text;
         let text = Vec::new();
-        let writer = Arc::new(Mutex::new(text));
+        let writer = Rc::new(RefCell::new(text));
         let mut proccsor = style.get_processor("\n".into(), writer.clone());
         let titles = Titles::default()
             .with_title("one".into())
@@ -485,7 +472,7 @@ mod tests {
             .with_result(None);
         proccsor.process(result)?;
 
-        let vec = writer.lock().unwrap().clone();
+        let vec = writer.borrow().clone();
         let lines = String::from_utf8(vec).unwrap();
         let lines = lines.lines().collect::<Vec<_>>();
 

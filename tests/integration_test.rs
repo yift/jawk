@@ -1,9 +1,9 @@
 use clap::Parser;
 use jawk::{Cli, Master};
+use std::cell::RefCell;
 use std::io::Read;
 use std::ops::Deref;
-use std::sync::Arc;
-use std::sync::Mutex;
+use std::rc::Rc;
 use std::{fs, fs::File, path::Path};
 
 #[test]
@@ -34,9 +34,9 @@ fn test_example(dir: &Path) {
     let args = fs::read_to_string(args).unwrap();
     let args: Vec<_> = args.lines().collect();
     let cli = Cli::parse_from(args);
-    let stdout = Arc::new(Mutex::new(Vec::new()));
-    let stderr = Arc::new(Mutex::new(Vec::new()));
-    let input_file = Arc::new(dir.join("input.txt").clone());
+    let stdout = Rc::new(RefCell::new(Vec::new()));
+    let stderr = Rc::new(RefCell::new(Vec::new()));
+    let input_file = Rc::new(dir.join("input.txt").clone());
     let stdin = Box::new(move || File::open(input_file.deref().clone()).unwrap());
     let master = Master::new(cli, stdout.clone(), stderr.clone(), stdin);
     let result = master.go();
@@ -59,7 +59,7 @@ fn test_example(dir: &Path) {
     }
 
     let error_file = dir.join("error.txt");
-    let error_text = String::from_utf8(stderr.lock().unwrap().clone()).unwrap();
+    let error_text = String::from_utf8(stderr.borrow().clone()).unwrap();
     if error_file.exists() {
         let mut error_file = File::open(error_file).unwrap();
         let mut expected_error = String::new();
@@ -70,7 +70,7 @@ fn test_example(dir: &Path) {
     }
 
     let output_file = dir.join("output.txt");
-    let output_text = String::from_utf8(stdout.lock().unwrap().clone()).unwrap();
+    let output_text = String::from_utf8(stdout.borrow().clone()).unwrap();
     if output_file.exists() {
         let mut output_file = File::open(output_file).unwrap();
         let mut expected_output = String::new();

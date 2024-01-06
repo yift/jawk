@@ -39,14 +39,14 @@ use selection_help::print_selection_help;
 use sorters::Sorter;
 use sorters::SorterParserError;
 use splitter::Splitter;
+use std::cell::RefCell;
 use std::fmt::Error as FormatError;
 use std::fs::read_dir;
 use std::io::Error as IoEror;
 use std::io::Read;
 use std::path::PathBuf;
+use std::rc::Rc;
 use std::str::FromStr;
-use std::sync::Arc;
-use std::sync::Mutex;
 use thiserror::Error;
 
 use crate::json_parser::JsonParser;
@@ -190,15 +190,15 @@ enum AdditionalHelpType {
 
 pub struct Master<R: Read> {
     cli: Cli,
-    stdout: Arc<Mutex<dyn std::io::Write + Send>>,
-    stderr: Arc<Mutex<dyn std::io::Write + Send>>,
+    stdout: Rc<RefCell<dyn std::io::Write + Send>>,
+    stderr: Rc<RefCell<dyn std::io::Write + Send>>,
     stdin: Box<dyn Fn() -> R>,
 }
 impl<S: Read> Master<S> {
     pub fn new(
         cli: Cli,
-        stdout: Arc<Mutex<dyn std::io::Write + Send>>,
-        stderr: Arc<Mutex<dyn std::io::Write + Send>>,
+        stdout: Rc<RefCell<dyn std::io::Write + Send>>,
+        stderr: Rc<RefCell<dyn std::io::Write + Send>>,
         stdin: Box<dyn Fn() -> S>,
     ) -> Self {
         Master {
@@ -318,8 +318,8 @@ impl<S: Read> Master<S> {
                         OnError::Panic => {
                             return Err(e.into());
                         }
-                        OnError::Stdout => writeln!(self.stdout.lock().unwrap(), "error:{}", e)?,
-                        OnError::Stderr => writeln!(self.stderr.lock().unwrap(), "error:{}", e)?,
+                        OnError::Stdout => writeln!(self.stdout.borrow_mut(), "error:{}", e)?,
+                        OnError::Stderr => writeln!(self.stderr.borrow_mut(), "error:{}", e)?,
                     }
                 }
             };
