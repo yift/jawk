@@ -1,15 +1,20 @@
 use std::collections::HashMap;
 use std::ops::Deref;
+use std::prelude::v1::Result as StdResult;
 use std::rc::Rc;
 
 use indexmap::IndexMap;
+use regex::Regex;
 use std::fmt::Error as FormatError;
 use std::io::Error as IoEror;
 use thiserror::Error;
 
 use crate::json_value::JsonValue;
 use crate::reader::Location;
+use crate::regex_cache::{RegexCache, RegexCompile};
 use crate::selection::Get;
+
+use regex::Error as RegexError;
 
 #[derive(Debug, Error)]
 pub enum ProcessError {
@@ -65,6 +70,7 @@ pub struct Context {
     variables: Rc<HashMap<String, JsonValue>>,
     definitions: Rc<HashMap<String, Rc<dyn Get>>>,
     input_context: Option<Rc<InputContext>>,
+    regex_cache: RegexCache,
 }
 impl Context {
     pub fn new_empty() -> Self {
@@ -75,6 +81,7 @@ impl Context {
             variables: Rc::new(HashMap::new()),
             definitions: Rc::new(HashMap::new()),
             input_context: None,
+            regex_cache: RegexCache::new(0),
         }
     }
     pub fn new_with_no_context(input: JsonValue) -> Self {
@@ -85,6 +92,7 @@ impl Context {
             variables: Rc::new(HashMap::new()),
             definitions: Rc::new(HashMap::new()),
             input_context: None,
+            regex_cache: RegexCache::new(0),
         }
     }
     pub fn new_with_input(
@@ -93,6 +101,7 @@ impl Context {
         end_location: Location,
         file_index: u64,
         index: u64,
+        regex_cache: &RegexCache,
     ) -> Self {
         let input_context = InputContext {
             start_location,
@@ -107,6 +116,7 @@ impl Context {
             variables: Rc::new(HashMap::new()),
             definitions: Rc::new(HashMap::new()),
             input_context: Some(Rc::new(input_context)),
+            regex_cache: regex_cache.clone(),
         }
     }
     pub fn with_inupt(&self, value: JsonValue) -> Self {
@@ -123,6 +133,7 @@ impl Context {
             variables: self.variables.clone(),
             definitions: self.definitions.clone(),
             input_context: self.input_context.clone(),
+            regex_cache: self.regex_cache.clone(),
         }
     }
     pub fn with_result(&self, title: &Rc<String>, result: Option<JsonValue>) -> Self {
@@ -135,6 +146,7 @@ impl Context {
             variables: self.variables.clone(),
             definitions: self.definitions.clone(),
             input_context: self.input_context.clone(),
+            regex_cache: self.regex_cache.clone(),
         }
     }
     pub fn with_variable(&self, name: String, value: JsonValue) -> Self {
@@ -150,6 +162,7 @@ impl Context {
             variables: Rc::new(variables),
             definitions: self.definitions.clone(),
             input_context: self.input_context.clone(),
+            regex_cache: self.regex_cache.clone(),
         }
     }
     pub fn with_variables(&self, variables: &Rc<HashMap<String, JsonValue>>) -> Self {
@@ -160,6 +173,7 @@ impl Context {
             variables: variables.clone(),
             definitions: self.definitions.clone(),
             input_context: self.input_context.clone(),
+            regex_cache: self.regex_cache.clone(),
         }
     }
     pub fn with_definition(&self, name: String, definition: &Rc<dyn Get>) -> Self {
@@ -175,6 +189,7 @@ impl Context {
             variables: self.variables.clone(),
             definitions: Rc::new(definitions),
             input_context: self.input_context.clone(),
+            regex_cache: self.regex_cache.clone(),
         }
     }
     pub fn with_definitions(&self, definitions: &Rc<HashMap<String, Rc<dyn Get>>>) -> Self {
@@ -185,6 +200,7 @@ impl Context {
             variables: self.variables.clone(),
             definitions: definitions.clone(),
             input_context: self.input_context.clone(),
+            regex_cache: self.regex_cache.clone(),
         }
     }
     pub fn build(&self) -> Option<JsonValue> {
@@ -248,6 +264,12 @@ impl Context {
 
     pub fn input_context(&self) -> Option<Rc<InputContext>> {
         self.input_context.clone()
+    }
+}
+
+impl RegexCompile for Context {
+    fn compile_regex(&self, regex: &str) -> Rc<StdResult<Regex, RegexError>> {
+        self.regex_cache.compile_regex(regex)
     }
 }
 

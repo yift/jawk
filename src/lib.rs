@@ -15,6 +15,7 @@ mod pre_sets;
 mod printer;
 mod processor;
 mod reader;
+mod regex_cache;
 mod selection;
 mod selection_extractor;
 mod selection_help;
@@ -35,6 +36,7 @@ use pre_sets::PreSetCollection;
 use pre_sets::PreSetParserError;
 use processor::ProcessDesision;
 use processor::{Context, Process, ProcessError, Titles};
+use regex_cache::RegexCache;
 use selection::Selection;
 use selection::SelectionParseError;
 use selection_help::print_selection_help;
@@ -167,6 +169,15 @@ pub struct Cli {
     #[arg(long, short = 'e')]
     set: Vec<String>,
 
+    /// Regular expression cache size.
+    ///
+    /// Regular expression compilation can time time. If you have a few repeating complex regular expression, you can set
+    /// a cahce of compiled expressions, this will make sure that the offten used regular expression are compiled only once.
+    /// Ommiting this setting will re-compile the regular expressions before any use (i.e. size 0).
+    ///
+    #[arg(long, default_value_t = 0)]
+    regular_expression_cache_size: usize,
+
     /// Only accept objects and array
     ///
     /// Use this to ignore numbers, Booleans and nulls in the input stream and only treat
@@ -202,6 +213,7 @@ pub struct Master<R: Read> {
     stdout: Rc<RefCell<dyn std::io::Write + Send>>,
     stderr: Rc<RefCell<dyn std::io::Write + Send>>,
     stdin: Box<dyn Fn() -> R>,
+    regular_expression_cache: RegexCache,
 }
 impl<S: Read> Master<S> {
     pub fn new(
@@ -210,11 +222,13 @@ impl<S: Read> Master<S> {
         stderr: Rc<RefCell<dyn std::io::Write + Send>>,
         stdin: Box<dyn Fn() -> S>,
     ) -> Self {
+        let regular_expression_cache = RegexCache::new(cli.regular_expression_cache_size);
         Master {
             cli,
             stdin,
             stderr,
             stdout,
+            regular_expression_cache,
         }
     }
     pub fn go(&self) -> Result<()> {
@@ -313,8 +327,14 @@ impl<S: Read> Master<S> {
                         }
                     }
                     let ended = reader.where_am_i();
-                    let context =
-                        Context::new_with_input(val, started, ended, in_file_index, *index);
+                    let context = Context::new_with_input(
+                        val,
+                        started,
+                        ended,
+                        in_file_index,
+                        *index,
+                        &self.regular_expression_cache,
+                    );
                     match process.process(context)? {
                         ProcessDesision::Break => break Ok(()),
                         ProcessDesision::Continue => {

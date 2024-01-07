@@ -1,11 +1,11 @@
 use std::env::var;
+use std::ops::Deref;
 use std::rc::Rc;
 use std::str::FromStr;
 
-use regex::Regex;
-
 use crate::json_parser::JsonParser;
 use crate::processor::Context;
+use crate::regex_cache::RegexCompile;
 use crate::selection::Selection;
 use crate::{
     functions_definitions::{Arguments, Example, FunctionDefinitions, FunctionsGroup},
@@ -280,7 +280,7 @@ pub fn get_string_functions() -> FunctionsGroup {
                                 self.0.apply(value, 1),
                             )
                         {
-                            if let Ok(regex) = Regex::new(regex.as_str()) {
+                            if let Ok(regex) = value.compile_regex(&regex).deref() {
                                 Some(regex.is_match(&str).into())
                             } else {
                                 None
@@ -329,7 +329,7 @@ pub fn get_string_functions() -> FunctionsGroup {
                         {
                             if
                                 let (Ok(regex), Ok(index)) = (
-                                    Regex::new(regex.as_str()),
+                                    value.compile_regex(&regex).deref(),
                                     TryInto::<usize>::try_into(index),
                                 )
                             {
