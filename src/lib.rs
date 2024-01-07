@@ -28,6 +28,7 @@ use filter::Filter;
 use functions_definitions::print_help;
 use grouper::Grouper;
 use json_parser::JsonParserError;
+use json_value::JsonValue;
 use limits::Limiter;
 use merger::Merger;
 use pre_sets::PreSetCollection;
@@ -165,6 +166,13 @@ pub struct Cli {
     /// For example: `--set one=1 --set pi=3.14 --set name="Name" --set @pirsquare=(* :pi . .)`.
     #[arg(long, short = 'e')]
     set: Vec<String>,
+
+    /// Only accept objects and array
+    ///
+    /// Use this to ignore numbers, Booleans and nulls in the input stream and only treat
+    /// objects and arrays (that is, as defined in RFC 4627).
+    #[arg(long)]
+    only_objects_and_arrays: bool,
 }
 
 #[derive(clap::ValueEnum, Debug, Clone, PartialEq)]
@@ -296,6 +304,14 @@ impl<S: Read> Master<S> {
             let started = reader.where_am_i();
             match reader.next_json_value() {
                 Ok(Some(val)) => {
+                    if self.cli.only_objects_and_arrays {
+                        match val {
+                            JsonValue::Object(_) | JsonValue::Array(_) => {}
+                            _ => {
+                                continue;
+                            }
+                        }
+                    }
                     let ended = reader.where_am_i();
                     let context =
                         Context::new_with_input(val, started, ended, in_file_index, *index);
