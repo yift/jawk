@@ -157,28 +157,28 @@ fn build_help() -> Vec<SelectionHelp> {
                 SelectionHelp::new(
                     "Previous selected values",
                     vec![
-                        "Reuse previoulsy selected value. Us this to reuse a value that had been selected previously. This is not available during filtering, ",
+                        "Reuse previoulsy selected value. Use this to reuse a value that had been selected previously. This is not available during filtering, ",
                         "and one can only refere to values that had been selected before.",
-                        "The format is '<selection-name>' where the <selection-name> is the name of the selection."
+                        "The format is `<selection-name>` where the <selection-name> is the name of the selection."
                     ]
                 )
                     .with_example(
                         UsageExample::new(
-                            "'name'", 
+                            "`name`", 
                             "",
                              "\"John\""
                             ).with_previous_selection("name", "\"John\"")
                         )
                         .with_example(
                             UsageExample::new(
-                                "'name'", 
+                                "`name`", 
                                 "",
                                  ""
                                 ).with_previous_selection("name", "")
                             )
                             .with_example(
                                 UsageExample::new(
-                                    "'name'", 
+                                    "`name`", 
                                     "",
                                      ""
                                     ).with_previous_selection("Last Name", "\"Doe\"")
