@@ -89,7 +89,10 @@ pub fn parse_input_context<R: Read>(reader: &mut Reader<R>) -> SelectionResult<R
 
 #[cfg(test)]
 mod tests {
-    use crate::reader::{from_string, Location};
+    use crate::{
+        reader::{from_string, Location},
+        regex_cache::RegexCache,
+    };
 
     use super::*;
 
@@ -162,6 +165,7 @@ mod tests {
             },
             10,
             61,
+            &RegexCache::new(0),
         );
 
         assert_eq!(ext.get(&conext), Some(61.into()));
@@ -186,6 +190,7 @@ mod tests {
             },
             10,
             61,
+            &RegexCache::new(0),
         );
 
         assert_eq!(ext.get(&conext), Some(10.into()));
@@ -210,6 +215,7 @@ mod tests {
             },
             10,
             61,
+            &RegexCache::new(0),
         );
 
         assert_eq!(ext.get(&conext), Some(41.into()));
@@ -234,6 +240,7 @@ mod tests {
             },
             10,
             61,
+            &RegexCache::new(0),
         );
 
         assert_eq!(ext.get(&conext), Some(42.into()));
@@ -258,6 +265,7 @@ mod tests {
             },
             10,
             61,
+            &RegexCache::new(0),
         );
 
         assert_eq!(ext.get(&conext), Some(11.into()));
@@ -282,6 +290,7 @@ mod tests {
             },
             10,
             61,
+            &RegexCache::new(0),
         );
 
         assert_eq!(ext.get(&conext), Some(20.into()));
@@ -306,6 +315,7 @@ mod tests {
             },
             10,
             61,
+            &RegexCache::new(0),
         );
 
         assert_eq!(ext.get(&conext), Some("test".into()));
@@ -330,6 +340,7 @@ mod tests {
             },
             10,
             61,
+            &RegexCache::new(0),
         );
 
         assert_eq!(ext.get(&conext), None);
@@ -367,6 +378,7 @@ mod tests {
             },
             10,
             61,
+            &RegexCache::new(0),
         );
 
         assert_eq!(selection.get(&conext), Some(20.into()));

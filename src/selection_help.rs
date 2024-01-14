@@ -231,6 +231,7 @@ mod tests {
         json_parser::JsonParser,
         processor::Context,
         reader::from_string,
+        regex_cache::RegexCache,
         selection::{self, read_getter},
     };
 
@@ -252,7 +253,7 @@ mod tests {
                 let mut context = match input {
                     Some(i) => {
                         println!("\tAnd input: {}", &i);
-                        Context::new_with_input(i, started, ended, 0, 0)
+                        Context::new_with_input(i, started, ended, 0, 0, &RegexCache::new(0))
                     }
                     None => {
                         println!("\tAnd no input");
