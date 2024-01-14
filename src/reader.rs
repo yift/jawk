@@ -15,6 +15,7 @@ pub struct Reader<R: Read> {
     bytes: Bytes<R>,
     current_byte: Option<u8>,
     location: Location,
+    eof: bool,
 }
 pub fn from_file(file_name: &PathBuf) -> Result<Reader<BufReader<File>>> {
     let file = File::open(file_name)?;
@@ -45,13 +46,18 @@ impl<R: Read> Reader<R> {
             bytes: reader.bytes(),
             current_byte: Option::None,
             location,
+            eof: false,
         }
     }
 
     #[inline]
     pub fn next(&mut self) -> Result<Option<u8>> {
+        if self.eof {
+            return Ok(None);
+        }
         match self.bytes.next() {
             None => {
+                self.eof = true;
                 self.current_byte = None;
                 Ok(None)
             }
