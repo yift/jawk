@@ -62,7 +62,7 @@ jobs:
         with:
           name: jawk-${{ matrix.target }}
           path: ./target/release/jawk${{ matrix.suffix }}
-  build-musl:
+  build-musl-and-docker:
     needs:
       - verify
     runs-on: ubuntu-latest
@@ -70,9 +70,25 @@ jobs:
       - uses: actions/checkout@master
       - name: install musl
         run:  rustup target add x86_64-unknown-linux-musl
-      - name: buid
+      - name: build
         run: cargo build --release --target=x86_64-unknown-linux-musl --verbose
       - uses: actions/upload-artifact@v3
         with:
           name: jawk-x86_64-unknown-linux-musl
           path: ./target/x86_64-unknown-linux-musl/release/jawk
+      - name: Copy binary
+        run: |
+          rm -rf ./docker/target
+          mkdir -p ./docker/target
+          cp ./target/x86_64-unknown-linux-musl/release/jawk ./docker/target/jawk
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: docker
+          push: true
+          tags: yiftach/jawk:latest,yiftach/jawk:0.1
