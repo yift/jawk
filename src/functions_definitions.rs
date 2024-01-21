@@ -18,6 +18,7 @@ use crate::{
     reader::from_string,
     selection::{Get, Selection},
 };
+use clap::builder::PossibleValue;
 use lazy_static::lazy_static;
 use std::str::FromStr;
 use thiserror::Error;
@@ -204,39 +205,95 @@ pub fn find_function(name: &str) -> Result<&'static FunctionDefinitions, Functio
         .map(|f| *f)
 }
 
-pub fn print_help() {
-    for group in ALL_FUNCTIONS.iter() {
-        println!("--- {} ---", group.name);
-        for func in group.functions.iter() {
-            let name = func.name;
-            println!("  {} function:", name);
-            for alias in &func.aliases {
-                println!("    * Can also be called as '{}'", alias);
-            }
-            for description in &func.description {
-                println!("    {}", description);
-            }
-            println!("    For example:");
-            for example in &func.examples {
-                let json = if let Some(input) = example.input {
-                    let input = input.to_string();
-                    let mut reader = from_string(&input);
-                    let json = reader.next_json_value().unwrap().unwrap();
-                    println!("      for input: \"{}\"", json);
-                    json
-                } else {
-                    JsonValue::Null
-                };
-                let args = example.arguments.join(", ");
-                let run = format!("({} {})", name, args);
-                println!("        running: \"{}\"", run);
-                let selection = Selection::from_str(&run).unwrap();
-                match selection.get(&Context::new_with_no_context(json)) {
-                    None => println!("        will return nothing"),
-                    Some(result) => println!("        will give: \"{}\"", result),
-                };
+pub fn create_possible_fn_help_types() -> Vec<PossibleValue> {
+    let mut values = Vec::new();
+    values.push(
+        PossibleValue::new("functions").help("Additional help about the available functions"),
+    );
+
+    for &group in ALL_FUNCTIONS.iter() {
+        values.push(PossibleValue::new(group.name).help(format!(
+            "Additional help about the {} functions group",
+            group.name
+        )));
+        for function in &group.functions {
+            for alias in function.names() {
+                values.push(PossibleValue::new(alias).hide(true));
             }
         }
+    }
+
+    values
+}
+pub fn print_fn_help(help_type: &str) {
+    if help_type == "functions" {
+        println!("Functions allow one to manipulate the input. The functions format is `(<function-name>` <arg0> <arg1> ..)` where `<argN>` are functions or other types of selection.");
+        println!("See additional help for selection for more details.");
+        println!(
+            "There are {} functions group available:",
+            ALL_FUNCTIONS.len()
+        );
+        for &group in ALL_FUNCTIONS.iter() {
+            println!("* {} functions.", group.name);
+        }
+        println!("See additional help with the group name to see the list of available functions in that group.");
+    } else {
+        for &group in ALL_FUNCTIONS.iter() {
+            if group.name == help_type {
+                print_group_help(group);
+                return;
+            }
+        }
+        let function = NAME_TO_FUNCTION.get(help_type);
+        if let Some(&function) = function {
+            print_function_help(function);
+        } else {
+            panic!("Can not find function {}", help_type)
+        }
+    }
+}
+
+fn print_group_help(group: &FunctionsGroup) {
+    println!(
+        "Function group {} has {} functions:",
+        group.name,
+        group.functions.len()
+    );
+    for f in &group.functions {
+        println!("* `{}` - {}", f.name, f.description.first().unwrap_or(&""));
+    }
+    println!("Use additional help with a function name to see more details about the function.");
+}
+fn print_function_help(func: &FunctionDefinitions) {
+    let name = func.name;
+    println!("`{}` function:", name);
+    for alias in &func.aliases {
+        println!("* Can also be called as `{}`", alias);
+    }
+    for description in &func.description {
+        println!("{}", description);
+    }
+    println!();
+    println!("For example:");
+    for example in &func.examples {
+        let json = if let Some(input) = example.input {
+            let input = input.to_string();
+            let mut reader = from_string(&input);
+            let json = reader.next_json_value().unwrap().unwrap();
+            println!("* for input:\n ```{}```", json);
+            json
+        } else {
+            JsonValue::Null
+        };
+        let args = example.arguments.join(", ");
+        let run = format!("({} {})", name, args);
+        println!("  running: `{}`", run);
+        let selection = Selection::from_str(&run).unwrap();
+        match selection.get(&Context::new_with_no_context(json)) {
+            None => println!("  will return nothing"),
+            Some(result) => println!("  will give: `{}`", result),
+        };
+        println!();
     }
 }
 

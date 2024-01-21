@@ -8,7 +8,7 @@ use crate::{
 };
 
 pub fn get_type_functions() -> FunctionsGroup {
-    FunctionsGroup::new("Type functions")
+    FunctionsGroup::new("type")
         .add_function(
             FunctionDefinitions::new("array?", 1, 1, |args| {
                 struct Impl(Vec<Rc<dyn Get>>);

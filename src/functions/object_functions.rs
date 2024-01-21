@@ -10,7 +10,7 @@ use crate::{
 };
 
 pub fn get_object_functions() -> FunctionsGroup {
-    FunctionsGroup::new("Object functions")
+    FunctionsGroup::new("object")
 
         .add_function(
             FunctionDefinitions::new("keys", 1, 1, |args| {

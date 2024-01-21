@@ -10,7 +10,7 @@ use crate::{
 };
 
 pub fn get_time_functions() -> FunctionsGroup {
-    FunctionsGroup::new("Time functions")
+    FunctionsGroup::new("time")
         .add_function(
             FunctionDefinitions::new("now", 0, 0, |_| {
                 struct Impl;

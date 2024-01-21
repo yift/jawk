@@ -10,7 +10,7 @@ use crate::{
 };
 
 pub fn get_list_functions() -> FunctionsGroup {
-    FunctionsGroup::new("List functions")
+    FunctionsGroup::new("list")
 
         .add_function(
             FunctionDefinitions::new("filter", 2, 2, |args| {

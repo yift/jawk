@@ -9,7 +9,7 @@ use crate::{
 
 use indexmap::IndexMap;
 pub fn get_basic_functions() -> FunctionsGroup {
-    FunctionsGroup::new("Basic functions")
+    FunctionsGroup::new("basic")
 
         .add_function(
             FunctionDefinitions::new("get", 2, 2, |args| {

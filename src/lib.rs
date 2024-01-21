@@ -1,3 +1,4 @@
+mod additional_help;
 mod const_getter;
 mod duplication_remover;
 mod extractor;
@@ -23,10 +24,10 @@ mod sorters;
 mod splitter;
 mod variables_extractor;
 
+use additional_help::display_additional_help;
 use clap::Parser;
 use duplication_remover::Uniquness;
 use filter::Filter;
-use functions_definitions::print_help;
 use grouper::Grouper;
 use json_parser::JsonParserError;
 use json_value::JsonValue;
@@ -39,7 +40,6 @@ use processor::{Context, Process, ProcessError, Titles};
 use regex_cache::RegexCache;
 use selection::Selection;
 use selection::SelectionParseError;
-use selection_help::print_selection_help;
 use sorters::Sorter;
 use sorters::SorterParserError;
 use splitter::Splitter;
@@ -53,6 +53,7 @@ use std::rc::Rc;
 use std::str::FromStr;
 use thiserror::Error;
 
+use crate::additional_help::create_possible_values;
 use crate::json_parser::JsonParser;
 use crate::output::OutputStyle;
 use crate::reader::{from_file, from_std_in, Reader};
@@ -150,9 +151,9 @@ pub struct Cli {
 
     /// Additional help.
     ///
-    /// Display additional help.
-    #[arg(long, short, default_value = None)]
-    additional_help: Option<AdditionalHelpType>,
+    /// Display additional help. Use the function name to get additional help on a specific function.
+    #[arg(long, short, default_value = None, value_parser = create_possible_values())]
+    additional_help: Option<String>,
 
     /// Avoid posting the same output more than once.
     ///
@@ -199,15 +200,6 @@ enum OnError {
     Stdout,
 }
 
-#[derive(clap::ValueEnum, Debug, Clone, PartialEq)]
-#[clap(rename_all = "kebab_case")]
-enum AdditionalHelpType {
-    /// Functions additional help
-    Functions,
-    /// Selection additional help
-    Selection,
-}
-
 pub struct Master<R: Read> {
     cli: Cli,
     stdout: Rc<RefCell<dyn std::io::Write + Send>>,
@@ -232,13 +224,9 @@ impl<S: Read> Master<S> {
         }
     }
     pub fn go(&self) -> Result<()> {
-        match self.cli.additional_help {
-            Some(AdditionalHelpType::Functions) => {
-                print_help();
-                return Ok(());
-            }
-            Some(AdditionalHelpType::Selection) => {
-                print_selection_help();
+        match &self.cli.additional_help {
+            Some(help_type) => {
+                display_additional_help(help_type);
                 return Ok(());
             }
             None => {}

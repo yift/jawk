@@ -8,7 +8,7 @@ use crate::{
 };
 
 pub fn get_number_functions() -> FunctionsGroup {
-    FunctionsGroup::new("Number functions")
+    FunctionsGroup::new("number")
 
         .add_function(
             FunctionDefinitions::new("+", 2, usize::MAX, |args| {

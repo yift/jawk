@@ -8,7 +8,7 @@ use crate::{
 };
 
 pub fn get_boolean_functions() -> FunctionsGroup {
-    FunctionsGroup::new("Boolean functions")
+    FunctionsGroup::new("boolean")
 
         .add_function(
             FunctionDefinitions::new("=", 2, 2, |args| {

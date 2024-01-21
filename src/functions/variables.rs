@@ -8,7 +8,7 @@ use crate::{
 };
 
 pub fn get_variable_functions() -> FunctionsGroup {
-    FunctionsGroup::new("Variablers functions")
+    FunctionsGroup::new("variables")
 
     .add_function(
             FunctionDefinitions::new("set", 3, 3, |args| {

@@ -15,7 +15,7 @@ use crate::{
 };
 
 pub fn get_string_functions() -> FunctionsGroup {
-    FunctionsGroup::new("String functions")
+    FunctionsGroup::new("string")
 
         .add_function(
             FunctionDefinitions::new("parse", 1, 1, |args| {
