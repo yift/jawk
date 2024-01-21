@@ -25,6 +25,7 @@ mod splitter;
 mod variables_extractor;
 
 use additional_help::display_additional_help;
+use additional_help::HelpError;
 use clap::Parser;
 use duplication_remover::Uniquness;
 use filter::Filter;
@@ -152,7 +153,7 @@ pub struct Cli {
     /// Additional help.
     ///
     /// Display additional help. Use the function name to get additional help on a specific function.
-    #[arg(long, short, default_value = None, value_parser = create_possible_values())]
+    #[arg(long, short, default_value = None, value_parser = create_possible_values(), ignore_case = true)]
     additional_help: Option<String>,
 
     /// Avoid posting the same output more than once.
@@ -226,7 +227,7 @@ impl<S: Read> Master<S> {
     pub fn go(&self) -> Result<()> {
         match &self.cli.additional_help {
             Some(help_type) => {
-                display_additional_help(help_type);
+                display_additional_help(help_type)?;
                 return Ok(());
             }
             None => {}
@@ -370,4 +371,6 @@ pub enum MainError {
     Processor(#[from] ProcessError),
     #[error("{0}")]
     PreSet(#[from] PreSetParserError),
+    #[error("{0}")]
+    Help(#[from] HelpError),
 }

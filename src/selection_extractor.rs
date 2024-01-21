@@ -15,14 +15,14 @@ impl Get for SelectionExtructor {
 }
 
 pub fn parse_get_selection<R: Read>(reader: &mut Reader<R>) -> Result<Rc<dyn Get>> {
-    if reader.peek()? != Some(b'`') {
+    if reader.peek()? != Some(b'/') {
         return Err(JsonParserError::UnexpectedEof(reader.where_am_i()).into());
     }
     let mut name = Vec::new();
     loop {
         match reader.next()? {
             None => return Err(JsonParserError::UnexpectedEof(reader.where_am_i()).into()),
-            Some(b'`') => break,
+            Some(b'/') => break,
             Some(ch) => name.push(ch),
         };
     }
@@ -77,7 +77,7 @@ mod tests {
 
     #[test]
     fn parse_return_error_for_empty_name() -> Result<()> {
-        let text = "``".to_string();
+        let text = "//".to_string();
         let mut reader = from_string(&text);
         let error = parse_get_selection(&mut reader).err().unwrap();
 
@@ -94,7 +94,7 @@ mod tests {
 
     #[test]
     fn get_return_the_correct_selection() -> Result<()> {
-        let text = "`test`".to_string();
+        let text = "/test/".to_string();
         let mut reader = from_string(&text);
         let selection = parse_get_selection(&mut reader).unwrap();
 
@@ -110,7 +110,7 @@ mod tests {
 
     #[test]
     fn get_return_the_correct_selection_when_not_found() -> Result<()> {
-        let text = "`test-1`".to_string();
+        let text = "/test-1/".to_string();
         let mut reader = from_string(&text);
         let selection = parse_get_selection(&mut reader).unwrap();
 

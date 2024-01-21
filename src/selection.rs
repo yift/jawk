@@ -124,7 +124,7 @@ pub fn read_getter<R: Read>(reader: &mut Reader<R>) -> Result<Rc<dyn Get>> {
         Some(b'(') => parse_function(reader),
         Some(b':' | b'@') => parse_get_variable(reader),
         Some(b'&') => parse_input_context(reader),
-        Some(b'`') => parse_get_selection(reader),
+        Some(b'/') => parse_get_selection(reader),
         _ => match ConstGetters::parse(reader)? {
             None => Err(SelectionParseError::UnexpectedEof),
             Some(getter) => Ok(Rc::new(getter)),

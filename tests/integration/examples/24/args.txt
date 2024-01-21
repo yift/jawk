@@ -1,7 +1,7 @@
 jawk
 --select=.name.last=Last name
 --select=.name.first=First name
---select=(concat `First name` " " `Last name`)=Full name
+--select=(concat /First name/ " " /Last name/)=Full name
 --select=.nat=Nationality
---sort-by=`Full name`
+--sort-by=/Full name/
 --output-style=csv

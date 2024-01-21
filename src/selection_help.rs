@@ -57,10 +57,10 @@ fn build_help() -> Vec<SelectionHelp> {
             "Extraction",
             vec![
                 "Used to extract data from the input.",
-                "* Use `. to get the input as is.",
+                "* Use `.` to get the input as is.",
                 "* Use `.<name>` to access a key within an object. If the name has spaces, use the `get` function instead.",
-                "* Use `#<index> to access an element in an array.",
-                "* Use `^` to access the \"parent\" input. That is,, while in a functional function - like `filter` or `map`, use `^` to access the original input and `^^` to access the input of that input and so on.",
+                "* Use `#<index>` to access an element in an array.",
+                "* Use `^` to access the \"parent\" input. That is, while in a functional function - like `filter` or `map` - use `^` to access the original input and `^^` to access the input of that input and so on.",
                 "* One can use a combination of all of the aboove, i.e. `^.key-1.key-2#3.key-4`."
             ]
         )
@@ -88,8 +88,8 @@ fn build_help() -> Vec<SelectionHelp> {
         SelectionHelp::new(
             "Function",
             vec![
-                "Invoke a function. Has a format of `(<function-name>` <arg0> <arg1> ..)` where `<argN>` are other selection.",
-                "Alternative format is `(.<function-name>` <arg1>...)` - in that case, the first argument will be the input (i.e. `.`).",
+                "Invoke a function. Has a format of `(<function-name> <arg0> <arg1> ..)` where `<argN>` are other selection.",
+                "Alternative format is `(.<function-name> <arg1>...)` - in that case, the first argument will be the input (i.e. `.`).",
                 "The argument can be seperated by comma or whitespace.",
                 "See list of available functions in functions additional help."
             ]
@@ -107,7 +107,7 @@ fn build_help() -> Vec<SelectionHelp> {
         SelectionHelp::new(
             "Variables",
             vec![
-                "Use a variable (either one the was predefined by the `set` command line argument or one that was defined by the `set` function.",
+                "Use a variable (either one the was predefined by the `set` command line argument or one that was defined by the `set` function).",
                 "The format to use varaibles is `:<variable-name>`. Note that the variable is defiend once."
             ]
         )
@@ -122,7 +122,7 @@ fn build_help() -> Vec<SelectionHelp> {
         SelectionHelp::new(
             "Macros",
             vec![
-                "Use a macro (either one the was predefined by the `set` command line argument or one that was defined by the `define` function.",
+                "Use a macro (either one the was predefined by the `set` command line argument or one that was defined by the `define` function).",
                 "The format to use a macro is `@<variable-name>`. Note that the macro is evelated on each call."
             ]
         )
@@ -157,28 +157,27 @@ fn build_help() -> Vec<SelectionHelp> {
                 SelectionHelp::new(
                     "Previous selected values",
                     vec![
-                        "Reuse previoulsy selected value. Use this to reuse a value that had been selected previously. This is not available during filtering, ",
-                        "and one can only refere to values that had been selected before.",
-                        "The format is `<selection-name>` where the <selection-name> is the name of the selection."
+                        "Reuse previoulsy selected value. Use this to reuse a value that had been selected previously. This is not available during filtering, and one can only refere to values that had been selected before.",
+                        "The format is `/<selection-name>/` where the *selection-name* is the name of the selection."
                     ]
                 )
                     .with_example(
                         UsageExample::new(
-                            "`name`", 
+                            "/name/", 
                             "",
                              "\"John\""
                             ).with_previous_selection("name", "\"John\"")
                         )
                         .with_example(
                             UsageExample::new(
-                                "`name`", 
+                                "/name/", 
                                 "",
                                  ""
                                 ).with_previous_selection("name", "")
                             )
                             .with_example(
                                 UsageExample::new(
-                                    "`name`", 
+                                    "/name/", 
                                     "",
                                      ""
                                     ).with_previous_selection("Last Name", "\"Doe\"")
@@ -186,42 +185,51 @@ fn build_help() -> Vec<SelectionHelp> {
                     ]
 }
 
-pub fn print_selection_help() {
+pub fn get_selection_help() -> Vec<String> {
     let types = build_help();
-    println!("There are {} types of selectoion:", types.len());
+    let mut help = Vec::new();
+    help.push("# Selection".into());
+    help.push(format!("There are {} types of selectoion:", types.len()));
     for t in types {
-        println!();
-        println!("{}", t.name);
+        help.push("".into());
+        help.push(format!("## {}", t.name));
         for d in t.description {
-            println!("  {}", d);
+            help.push(format!("  {}", d));
         }
-        println!("  For example:");
+        help.push("### Examples".into());
         for e in t.examples {
-            println!("      * For selection: `{}`:", e.selection);
-            if let Some(o) = e.expected_output {
-                println!("        will produce: `{}`", o);
+            let previous_selection = if !e.previous_selection.is_empty() {
+                e.previous_selection
+                    .iter()
+                    .map(|(key, value)| {
+                        if let Some(value) = value {
+                            format!(" and previously selected *{}* as `{}`", key, value)
+                        } else {
+                            format!(" and previously selected *{}* as nothing", key)
+                        }
+                    })
+                    .collect()
             } else {
-                println!("        will produce nothing");
-            }
-            if let Ok(i) = JsonValue::from_str(e.input.as_str()) {
-                println!("        for input: `{}`.", i);
+                String::new()
+            };
+            let input = if let Ok(i) = JsonValue::from_str(e.input.as_str()) {
+                format!("for input: `{}`", i)
             } else {
-                println!("        regardless of the input.");
-            }
-            if !e.previous_selection.is_empty() {
-                for (key, value) in e.previous_selection {
-                    if let Some(value) = value {
-                        println!(
-                            "        and previously selected \"{}\" as `{}`.",
-                            key, value
-                        );
-                    } else {
-                        println!("        and previously selected \"{}\" as nothing.", key);
-                    }
-                }
-            }
+                "regardless of the input".into()
+            };
+            let output = if let Some(o) = e.expected_output {
+                format!("will produce: `{}`", o)
+            } else {
+                "will produce nothing".into()
+            };
+            help.push(format!(
+                "* For selection: `{}` {}{} {}.",
+                e.selection, input, previous_selection, output
+            ));
         }
+        help.push("---".into());
     }
+    help
 }
 #[cfg(test)]
 mod tests {

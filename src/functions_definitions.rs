@@ -225,76 +225,92 @@ pub fn create_possible_fn_help_types() -> Vec<PossibleValue> {
 
     values
 }
-pub fn print_fn_help(help_type: &str) {
+pub fn get_fn_help(help_type: &str) -> Vec<String> {
     if help_type == "functions" {
-        println!("Functions allow one to manipulate the input. The functions format is `(<function-name>` <arg0> <arg1> ..)` where `<argN>` are functions or other types of selection.");
-        println!("See additional help for selection for more details.");
-        println!(
+        let mut help = Vec::new();
+        help.push("# Functions".into());
+        help.push("Functions allow one to manipulate the input. The functions format is `(<function-name> <arg0> <arg1> ..)` where `<argN>` are functions or other types of selection.".into());
+        help.push("See additional help for selection for more details.".into());
+        help.push(format!(
             "There are {} functions group available:",
             ALL_FUNCTIONS.len()
-        );
+        ));
         for &group in ALL_FUNCTIONS.iter() {
-            println!("* {} functions.", group.name);
+            help.push(format!("* *{}* functions.", group.name));
         }
-        println!("See additional help with the group name to see the list of available functions in that group.");
+        help.push("See additional help with the group name to see the list of available functions in that group.".into());
+        help
     } else {
         for &group in ALL_FUNCTIONS.iter() {
             if group.name == help_type {
-                print_group_help(group);
-                return;
+                return get_group_help(group);
             }
         }
         let function = NAME_TO_FUNCTION.get(help_type);
         if let Some(&function) = function {
-            print_function_help(function);
+            get_function_help(function)
         } else {
             panic!("Can not find function {}", help_type)
         }
     }
 }
 
-fn print_group_help(group: &FunctionsGroup) {
-    println!(
+fn get_group_help(group: &FunctionsGroup) -> Vec<String> {
+    let mut help = Vec::new();
+    help.push(format!("# Function group {}", group.name,));
+    help.push(format!(
         "Function group {} has {} functions:",
         group.name,
         group.functions.len()
-    );
+    ));
     for f in &group.functions {
-        println!("* `{}` - {}", f.name, f.description.first().unwrap_or(&""));
+        help.push(format!(
+            "* `{}` - {}",
+            f.name,
+            f.description.first().unwrap_or(&"")
+        ));
     }
-    println!("Use additional help with a function name to see more details about the function.");
+    help.push(
+        "Use additional help with a function name to see more details about the function.".into(),
+    );
+    help
 }
-fn print_function_help(func: &FunctionDefinitions) {
+
+fn get_function_help(func: &FunctionDefinitions) -> Vec<String> {
+    let mut help = Vec::new();
     let name = func.name;
-    println!("`{}` function:", name);
+    help.push(format!("# `{}` function:", name));
     for alias in &func.aliases {
-        println!("* Can also be called as `{}`", alias);
+        help.push(format!("* Can also be called as `{}`", alias));
     }
     for description in &func.description {
-        println!("{}", description);
+        help.push(description.to_string());
     }
-    println!();
-    println!("For example:");
+    help.push(String::new());
+    help.push("## Examples:".into());
     for example in &func.examples {
         let json = if let Some(input) = example.input {
             let input = input.to_string();
             let mut reader = from_string(&input);
             let json = reader.next_json_value().unwrap().unwrap();
-            println!("* for input:\n ```{}```", json);
+            help.push(format!("* for input:\n ```{}```", json));
             json
         } else {
+            help.push("* Witout input".into());
             JsonValue::Null
         };
         let args = example.arguments.join(", ");
         let run = format!("({} {})", name, args);
-        println!("  running: `{}`", run);
+        help.push(format!("  running: `{}`", run));
         let selection = Selection::from_str(&run).unwrap();
         match selection.get(&Context::new_with_no_context(json)) {
-            None => println!("  will return nothing"),
-            Some(result) => println!("  will give: `{}`", result),
+            None => help.push("  will return nothing".into()),
+            Some(result) => help.push(format!("  will give: `{}`", result)),
         };
-        println!();
+        help.push("----".into());
+        help.push(String::new());
     }
+    help
 }
 
 #[cfg(test)]
