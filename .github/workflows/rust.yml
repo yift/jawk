@@ -122,7 +122,5 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSSWORD }}
           port: 22
-          protocol: sftp
-          delete: 'true'
           uploads: |
             target/docs/book/book/ => ./
