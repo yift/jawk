@@ -13,7 +13,7 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@master
     - name: Run check
       run: cargo check --verbose
     - name: Build
@@ -28,15 +28,16 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@master
     - name: Install Tarpaulin
       run: cargo install cargo-tarpaulin
     - name: Create Report
       run: cargo tarpaulin --out Html --fail-under 50
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: coverage-report
         path: ./tarpaulin-report.html
+        retention-days: 1
         
   build:
     needs:
@@ -58,10 +59,11 @@ jobs:
       - uses: actions/checkout@master
       - name: build
         run: cargo build --release --verbose
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: jawk-${{ matrix.target }}
           path: ./target/release/jawk${{ matrix.suffix }}
+          retention-days: 1
   build-musl-and-docker:
     needs:
       - verify
@@ -72,10 +74,11 @@ jobs:
         run:  rustup target add x86_64-unknown-linux-musl
       - name: build
         run: cargo build --release --target=x86_64-unknown-linux-musl --verbose
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: jawk-x86_64-unknown-linux-musl
           path: ./target/x86_64-unknown-linux-musl/release/jawk
+          retention-days: 1
       - name: Copy binary
         run: |
           rm -rf ./docker/target
@@ -92,3 +95,34 @@ jobs:
           context: docker
           push: true
           tags: yiftach/jawk:latest,yiftach/jawk:0.1
+
+  produce-book:
+    needs:
+      - build-musl-and-docker
+      - build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: build
+        run: cargo build --features=create-docs
+      - name: create book
+        run: target/debug/jawk --build-docs
+      - name: Install mdBook
+        run: cargo install mdbook
+      - name: Build book
+        working-directory: target/docs/book/
+        run: mdbook build
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: jawk-*
+          path: target/docs/book/
+      - uses: Dylan700/sftp-upload-action@latest
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSSWORD }}
+          port: 22
+          protocol: sftp
+          delete: 'true'
+          uploads: |
+            target/docs/book/book/ => ./

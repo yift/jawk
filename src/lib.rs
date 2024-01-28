@@ -1,4 +1,6 @@
 mod additional_help;
+#[cfg(feature = "create-docs")]
+mod build_docs;
 mod const_getter;
 mod duplication_remover;
 mod extractor;
@@ -55,6 +57,8 @@ use std::str::FromStr;
 use thiserror::Error;
 
 use crate::additional_help::create_possible_values;
+#[cfg(feature = "create-docs")]
+use crate::build_docs::build_docs;
 use crate::json_parser::JsonParser;
 use crate::output::OutputStyle;
 use crate::reader::{from_file, from_std_in, Reader};
@@ -186,6 +190,11 @@ pub struct Cli {
     /// objects and arrays (that is, as defined in RFC 4627).
     #[arg(long)]
     only_objects_and_arrays: bool,
+
+    #[cfg(feature = "create-docs")]
+    /// Build docs
+    #[arg(long, hide = true)]
+    build_docs: bool,
 }
 
 #[derive(clap::ValueEnum, Debug, Clone, PartialEq)]
@@ -231,6 +240,11 @@ impl<S: Read> Master<S> {
                 return Ok(());
             }
             None => {}
+        }
+        #[cfg(feature = "create-docs")]
+        if self.cli.build_docs {
+            build_docs()?;
+            return Ok(());
         }
         let mut process = self
             .cli

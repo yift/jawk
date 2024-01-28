@@ -16,3 +16,4 @@ termimad = { version = "0.28", optional = true }
 [features]
 default = ["termimad-help"]
 termimad-help = ["termimad"]
+create-docs = []

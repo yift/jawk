@@ -100,7 +100,7 @@ pub fn display_additional_help(help_type: &str) -> Result<(), HelpError> {
     };
     let mut w = stdout();
     let help = help.join("\n");
-    if w.is_terminal() {
+    if w.is_terminal() && cfg!(windows) {
         display_help(&mut w, &help)?;
     } else {
         printout_help(&mut w, &help)?;

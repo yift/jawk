@@ -238,6 +238,7 @@ pub fn get_fn_help(help_type: &str) -> Vec<String> {
         for &group in ALL_FUNCTIONS.iter() {
             help.push(format!("* *{}* functions.", group.name));
         }
+        help.push(String::new());
         help.push("See additional help with the group name to see the list of available functions in that group.".into());
         help
     } else {
@@ -253,6 +254,17 @@ pub fn get_fn_help(help_type: &str) -> Vec<String> {
             panic!("Can not find function {}", help_type)
         }
     }
+}
+
+#[cfg(feature = "create-docs")]
+pub fn get_groups_and_funs() -> Vec<(String, Vec<String>)> {
+    ALL_FUNCTIONS
+        .iter()
+        .map(|g| {
+            let funcs = g.functions.iter().map(|f| f.name.to_string()).collect();
+            (g.name.to_string(), funcs)
+        })
+        .collect()
 }
 
 fn get_group_help(group: &FunctionsGroup) -> Vec<String> {
