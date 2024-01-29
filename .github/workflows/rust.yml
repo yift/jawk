@@ -110,12 +110,12 @@ jobs:
       - name: Install mdBook
         run: cargo install mdbook
       - name: Build book
-        working-directory: target/docs/book/book/
+        working-directory: target/docs/book/
         run: mdbook build
       - uses: actions/download-artifact@v4
         with:
           pattern: jawk-*
-          path: target/docs/book/
+          path: target/docs/book/book/
       - uses: Dylan700/sftp-upload-action@latest
         with:
           server: ${{ secrets.FTP_SERVER }}
