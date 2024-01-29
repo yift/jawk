@@ -110,7 +110,7 @@ jobs:
       - name: Install mdBook
         run: cargo install mdbook
       - name: Build book
-        working-directory: target/docs/book/
+        working-directory: target/docs/book/book/
         run: mdbook build
       - uses: actions/download-artifact@v4
         with:
