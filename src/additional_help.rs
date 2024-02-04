@@ -2,7 +2,7 @@ use std::io::{stdout, Error as IoError, IsTerminal, Stdout, Write};
 use thiserror::Error;
 
 use clap::builder::{PossibleValue, PossibleValuesParser};
-#[cfg(feature = "termimad-help")]
+#[cfg(all(not(target_os = "windows"), feature = "termimad-help"))]
 use termimad::{
     crossterm::{
         cursor::{Hide, Show},
@@ -30,13 +30,13 @@ pub fn create_possible_values() -> PossibleValuesParser {
     );
     values.into()
 }
-#[cfg(feature = "termimad-help")]
+#[cfg(all(not(target_os = "windows"), feature = "termimad-help"))]
 fn view_area() -> Area {
     let mut area = Area::full_screen();
     area.pad_for_max_width(200);
     area
 }
-#[cfg(feature = "termimad-help")]
+#[cfg(all(not(target_os = "windows"), feature = "termimad-help"))]
 fn make_skin() -> MadSkin {
     let mut skin = MadSkin::default();
     skin.table.align = Alignment::Center;
@@ -52,7 +52,7 @@ fn make_skin() -> MadSkin {
     skin
 }
 
-#[cfg(feature = "termimad-help")]
+#[cfg(all(not(target_os = "windows"), feature = "termimad-help"))]
 fn display_help(w: &mut Stdout, help: &String) -> Result<(), HelpError> {
     queue!(w, EnterAlternateScreen)?;
     terminal::enable_raw_mode()?;
@@ -82,7 +82,7 @@ fn display_help(w: &mut Stdout, help: &String) -> Result<(), HelpError> {
     queue!(w, LeaveAlternateScreen)?;
     Ok(())
 }
-#[cfg(not(feature = "termimad-help"))]
+#[cfg(any(target_os = "windows", not(feature = "termimad-help")))]
 fn display_help(w: &mut Stdout, help: &String) -> Result<(), HelpError> {
     printout_help(w, help)?;
     Ok(())
@@ -100,7 +100,7 @@ pub fn display_additional_help(help_type: &str) -> Result<(), HelpError> {
     };
     let mut w = stdout();
     let help = help.join("\n");
-    if w.is_terminal() && cfg!(windows) {
+    if w.is_terminal() {
         display_help(&mut w, &help)?;
     } else {
         printout_help(&mut w, &help)?;
@@ -112,7 +112,7 @@ pub fn display_additional_help(help_type: &str) -> Result<(), HelpError> {
 pub enum HelpError {
     #[error("{0}")]
     Io(#[from] IoError),
-    #[cfg(feature = "termimad-help")]
+    #[cfg(all(not(target_os = "windows"), feature = "termimad-help"))]
     #[error("{0}")]
     Termimad(#[from] TermimadError),
 }
