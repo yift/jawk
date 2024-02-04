@@ -107,11 +107,6 @@ jobs:
         run: cargo build --features=create-docs
       - name: create book
         run: target/debug/jawk --build-docs
-      - name: Install mdBook
-        run: cargo install mdbook
-      - name: Build book
-        working-directory: target/docs/book/
-        run: mdbook build
       - uses: actions/download-artifact@v4
         with:
           pattern: jawk-*
