@@ -7,7 +7,7 @@
 - [Getting Started](./getting_started.md)
 
 # More Detailed View
-- [Full Help](help.md)
+- [Command-Line Help for `jawk`](help.md)
 - [Selection](./selection.md)
 - [Functions](functions.md)
 <function_groups>

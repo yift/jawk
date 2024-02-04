@@ -3,7 +3,7 @@ use crate::{
     selection_help::get_selection_help,
     Cli,
 };
-use clap::CommandFactory;
+use mdbook::MDBook;
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -71,9 +71,7 @@ pub fn build_docs() -> Result<()> {
     let new_summary = old_summary.replace("<function_groups>", summary.as_str());
 
     // Add help output
-    let mut cli = Cli::command();
-    let help_output = cli.render_long_help();
-    let help_output = format!("{}", help_output);
+    let help_output = clap_markdown::help_markdown::<Cli>();
     let help_file = target.join("help.md");
     let help = fs::read_to_string(&help_file)?;
     let new_help = help.replace("<help>", help_output.as_str());
@@ -83,6 +81,9 @@ pub fn build_docs() -> Result<()> {
     let examples = create_examples(&target)?;
     let new_summary = new_summary.replace("<examples>", examples.as_str());
     fs::write(summary_file, new_summary)?;
+
+    let book = MDBook::load(target.parent().unwrap()).unwrap();
+    book.build().unwrap();
 
     Ok(())
 }
