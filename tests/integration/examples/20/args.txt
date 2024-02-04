@@ -7,3 +7,4 @@ jawk
 --order-by=.name.last
 --merge
 -o=json
+--style=pretty

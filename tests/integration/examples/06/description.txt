@@ -1,1 +1,1 @@
-prety json file can be created with yaml style seperators.
+Text output style produce simple text

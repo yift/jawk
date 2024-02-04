@@ -1,3 +1,4 @@
 jawk
 --select=(concat .name.first " " .name.last) = Full name
 --output-style=text
+--headers

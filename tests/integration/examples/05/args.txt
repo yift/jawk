@@ -2,4 +2,5 @@ jawk
 --select=.name.first=First Name
 --select=.name.last=Last Name
 --output-style=json
+--style=pretty
 -r=---

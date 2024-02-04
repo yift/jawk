@@ -13,9 +13,8 @@ mod json_parser;
 mod json_value;
 mod limits;
 mod merger;
-mod output;
+mod output_style;
 mod pre_sets;
-mod printer;
 mod processor;
 mod reader;
 mod regex_cache;
@@ -36,6 +35,8 @@ use json_parser::JsonParserError;
 use json_value::JsonValue;
 use limits::Limiter;
 use merger::Merger;
+use output_style::OutputOptions;
+use output_style::OutputStyleValidationError;
 use pre_sets::PreSetCollection;
 use pre_sets::PreSetParserError;
 use processor::ProcessDesision;
@@ -60,7 +61,6 @@ use crate::additional_help::create_possible_values;
 #[cfg(feature = "create-docs")]
 use crate::build_docs::build_docs;
 use crate::json_parser::JsonParser;
-use crate::output::OutputStyle;
 use crate::reader::{from_file, from_std_in, Reader};
 
 /// An AWK like toold for JSON input.
@@ -79,11 +79,6 @@ pub struct Cli {
     #[arg(long, default_value_t = OnError::Ignore)]
     #[clap(value_enum)]
     on_error: OnError,
-
-    /// How to display the output
-    #[arg(long, short, default_value_t = OutputStyle::OneLineJson)]
-    #[clap(value_enum)]
-    output_style: OutputStyle,
 
     /// What to output.
     ///
@@ -148,12 +143,6 @@ pub struct Cli {
     #[arg(long, short, visible_alias = "limit")]
     take: Option<u64>,
 
-    /// Row seperator.
-    ///
-    /// How to seperate between each row. The default is new line, but one can use something like `--row_seperator="---\n" to use yaml style seperation.
-    #[arg(long, short, default_value = "\n")]
-    row_seperator: String,
-
     /// Additional help.
     ///
     /// Display additional help. Use the function name to get additional help on a specific function.
@@ -190,6 +179,9 @@ pub struct Cli {
     /// objects and arrays (that is, as defined in RFC 4627).
     #[arg(long)]
     only_objects_and_arrays: bool,
+
+    #[command(flatten)]
+    output_options: OutputOptions,
 
     #[cfg(feature = "create-docs")]
     /// Build docs
@@ -246,10 +238,7 @@ impl<S: Read> Master<S> {
             build_docs()?;
             return Ok(());
         }
-        let mut process = self
-            .cli
-            .output_style
-            .get_processor(self.cli.row_seperator.clone(), self.stdout.clone());
+        let mut process = self.cli.output_options.get_processor(self.stdout.clone())?;
         if let Some(group_by) = &self.cli.group_by {
             if let Some(group_by) = group_by {
                 let group_by = Grouper::from_str(group_by)?;
@@ -387,4 +376,6 @@ pub enum MainError {
     PreSet(#[from] PreSetParserError),
     #[error("{0}")]
     Help(#[from] HelpError),
+    #[error("{0}")]
+    OutputStyle(#[from] OutputStyleValidationError),
 }

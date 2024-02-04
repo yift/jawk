@@ -3,4 +3,5 @@ jawk
 --order-by=.results#0.name.last
 --order-by=.results#0.name.first
 --output-style=text
+--headers
 ./tests/integration/examples/14/files

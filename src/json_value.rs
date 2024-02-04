@@ -5,7 +5,7 @@ use thiserror::Error;
 
 use crate::{
     json_parser::{JsonParser, JsonParserError},
-    printer::{JsonPrinter, Print},
+    output_style::{JsonOutputOptions, Print},
     reader::from_string,
 };
 
@@ -44,8 +44,8 @@ impl JsonValue {
 }
 impl Display for JsonValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let printer = JsonPrinter::new(false, true);
-        printer.print(f, self)
+        let printer = JsonOutputOptions::default();
+        printer.print_something(f, self)
     }
 }
 

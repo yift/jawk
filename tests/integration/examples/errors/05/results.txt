@@ -1,1 +1,1 @@
-Err(Processor(InvalidInputError("CSV output must have selection and can no group by")))
+Err(Processor(InvalidInputError("Missing headers. This output style must have selection and can no group by")))

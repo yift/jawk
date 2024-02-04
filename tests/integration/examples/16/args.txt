@@ -4,3 +4,4 @@ jawk
 --group-by=.nat
 --unique
 -o=json
+--style=pretty
