@@ -1,8 +1,8 @@
 [package]
 name = "jawk"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
-license-file = "LICENSE"
+license = "MIT"
 description = "JSON AWK."
 homepage = "https://jawk.ykaplan.me/"
 repository = "https://github.com/yift/jawk"
