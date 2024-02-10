@@ -3,7 +3,7 @@ There are a few ways to install `jawk`:
 ## From source
 To install `jawk` from source, make sure you have the Rust toolchain installed. See details in [here](https://www.rust-lang.org/tools/install)
 ### From the repository
-To install `jawk` from the repository, one need to clone the repository, build the tool and copy the executable to the path.
+To install `jawk` from the [repository](https://github.com/yift/jawk), one need to clone the repository, build the tool and copy the executable to the path.
 For example, on linux (assuming `~/bin` is in the path):
 ```
 git clone https://github.com/yift/jawk
@@ -12,11 +12,13 @@ cargo build -r
 cp target/release/jawk ~/bin
 ```
 
-### From Cargo
-To install `jawk` from Cargo, one can simply run:
+### Using Cargo
+To install [jawk](https://crates.io/crates/jawk) using Cargo, one can simply run:
 ```
 cargo install jawk
 ```
+
+(To install rust see [here](https://www.rust-lang.org/tools/install)).
 
 ## From Docker
 One can use [`jawk` docker container](https://hub.docker.com/r/yiftach/jawk). Please note that this will not allow you to access any local files (unless you add them to the container volumes).
