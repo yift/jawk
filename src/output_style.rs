@@ -54,7 +54,7 @@ pub struct JsonOutputOptions {
     #[clap(value_enum)]
     style: JsonStyle,
 
-    /// output string literal as UTF8, (by default only ASCII will be used, and everything else will be escaped).
+    /// Output string literal as UTF8 for JSON, (by default only ASCII will be used, and everything else will be escaped).
     #[arg(long, default_value_t = false)]
     utf8_strings: bool,
 }
@@ -73,40 +73,40 @@ pub enum JsonStyle {
 #[derive(Args, Debug, Clone)]
 #[group(required = false, multiple = true)]
 pub struct TextOutputOptions {
-    /// Seperate items by.
+    /// Seperate items by (for text output).
     #[arg(long, default_value = "\t")]
     items_seperator: String,
 
-    /// What to add before a String value.
+    /// What to add before a String value (for text output).
     #[arg(long, default_value = "")]
     string_prefix: String,
 
-    /// What to add after a String value.
+    /// What to add after a String value (for text output).
     #[arg(long, default_value = "")]
     string_postfix: String,
 
-    /// Include headers.
+    /// Include headers (for text output).
     #[arg(long, default_value_t = false)]
     headers: bool,
 
     /// Escape sequance. Can be set more than once. should be used with the escaped character followed by
-    /// the excpaed sequance. For example, `"\"` will set the `"`` to be escaped by a `\"`.
+    /// the excpaed sequance. For example, `"\"` will set the `"`` to be escaped by a `\"` (for text output).
     #[arg(long)]
     escape_sequance: Vec<String>,
 
-    /// How to display nulls values.
+    /// How to display nulls values (for text output).
     #[arg(long, default_value = "null")]
     null_keyword: String,
 
-    /// How to display true values.
+    /// How to display true values (for text output).
     #[arg(long, default_value = "true")]
     true_keyword: String,
 
-    /// How to display false values.
+    /// How to display false values (for text output).
     #[arg(long, default_value = "false")]
     false_keyword: String,
 
-    /// How to display missing values.
+    /// How to display missing values (for text output).
     #[arg(long)]
     missing_value_keyword: Option<String>,
 }

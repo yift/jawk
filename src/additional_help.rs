@@ -2,6 +2,7 @@ use std::io::{stdout, Error as IoError, IsTerminal, Stdout, Write};
 use thiserror::Error;
 
 use clap::builder::{PossibleValue, PossibleValuesParser};
+
 #[cfg(all(not(target_os = "windows"), feature = "termimad-help"))]
 use termimad::{
     crossterm::{
@@ -14,6 +15,8 @@ use termimad::{
     Alignment, Area, Error as TermimadError, MadSkin, MadView,
 };
 
+#[cfg(feature = "create-docs")]
+use crate::build_docs::build_docs;
 use crate::{
     functions_definitions::{create_possible_fn_help_types, get_fn_help},
     selection_help::get_selection_help,
@@ -28,6 +31,10 @@ pub fn create_possible_values() -> PossibleValuesParser {
         0,
         PossibleValue::new("selection").help("Additional help about the selection"),
     );
+    #[cfg(feature = "create-docs")]
+    {
+        values.push(PossibleValue::new("book").help("Create a book").hide(true))
+    }
     values.into()
 }
 #[cfg(all(not(target_os = "windows"), feature = "termimad-help"))]
@@ -92,6 +99,13 @@ fn printout_help(w: &mut Stdout, help: &String) -> Result<(), HelpError> {
     Ok(())
 }
 pub fn display_additional_help(help_type: &str) -> Result<(), HelpError> {
+    #[cfg(feature = "create-docs")]
+    {
+        if help_type == "book" {
+            build_docs()?;
+            return Ok(());
+        }
+    }
     let help_type = help_type.to_lowercase();
     let help = if help_type == "selection" {
         get_selection_help()

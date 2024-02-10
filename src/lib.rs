@@ -58,8 +58,6 @@ use std::str::FromStr;
 use thiserror::Error;
 
 use crate::additional_help::create_possible_values;
-#[cfg(feature = "create-docs")]
-use crate::build_docs::build_docs;
 use crate::json_parser::JsonParser;
 use crate::reader::{from_file, from_std_in, Reader};
 
@@ -182,11 +180,6 @@ pub struct Cli {
 
     #[command(flatten)]
     output_options: OutputOptions,
-
-    #[cfg(feature = "create-docs")]
-    /// Build docs
-    #[arg(long, hide = true)]
-    build_docs: bool,
 }
 
 #[derive(clap::ValueEnum, Debug, Clone, PartialEq)]
@@ -225,6 +218,7 @@ impl<S: Read> Master<S> {
             regular_expression_cache,
         }
     }
+
     pub fn go(&self) -> Result<()> {
         match &self.cli.additional_help {
             Some(help_type) => {
@@ -232,11 +226,6 @@ impl<S: Read> Master<S> {
                 return Ok(());
             }
             None => {}
-        }
-        #[cfg(feature = "create-docs")]
-        if self.cli.build_docs {
-            build_docs()?;
-            return Ok(());
         }
         let mut process = self.cli.output_options.get_processor(self.stdout.clone())?;
         if let Some(group_by) = &self.cli.group_by {
