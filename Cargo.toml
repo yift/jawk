@@ -2,6 +2,12 @@
 name = "jawk"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+description = "JSON AWK."
+homepage = "https://jawk.ykaplan.me/"
+repository = "https://github.com/yift/jawk"
+documentation = "https://jawk.ykaplan.me/"
+readme = "README.md"
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }
