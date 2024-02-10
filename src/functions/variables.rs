@@ -150,7 +150,6 @@ pub fn get_variable_functions() -> FunctionsGroup {
                 }
                 Rc::new(Impl(args))
             })
-                .add_alias("apply a definition")
                 .add_description_line("Return the value of a named variable. See define for examples.")
                 .add_example(Example::new().add_argument("\"foo\""))
         )

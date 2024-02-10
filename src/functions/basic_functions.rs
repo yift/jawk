@@ -86,15 +86,17 @@ pub fn get_basic_functions() -> FunctionsGroup {
                         .add_argument("(get . \"key-2\")")
                         .expected_output("100")
                         .input("{\"key\": [20, 40, 60, {\"key-2\": 100}]}")
+                        .explain("the first `get` will return the list in the input, the second one will return the fourth item in the list, and the last one will get the `key-2` element in that item.")
                 )
                 .add_example(
                     Example::new()
-                        .add_argument("(get . 1)")
                         .input("[1, 2, 3, 4]")
+                        .add_argument("(get . 1)")
                         .add_argument("(+ . 4)")
                         .add_argument("(+ . 10)")
                         .add_argument("(+ . (len ^^^))")
                         .expected_output("20")
+                        .explain("The first get will return 2, the second one will add 4, then third one will add 10, and the last one will add the size of the original list, so `2 + 4 + 10 + 4 = 20`.")
                 )
         )
 
@@ -126,7 +128,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
                         .expected_output("2")
                 )
                 .add_example(Example::new().add_argument("\"123\"").expected_output("3"))
-                .add_example(Example::new().add_argument("50"))
+                .add_example(Example::new().add_argument("50").explain("50 is not an array, not an object nor a string."))
         )
 
         .add_function(
@@ -541,6 +543,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
                         .add_argument("22")
                         .expected_output("1")
                         .input("{\"key-1\": 1, \"key-2\": false}")
+                        .explain("the first get will return nothing because the input is an object and get should have a string argument, the second get will return 1, which is not a nothing, so it will be the returned value.")
                 )
                 .add_example(
                     Example::new()
@@ -549,8 +552,16 @@ pub fn get_basic_functions() -> FunctionsGroup {
                         .add_argument("22")
                         .expected_output("22")
                         .input("{\"key-1\": 1, \"key-2\": false}")
+                        .explain("all the `get` will return nothing, so 22 is the first non nothing argument.")
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("(.get 1)")
+                        .add_argument("(.get 2)")
+                        .input("100")
                 )
         )
+
 
         .add_function(
             FunctionDefinitions::new("?", 3, 3, |args| {
@@ -603,6 +614,12 @@ pub fn get_basic_functions() -> FunctionsGroup {
                         .expected_output("3")
                         .input("[1, 2, 3]")
                 )
+                .add_example(
+                    Example::new()
+                        .add_argument("100")
+                        .add_argument("true")
+                        .add_argument("false")
+                )
         )
 
         .add_function(
@@ -622,6 +639,11 @@ pub fn get_basic_functions() -> FunctionsGroup {
                     Example::new()
                         .add_argument("{\"key\": [1, 2, \"3\"]}")
                         .expected_output("\"{\\\"key\\\": [1, 2, \\\"3\\\"]}\"")
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("(+ 10 20)")
+                        .expected_output("\"30\"")
                 )
         )
 }

@@ -93,6 +93,7 @@ pub fn get_string_functions() -> FunctionsGroup {
                     Example::new()
                         .add_argument("\"PATH\"")
                         .expected_json(var("PATH").map(|f| f.into()).ok())
+                        .more_or_less()
                 )
         )
 
@@ -155,6 +156,7 @@ pub fn get_string_functions() -> FunctionsGroup {
             })
                 .add_description_line("Extract a string header.")
                 .add_description_line("If the first argument is a string and the second argument is a positive integer, the returned value will be a string with the beggining of the first argument.")
+                .add_description_line("See also `take`.")
                 .add_example(
                     Example::new()
                         .add_argument("\"test-123\"")
@@ -207,6 +209,7 @@ pub fn get_string_functions() -> FunctionsGroup {
             })
                 .add_description_line("Extract a string tail.")
                 .add_description_line("If the first argument is a string and the second argument is a positive integer, the returned value will be a string with the end of the first argument.")
+                .add_description_line("See also `take_last`.")
                 .add_example(
                     Example::new()
                         .add_argument("\"test-123\"")
@@ -296,6 +299,12 @@ pub fn get_string_functions() -> FunctionsGroup {
                 .add_description_line(
                     "Return true if the first string argument match the second regular expression argument."
                 )
+                .add_description_line(
+                    "For regular expression syntax, see [https://docs.rs/regex/latest/regex/#syntax]."
+                )
+                .add_description_line(
+                    "Use `--regular_expression_cache_size` so set a cache for compiled regular expressions."
+                )
                 .add_example(
                     Example::new()
                         .add_argument("\"test\"")
@@ -352,12 +361,22 @@ pub fn get_string_functions() -> FunctionsGroup {
                 Rc::new(Impl(args))
             })
                 .add_description_line("Return the capture group within the string.")
+                .add_description_line("The first argument is expected to be the string to apply the expression on.")
+                .add_description_line("The second argument is expected to be the string with the regular expression.")
+                .add_description_line("The third argument is expected to be the group index with in the regular epression (the first group index is one).")
+                .add_description_line(
+                    "For regular expression syntax, see [https://docs.rs/regex/latest/regex/#syntax]."
+                )
+                .add_description_line(
+                    "Use `--regular_expression_cache_size` so set a cache for compiled regular expressions."
+                )
                 .add_example(
                     Example::new()
                         .add_argument("\"hello 200 world\"")
                         .add_argument("\"[a-z ]+([0-9]+)[a-z ]+\"")
                         .add_argument("1")
                         .expected_output("\"200\"")
+                        .explain("the regular expression is letters and spaces, group with numbers, and more letter and spaces, so the group is the string `\"200\"`.")
                 )
                 .add_example(
                     Example::new()

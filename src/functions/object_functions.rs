@@ -84,8 +84,8 @@ pub fn get_object_functions() -> FunctionsGroup {
                 }
                 Rc::new(Impl(args))
             })
-                .add_alias("to-list")
-                .add_description_line("Get the list of all the entries of an obejct. Each item of the list will be an object with key` and `value` entries")
+                .add_alias("to_list")
+                .add_description_line("Get the list of all the entries of an obejct. Each item of the list will be an object with `key` and `value` entries")
                 .add_example(
                     Example::new()
                         .add_argument(r#"{"key-1": 1, "key-2": false}"#)
@@ -230,6 +230,7 @@ pub fn get_object_functions() -> FunctionsGroup {
                         .add_argument("{\"a\": 1, \"aa\": 2, \"aaa\": 3, \"aaaa\": 4}")
                         .add_argument("(>= (len .) 3)")
                         .expected_output("{\"aaa\": 3, \"aaaa\": 4}")
+                        .explain("it filters all the keys that are shorter than 3 characters.")
                 )
                 .add_example(Example::new().add_argument("[1, 2, 4]").add_argument("false"))
         )
@@ -266,6 +267,7 @@ pub fn get_object_functions() -> FunctionsGroup {
                         .add_argument("{\"a\": 1, \"aa\": 2, \"aaa\": 3, \"aaaa\": 4}")
                         .add_argument("(= 0 (% . 2))")
                         .expected_output("{\"aa\": 2, \"aaaa\": 4}")
+                        .explain("it filters all the odds values")
                 )
                 .add_example(Example::new().add_argument("[1, 2, 4]").add_argument("false"))
         )
@@ -309,6 +311,7 @@ pub fn get_object_functions() -> FunctionsGroup {
                         .add_argument("{\"a\": 1, \"aa\": 2, \"aaa\": 3, \"aaaa\": 4}")
                         .add_argument("(+ . ^.)")
                         .expected_output("{\"a\": 4, \"aa\": 5, \"aaa\": 6, \"aaaa\": 7}")
+                        .explain("it adds the input (3) to all the values.")
                 )
                 .add_example(Example::new().add_argument("[1, 2, 4]").add_argument("false"))
         )
@@ -426,7 +429,7 @@ pub fn get_object_functions() -> FunctionsGroup {
         )
 
         .add_function(
-            FunctionDefinitions::new("insert-if-absent", 3, 3, |args| {
+            FunctionDefinitions::new("insert_if_absent", 3, 3, |args| {
                 struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
@@ -455,8 +458,8 @@ pub fn get_object_functions() -> FunctionsGroup {
                 }
                 Rc::new(Impl(args))
             })
-                .add_alias("put-if-absent")
-                .add_alias("replace-if-absent")
+                .add_alias("put_if_absent")
+                .add_alias("replace_if_absent")
                 .add_alias("{-}")
                 .add_description_line("Add a new entry to a map if it has no such key.")
                 .add_description_line("The first argument should be an object.")
@@ -476,6 +479,7 @@ pub fn get_object_functions() -> FunctionsGroup {
                         .add_argument("\"a\"")
                         .add_argument("-1")
                         .expected_output("{\"a\": 10, \"b\": 22}")
+                        .explain("the object already has a value with the `a` key.")
                 )
                 .add_example(
                     Example::new().add_argument("[]").add_argument("\"a\"").add_argument("1")
@@ -490,7 +494,7 @@ pub fn get_object_functions() -> FunctionsGroup {
         )
 
         .add_function(
-            FunctionDefinitions::new("replace-if-exists", 3, 3, |args| {
+            FunctionDefinitions::new("replace_if_exists", 3, 3, |args| {
                 struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
@@ -519,8 +523,8 @@ pub fn get_object_functions() -> FunctionsGroup {
                 }
                 Rc::new(Impl(args))
             })
-                .add_alias("insert-if-exists")
-                .add_alias("put-if-exists")
+                .add_alias("insert_if_exists")
+                .add_alias("put_if_exists")
                 .add_alias("{+}")
                 .add_description_line("Add a new entry to a map if it has such key.")
                 .add_description_line("The first argument should be an object.")
@@ -533,6 +537,7 @@ pub fn get_object_functions() -> FunctionsGroup {
                         .add_argument("\"a\"")
                         .add_argument("1")
                         .expected_output("{}")
+                        .explain("The object has no value for key `a`.")
                 )
                 .add_example(
                     Example::new()

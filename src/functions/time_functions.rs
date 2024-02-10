@@ -4,7 +4,7 @@ use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 
 use crate::{
     functions_definitions::{Arguments, Example, FunctionDefinitions, FunctionsGroup},
-    json_value::JsonValue,
+    json_value::{JsonValue, NumberValue},
     processor::Context,
     selection::Get,
 };
@@ -24,7 +24,24 @@ pub fn get_time_functions() -> FunctionsGroup {
                 }
                 Rc::new(Impl)
             })
-            .add_description_line("Return the current time as seconds since epoch."),
+            .add_description_line("Return the current time as seconds since epoch.")
+            .add_example(
+                Example::new()
+                .validate_output(|value| {
+                    match value {
+                        Some(JsonValue::Number(NumberValue::Float(num))) => {
+                            match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
+                                Ok(d) => {
+                                    d.as_secs_f64() >= *num
+                                },
+                                _ => false
+                            }
+                        },
+                        _ => false
+                    }
+                })
+                .more_or_less()
+            ),
         )
         .add_function(
             FunctionDefinitions::new("format_time", 2, 2, |args| {
@@ -55,7 +72,7 @@ pub fn get_time_functions() -> FunctionsGroup {
             .add_description_line("The first argemnt should be the number of seconds since epoch")
             .add_description_line("The second argemnt should be the format as string")
             .add_description_line(
-                "See details in https://docs.rs/chrono/0.4.31/chrono/format/strftime/index.html.",
+                "See details in [https://docs.rs/chrono/latest/chrono/format/strftime/index.html].",
             )
             .add_example(
                 Example::new()
@@ -65,6 +82,12 @@ pub fn get_time_functions() -> FunctionsGroup {
             .add_example(
                 Example::new()
                     .add_argument("{}")
+                    .add_argument("\"%a %b %e %T %Y - %H:%M:%S%.f\""),
+            )
+            .add_example(
+                Example::new()
+                    .add_argument("1701611515.3603675")
+                    .expected_output("\"Sun Dec  3 13:51:55 2023 - 13:51:55.360367536\"")
                     .add_argument("\"%a %b %e %T %Y - %H:%M:%S%.f\""),
             ),
         )
@@ -95,7 +118,7 @@ pub fn get_time_functions() -> FunctionsGroup {
             .add_description_line("The first argemnt should be the date")
             .add_description_line("The second argemnt should be the format as string")
             .add_description_line(
-                "See details in https://docs.rs/chrono/0.4.31/chrono/format/strftime/index.html.",
+                "See details in [https://docs.rs/chrono/latest/chrono/format/strftime/index.html].",
             )
             .add_example(
                 Example::new()
@@ -141,7 +164,7 @@ pub fn get_time_functions() -> FunctionsGroup {
             .add_description_line("The first argemnt should be the date")
             .add_description_line("The second argemnt should be the format as string")
             .add_description_line(
-                "See details in https://docs.rs/chrono/0.4.31/chrono/format/strftime/index.html.",
+                "See details in [https://docs.rs/chrono/latest/chrono/format/strftime/index.html].",
             )
             .add_example(
                 Example::new()

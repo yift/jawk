@@ -4,6 +4,7 @@ use crate::{
     Cli,
 };
 use mdbook::MDBook;
+use regex::Regex;
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -45,6 +46,7 @@ pub fn build_docs() -> Result<()> {
         ("/", "__sl__"),
         (">", "__gt__"),
         ("<", "__st__"),
+        ("%", "__pc__"),
     ];
     let functions = get_groups_and_funs();
     let mut summary = String::new();
@@ -61,6 +63,7 @@ pub fn build_docs() -> Result<()> {
             }
             let function_file = target.join(format!("{}.md", function_file_name));
             let code = get_fn_help(function_name.as_str()).join("\n");
+            let code = add_links(&code);
             fs::write(function_file, code)?;
             summary +=
                 format!("\n        - [{}]({}.md)", function_name, function_file_name).as_str();
@@ -87,7 +90,10 @@ pub fn build_docs() -> Result<()> {
 
     Ok(())
 }
-
+fn add_links(code: &str) -> String {
+    let replacer = Regex::new(r"\[(?<link>https://[a-z0-9./_#]+)\]").unwrap();
+    replacer.replace_all(code, "[$link]($link)").to_string()
+}
 fn create_examples(target: &PathBuf) -> Result<String> {
     let source = PathBuf::from("tests").join("integration").join("examples");
 

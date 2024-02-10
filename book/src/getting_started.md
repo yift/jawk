@@ -48,7 +48,7 @@ Will return:
 ```
 
 ## Output
-By default the output will be a single line JSON for each valid value in the input. On can change this to CSV, raw text, consise JSON or pretty JSON.
+By default the output will be a single line JSON for each valid value in the input. On can change this to CSV, text, or other styles of JSON. For more details see [the command line help](help.md).
 ### Example
 Running:
 ```

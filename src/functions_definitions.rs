@@ -35,11 +35,19 @@ pub enum FunctionDefinitionsError {
     TooManyArgument(String, usize, usize),
 }
 
+enum ValidOutputForTest {
+    String(Cow<'static, str>),
+    Function(fn(&Option<JsonValue>) -> bool),
+}
 pub struct Example {
     input: Option<&'static str>,
     pub arguments: Vec<&'static str>,
     // For test only
-    output: Option<Cow<'static, str>>,
+    output: Option<ValidOutputForTest>,
+    // For docs only
+    explain: Option<Cow<'static, str>>,
+    // For docs only
+    acurate: bool,
 }
 
 impl Example {
@@ -48,6 +56,8 @@ impl Example {
             input: None,
             arguments: vec![],
             output: None,
+            explain: None,
+            acurate: true,
         }
     }
     pub fn input(mut self, input: &'static str) -> Self {
@@ -59,11 +69,23 @@ impl Example {
         self
     }
     pub fn expected_output(mut self, output: &'static str) -> Self {
-        self.output = Some(output.into());
+        self.output = Some(ValidOutputForTest::String(output.into()));
+        self
+    }
+    pub fn validate_output(mut self, compare: fn(&Option<JsonValue>) -> bool) -> Self {
+        self.output = Some(ValidOutputForTest::Function(compare));
         self
     }
     pub fn expected_json(mut self, output: Option<JsonValue>) -> Self {
-        self.output = output.map(|v| format!("{}", v).into());
+        self.output = output.map(|v| ValidOutputForTest::String(format!("{}", v).into()));
+        self
+    }
+    pub fn explain(mut self, explain: &'static str) -> Self {
+        self.explain = Some(explain.into());
+        self
+    }
+    pub fn more_or_less(mut self) -> Self {
+        self.acurate = false;
         self
     }
 }
@@ -293,7 +315,7 @@ fn get_function_help(func: &FunctionDefinitions) -> Vec<String> {
     let name = func.name;
     help.push(format!("# `{}` function:", name));
     for alias in &func.aliases {
-        help.push(format!("* Can also be called as `{}`", alias));
+        help.push(format!("* Can also be called as `{}`\n", alias));
     }
     for description in &func.description {
         help.push(description.to_string());
@@ -301,24 +323,33 @@ fn get_function_help(func: &FunctionDefinitions) -> Vec<String> {
     help.push(String::new());
     help.push("## Examples:".into());
     for example in &func.examples {
-        let json = if let Some(input) = example.input {
+        let (json, input) = if let Some(input) = example.input {
             let input = input.to_string();
             let mut reader = from_string(&input);
             let json = reader.next_json_value().unwrap().unwrap();
-            help.push(format!("* for input:\n ```{}```", json));
-            json
+            let input = format!(" for input: ```{}```", &json);
+            (json, input)
         } else {
-            help.push("* Witout input".into());
-            JsonValue::Null
+            (JsonValue::Null, "".to_string())
         };
         let args = example.arguments.join(", ");
         let run = format!("({} {})", name, args);
-        help.push(format!("  running: `{}`", run));
+        help.push(format!("* running: `{}`{}", run, input));
         let selection = Selection::from_str(&run).unwrap();
         match selection.get(&Context::new_with_no_context(json)) {
             None => help.push("  will return nothing".into()),
-            Some(result) => help.push(format!("  will give: `{}`", result)),
+            Some(result) => {
+                if example.acurate {
+                    help.push(format!("  will give: `{}`", result))
+                } else {
+                    help.push(format!("  can give something like: `{}`", result))
+                }
+            }
         };
+        match &example.explain {
+            None => {}
+            Some(explain) => help.push(format!("  Because {}", explain)),
+        }
         help.push("----".into());
         help.push(String::new());
     }
@@ -352,17 +383,25 @@ mod tests {
                     println!("\t\tRunning example: {}...", args);
                     let run = format!("({} {})", func.name, args);
                     let selection = Selection::from_str(&run)?;
-                    let expected = example.output.clone().map(|input| {
-                        let input = &input.to_string();
-                        let mut reader = from_string(&input);
-                        reader.next_json_value().unwrap().unwrap()
-                    });
                     let result = selection.get(&Context::new_with_no_context(json));
                     match &result {
                         Some(result) => println!("\t\t\tgot: {}", result),
                         None => println!("\t\t\tgot nothing"),
                     }
-                    assert_eq!(result, expected);
+                    match &example.output {
+                        None => {
+                            assert_eq!(result, None);
+                        }
+                        Some(ValidOutputForTest::String(str)) => {
+                            let input = str.to_string();
+                            let mut reader = from_string(&input);
+                            let json = reader.next_json_value().unwrap().unwrap();
+                            assert_eq!(result, Some(json))
+                        }
+                        Some(ValidOutputForTest::Function(fun)) => {
+                            assert_eq!(fun(&result), true);
+                        }
+                    }
                     println!("\t\tPassed");
                 }
                 println!("\tPassed");
