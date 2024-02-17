@@ -195,7 +195,24 @@ enum OnError {
     Stdout,
 }
 
-pub struct Master<R: Read> {
+/// Start JAWK and return a resuilt.
+///
+/// # Arguments
+///
+/// * `cli` - A the CLI that define this run.
+/// * `stdout` - A reference to the output stream to write the output.
+/// * `stderr` - A reference to the error stream to write the errors (if needed).
+/// * `stdin` - A reference to the input stream to read the inputs (if needed).
+pub fn go<R: Read>(
+    cli: Cli,
+    stdout: Rc<RefCell<dyn std::io::Write + Send>>,
+    stderr: Rc<RefCell<dyn std::io::Write + Send>>,
+    stdin: Box<dyn Fn() -> R>,
+) -> Result<()> {
+    let master = Master::new(cli, stdout, stderr, stdin);
+    master.go()
+}
+struct Master<R: Read> {
     cli: Cli,
     stdout: Rc<RefCell<dyn std::io::Write + Send>>,
     stderr: Rc<RefCell<dyn std::io::Write + Send>>,
@@ -343,6 +360,7 @@ impl<S: Read> Master<S> {
     }
 }
 
+/// A result from running the go function
 pub type Result<T> = std::result::Result<T, MainError>;
 
 #[derive(Debug, Error)]
