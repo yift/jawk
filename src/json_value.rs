@@ -62,23 +62,23 @@ impl Hash for JsonValue {
             JsonValue::Null => state.write_i8(1),
             JsonValue::Number(NumberValue::Float(f)) => {
                 state.write_i8(2);
-                state.write_u64(f.to_bits())
+                state.write_u64(f.to_bits());
             }
             JsonValue::Number(NumberValue::Positive(f)) => {
                 state.write_i8(3);
-                state.write_u64(*f)
+                state.write_u64(*f);
             }
             JsonValue::Number(NumberValue::Negative(f)) => {
                 state.write_i8(4);
-                state.write_i64(*f)
+                state.write_i64(*f);
             }
             JsonValue::String(str) => {
                 state.write_i8(5);
-                str.hash(state)
+                str.hash(state);
             }
             JsonValue::Array(lst) => {
                 state.write_i8(6);
-                lst.hash(state)
+                lst.hash(state);
             }
             JsonValue::Object(o) => {
                 state.write_i8(7);
@@ -323,8 +323,8 @@ impl Ord for JsonValue {
                     if keys_cmp != Ordering::Equal {
                         return keys_cmp;
                     }
-                    let me = format!("{}", self);
-                    let other = format!("{}", other);
+                    let me = format!("{self}");
+                    let other = format!("{other}");
                     me.cmp(&other)
                 } else {
                     Ordering::Equal
@@ -347,10 +347,7 @@ impl FromStr for JsonValue {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        collections::hash_map::RandomState,
-        hash::{BuildHasher, Hasher},
-    };
+    use std::{collections::hash_map::RandomState, hash::BuildHasher};
 
     use crate::selection;
 
@@ -360,7 +357,7 @@ mod tests {
     fn test_type_name() -> selection::Result<()> {
         assert_eq!(JsonValue::Null.type_name(), "null");
         assert_eq!(JsonValue::Boolean(true).type_name(), "boolean");
-        assert_eq!(JsonValue::String("".to_string()).type_name(), "string");
+        assert_eq!(JsonValue::String(String::new()).type_name(), "string");
         assert_eq!(
             JsonValue::Number(NumberValue::Float(1.0)).type_name(),
             "number"
@@ -397,14 +394,12 @@ mod tests {
         let state = RandomState::new();
 
         let val1 = to_json(json);
-        let mut hasher = state.build_hasher();
-        val1.hash(&mut hasher);
-        let val1 = hasher.finish();
+
+        let val1 = state.hash_one(&val1);
 
         let val2 = to_json(json);
-        let mut hasher = state.build_hasher();
-        val2.hash(&mut hasher);
-        let val2 = hasher.finish();
+
+        let val2 = state.hash_one(&val2);
 
         assert_eq!(val1, val2);
         Ok(())

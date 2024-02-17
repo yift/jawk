@@ -104,7 +104,7 @@ impl Process for SortProcess {
                 if space_left == 0 {
                     self.remove_last_item();
                 } else {
-                    self.space_left = Some(space_left - 1)
+                    self.space_left = Some(space_left - 1);
                 }
             }
         }
@@ -196,7 +196,7 @@ mod tests {
     fn sort_will_fail_with_wrong_direction() -> ProcessResult<()> {
         let error = Sorter::from_str(" 1 bla").err().unwrap();
 
-        assert_eq!(matches!(error, SorterParserError::UnknownOrder(_)), true);
+        assert!(matches!(error, SorterParserError::UnknownOrder(_)));
 
         Ok(())
     }

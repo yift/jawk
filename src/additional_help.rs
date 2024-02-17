@@ -33,7 +33,7 @@ pub fn create_possible_values() -> PossibleValuesParser {
     );
     #[cfg(feature = "create-docs")]
     {
-        values.push(PossibleValue::new("book").help("Create a book").hide(true))
+        values.push(PossibleValue::new("book").help("Create a book").hide(true));
     }
     values.into()
 }
@@ -95,7 +95,7 @@ fn display_help(w: &mut Stdout, help: &String) -> Result<(), HelpError> {
     Ok(())
 }
 fn printout_help(w: &mut Stdout, help: &String) -> Result<(), HelpError> {
-    writeln!(w, "{}", help)?;
+    writeln!(w, "{help}")?;
     Ok(())
 }
 pub fn display_additional_help(help_type: &str) -> Result<(), HelpError> {

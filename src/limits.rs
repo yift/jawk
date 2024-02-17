@@ -59,7 +59,7 @@ impl Process for Limiter {
 #[cfg(test)]
 mod tests {
     use std::cell::RefCell;
-    use std::ops::Deref;
+
     use std::rc::Rc;
 
     use super::*;
@@ -91,7 +91,7 @@ mod tests {
         }
 
         let binding = data.borrow();
-        let data = binding.deref();
+        let data = &*binding;
         assert_eq!(data, &2);
         assert_eq!(results[0], ProcessDesision::Continue);
         assert_eq!(results[1], ProcessDesision::Continue);
@@ -133,7 +133,7 @@ mod tests {
         }
 
         let binding = data.borrow();
-        let data = binding.deref();
+        let data = &*binding;
         assert_eq!(data, &5);
         assert_eq!(results[0], ProcessDesision::Continue);
         assert_eq!(results[1], ProcessDesision::Continue);

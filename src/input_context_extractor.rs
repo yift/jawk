@@ -73,11 +73,11 @@ pub fn parse_input_context<R: Read>(reader: &mut Reader<R>) -> SelectionResult<R
     let mut name = Vec::new();
     while let Some(ch) = reader.next()? {
         if ch.is_ascii_lowercase() {
-            name.push(ch)
+            name.push(ch);
         } else if ch.is_ascii_uppercase() {
-            name.push(ch.to_ascii_lowercase())
+            name.push(ch.to_ascii_lowercase());
         } else if ch == b'_' || ch == b'-' {
-            name.push(b'-')
+            name.push(b'-');
         } else {
             break;
         };
@@ -143,7 +143,7 @@ mod tests {
     fn from_name_return_error_for_unknown_name() -> SelectionResult<()> {
         let err = InputContextExtractor::from_name("nop".to_string()).err();
 
-        assert_eq!(err.is_some(), true);
+        assert!(err.is_some());
 
         Ok(())
     }
@@ -393,7 +393,7 @@ mod tests {
 
         let err = parse_input_context(&mut reader).err();
 
-        assert_eq!(err.is_some(), true);
+        assert!(err.is_some());
 
         Ok(())
     }

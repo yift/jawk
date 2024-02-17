@@ -382,7 +382,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
                             }
                             Some(JsonValue::String(str)) => {
                                 if start >= str.len() || length == 0 {
-                                    Some("".to_string().into())
+                                    Some(String::new().into())
                                 } else {
                                     let last_index = start + length;
                                     let last_index = if last_index >= str.len() {
@@ -627,7 +627,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
                 struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
-                        self.0.apply(value, 0).map(|val| format!("{}", val).into())
+                        self.0.apply(value, 0).map(|val| format!("{val}").into())
                     }
                 }
                 Rc::new(Impl(args))

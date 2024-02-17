@@ -151,7 +151,7 @@ impl Context {
     }
     pub fn with_variable(&self, name: String, value: JsonValue) -> Self {
         let mut variables = HashMap::with_capacity(self.variables.len() + 1);
-        for (k, v) in self.variables.deref() {
+        for (k, v) in &*self.variables {
             variables.insert(k.clone(), v.clone());
         }
         variables.insert(name, value);
@@ -178,7 +178,7 @@ impl Context {
     }
     pub fn with_definition(&self, name: String, definition: &Rc<dyn Get>) -> Self {
         let mut definitions = HashMap::with_capacity(self.definitions.len() + 1);
-        for (k, d) in self.definitions.deref() {
+        for (k, d) in &*self.definitions {
             definitions.insert(k.clone(), d.clone());
         }
         definitions.insert(name, definition.clone());
@@ -233,7 +233,7 @@ impl Context {
 
     pub fn get_selected(&self, name: &String) -> Option<JsonValue> {
         for (title, result) in &self.results {
-            if title.deref() == name {
+            if &**title == name {
                 return result.clone();
             }
         }

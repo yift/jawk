@@ -28,7 +28,7 @@ fn test_example(dir: &Path) {
     let description = dir.join("description.txt");
     if description.exists() {
         let description = fs::read_to_string(description).unwrap();
-        println!("Description: {}", description);
+        println!("Description: {description}");
     }
     let args = dir.join("args.txt");
     let args = fs::read_to_string(args).unwrap();
@@ -42,7 +42,7 @@ fn test_example(dir: &Path) {
             let mut input_file = File::open(file).unwrap();
             let mut input_text = String::new();
             input_file.read_to_string(&mut input_text).unwrap();
-            input_text = input_text.replace("\r", "");
+            input_text = input_text.replace('\r', "");
 
             let target_dir = dir.join("target");
             fs::create_dir_all(&target_dir).ok();
@@ -66,15 +66,13 @@ fn test_example(dir: &Path) {
         let mut expected_result = String::new();
         results_file.read_to_string(&mut expected_result).unwrap();
         if result.is_err() {
-            let result = format!("{:?}", result).to_string();
+            let result = format!("{result:?}").to_string();
             assert_eq!(result, expected_result);
         } else {
-            panic!("Expecting error: {}, got nothing", expected_result);
+            panic!("Expecting error: {expected_result}, got nothing");
         }
-    } else {
-        if result.is_err() {
-            panic!("Expecting to pass, failed with: {:?}", result);
-        }
+    } else if result.is_err() {
+        panic!("Expecting to pass, failed with: {result:?}");
     }
 
     let error_file = dir.join("error.txt");
@@ -84,11 +82,11 @@ fn test_example(dir: &Path) {
         let mut expected_error = String::new();
         error_file.read_to_string(&mut expected_error).unwrap();
         if cfg!(windows) {
-            expected_error = expected_error.replace("\r", "");
+            expected_error = expected_error.replace('\r', "");
         }
         assert_eq!(expected_error, error_text);
     } else if !error_text.is_empty() {
-        panic!("Expecting no error, got {}", error_text);
+        panic!("Expecting no error, got {error_text}");
     }
 
     let output_file = if cfg!(windows) {
@@ -107,10 +105,10 @@ fn test_example(dir: &Path) {
         let mut expected_output = String::new();
         output_file.read_to_string(&mut expected_output).unwrap();
         if cfg!(windows) {
-            expected_output = expected_output.replace("\r", "");
+            expected_output = expected_output.replace('\r', "");
         }
-        assert_eq!(expected_output, output_text)
+        assert_eq!(expected_output, output_text);
     } else if !output_text.is_empty() {
-        panic!("Expecting no output, got {}", output_text);
+        panic!("Expecting no output, got {output_text}");
     }
 }

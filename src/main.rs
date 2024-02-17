@@ -12,7 +12,7 @@ fn main() {
 
     let master = Master::new(cli, stdout, stderr, stdin);
     if let Err(err) = master.go() {
-        eprintln!("{}", err);
+        eprintln!("{err}");
         std::process::exit(-1);
     }
 }

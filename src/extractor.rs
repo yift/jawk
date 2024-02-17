@@ -50,8 +50,8 @@ pub fn parse_extractor<R: Read>(reader: &mut Reader<R>) -> Result<Rc<dyn Get>> {
     let number_of_parents = read_number_of_parents(reader)?;
     let extract_from_input = ExtractFromInput::parse(reader)?;
     Ok(Rc::new(Extract {
-        extract_from_input,
         number_of_parents,
+        extract_from_input,
     }))
 }
 fn read_number_of_parents<R: Read>(reader: &mut Reader<R>) -> Result<usize> {

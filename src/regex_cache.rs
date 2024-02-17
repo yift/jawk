@@ -44,10 +44,10 @@ mod tests {
     #[test]
     fn can_compile_with_no_cache() -> Result<(), Error> {
         let cach = RegexCache::new(0);
-        match cach.compile_regex("[a-z]+").deref() {
+        match &*cach.compile_regex("[a-z]+") {
             Ok(regex) => {
-                assert_eq!(regex.is_match("hello"), true);
-                assert_eq!(regex.is_match("1234"), false);
+                assert!(regex.is_match("hello"));
+                assert!(!regex.is_match("1234"));
             }
             Err(e) => return Err(e.clone()),
         }
@@ -57,32 +57,32 @@ mod tests {
     #[test]
     fn can_recompile_with_cache() -> Result<(), Error> {
         let cach = RegexCache::new(10);
-        match cach.compile_regex("[a-z]+").deref() {
+        match &*cach.compile_regex("[a-z]+") {
             Ok(regex) => {
-                assert_eq!(regex.is_match("hello"), true);
-                assert_eq!(regex.is_match("1234"), false);
+                assert!(regex.is_match("hello"));
+                assert!(!regex.is_match("1234"));
             }
             Err(e) => return Err(e.clone()),
         }
 
-        match cach.compile_regex("[a-z]+").deref() {
+        match &*cach.compile_regex("[a-z]+") {
             Ok(regex) => {
-                assert_eq!(regex.is_match("hello"), true);
-                assert_eq!(regex.is_match("1234"), false);
+                assert!(regex.is_match("hello"));
+                assert!(!regex.is_match("1234"));
             }
             Err(e) => return Err(e.clone()),
         }
-        match cach.compile_regex("[a-z]+").deref() {
+        match &*cach.compile_regex("[a-z]+") {
             Ok(regex) => {
-                assert_eq!(regex.is_match("hello"), true);
-                assert_eq!(regex.is_match("1234"), false);
+                assert!(regex.is_match("hello"));
+                assert!(!regex.is_match("1234"));
             }
             Err(e) => return Err(e.clone()),
         }
-        match cach.compile_regex("[a-z]+").deref() {
+        match &*cach.compile_regex("[a-z]+") {
             Ok(regex) => {
-                assert_eq!(regex.is_match("hello"), true);
-                assert_eq!(regex.is_match("1234"), false);
+                assert!(regex.is_match("hello"));
+                assert!(!regex.is_match("1234"));
             }
             Err(e) => return Err(e.clone()),
         }

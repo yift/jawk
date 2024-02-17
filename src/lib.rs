@@ -212,9 +212,9 @@ impl<S: Read> Master<S> {
         let regular_expression_cache = RegexCache::new(cli.regular_expression_cache_size);
         Master {
             cli,
-            stdin,
-            stderr,
             stdout,
+            stderr,
+            stdin,
             regular_expression_cache,
         }
     }
@@ -274,9 +274,7 @@ impl<S: Read> Master<S> {
     }
 
     fn read_file(&self, file: &PathBuf, index: &mut u64, process: &mut dyn Process) -> Result<()> {
-        if !file.exists() {
-            panic!("File {:?} not exists", file);
-        }
+        assert!(file.exists(), "File {file:?} not exists");
         if file.is_dir() {
             for entry in read_dir(file)? {
                 let path = entry?.path();
@@ -336,8 +334,8 @@ impl<S: Read> Master<S> {
                         OnError::Panic => {
                             return Err(e.into());
                         }
-                        OnError::Stdout => writeln!(self.stdout.borrow_mut(), "error:{}", e)?,
-                        OnError::Stderr => writeln!(self.stderr.borrow_mut(), "error:{}", e)?,
+                        OnError::Stdout => writeln!(self.stdout.borrow_mut(), "error:{e}")?,
+                        OnError::Stderr => writeln!(self.stderr.borrow_mut(), "error:{e}")?,
                     }
                 }
             };

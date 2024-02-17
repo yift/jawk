@@ -133,7 +133,7 @@ impl Process for PreSetProcessor {
 #[cfg(test)]
 mod tests {
     use std::cell::RefCell;
-    use std::ops::Deref;
+
     use std::rc::Rc;
 
     use super::*;
@@ -171,7 +171,7 @@ mod tests {
         preseters.process(context)?;
 
         let binding = data.borrow();
-        let data = binding.deref();
+        let data = &*binding;
         assert_eq!(data, &true);
 
         Ok(())
@@ -196,7 +196,7 @@ mod tests {
         let next = Box::new(Next);
         let error = list.create_process(next).err().unwrap();
 
-        assert_eq!(matches!(error, PreSetParserError::NoEqualsError(_)), true);
+        assert!(matches!(error, PreSetParserError::NoEqualsError(_)));
 
         Ok(())
     }
@@ -220,7 +220,7 @@ mod tests {
         let next = Box::new(Next);
         let error = list.create_process(next).err().unwrap();
 
-        assert_eq!(matches!(error, PreSetParserError::EmptyName(_)), true);
+        assert!(matches!(error, PreSetParserError::EmptyName(_)));
 
         Ok(())
     }
@@ -244,7 +244,7 @@ mod tests {
         let next = Box::new(Next);
         let error = list.create_process(next).err().unwrap();
 
-        assert_eq!(matches!(error, PreSetParserError::EmptyName(_)), true);
+        assert!(matches!(error, PreSetParserError::EmptyName(_)));
 
         Ok(())
     }
@@ -267,7 +267,7 @@ mod tests {
         let next = Box::new(Next);
         let error = list.create_process(next).err().unwrap();
 
-        assert_eq!(matches!(error, PreSetParserError::DuplicateKeys(_)), true);
+        assert!(matches!(error, PreSetParserError::DuplicateKeys(_)));
 
         Ok(())
     }
@@ -290,7 +290,7 @@ mod tests {
         let next = Box::new(Next);
         let error = list.create_process(next).err().unwrap();
 
-        assert_eq!(matches!(error, PreSetParserError::DuplicateKeys(_)), true);
+        assert!(matches!(error, PreSetParserError::DuplicateKeys(_)));
 
         Ok(())
     }

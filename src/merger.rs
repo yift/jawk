@@ -22,7 +22,7 @@ impl Merger {
 impl Process for Merger {
     fn complete(&mut self) -> Result<()> {
         let mut data = Vec::new();
-        for value in self.data.iter() {
+        for value in &self.data {
             let value = value.clone();
             data.push(value);
         }
@@ -81,7 +81,7 @@ mod tests {
         merger.start(titles)?;
 
         let binding = data.borrow();
-        let data = binding.deref();
+        let data = &*binding;
         assert_eq!(data, &true);
 
         Ok(())
@@ -99,7 +99,7 @@ mod tests {
             }
             fn process(&mut self, context: Context) -> Result<ProcessDesision> {
                 let input = context.input().deref().clone();
-                assert_eq!(self.data.borrow().is_none(), true);
+                assert!(self.data.borrow().is_none());
                 *self.data.borrow_mut() = Some(input);
                 Ok(ProcessDesision::Continue)
             }
@@ -131,7 +131,7 @@ mod tests {
 
         let binding = data.borrow();
         let data = binding.deref().clone().unwrap();
-        let data = format!("{}", data);
+        let data = format!("{data}");
         assert_eq!(
             data,
             r#"[{"one": 1, "two": 2}, {"one": 4, "two": 6}, {"one": 3, "two": 4}]"#

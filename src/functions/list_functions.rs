@@ -787,7 +787,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                             let mut datum = IndexMap::new();
                             for (i, lst) in all_lists.iter().enumerate() {
                                 if let Some(value) = lst.get(index) {
-                                    datum.insert(format!(".{}", i).to_string(), value.clone());
+                                    datum.insert(format!(".{i}").to_string(), value.clone());
                                 }
                             }
                             zipped_list.push(datum.into());
@@ -842,7 +842,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                             }
                         }
                         for (i, lst) in all_lists.iter().enumerate() {
-                            let key = format!(".{}", i);
+                            let key = format!(".{i}");
                             let mut new_joined_list = vec![];
                             for val in lst {
                                 for so_far in &joined_list {
@@ -1025,7 +1025,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                                 } else {
                                     let new_len = lst.len() - 1;
                                     let mut new_list = Vec::with_capacity(new_len);
-                                    for val in lst.iter() {
+                                    for val in &lst {
                                         if new_list.len() < new_len {
                                             new_list.push(val.clone());
                                         }

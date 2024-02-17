@@ -149,7 +149,7 @@ fn build_help() -> Vec<SelectionHelp> {
             )
                 .with_example(
                     UsageExample::new(
-                        r#"(- &ended-at-char-number &started-at-char-number)"#,
+                        r"(- &ended-at-char-number &started-at-char-number)",
                         r#""test""#,
                         "6"
                     )
@@ -191,10 +191,10 @@ pub fn get_selection_help() -> Vec<String> {
     help.push("# Selection".into());
     help.push(format!("There are {} types of selectoion:", types.len()));
     for t in types {
-        help.push("".into());
+        help.push(String::new());
         help.push(format!("## {}", t.name));
         for d in t.description {
-            help.push(format!("  {}", d));
+            help.push(format!("  {d}"));
         }
         help.push("### Examples".into());
         for e in t.examples {
@@ -203,9 +203,9 @@ pub fn get_selection_help() -> Vec<String> {
                     .iter()
                     .map(|(key, value)| {
                         if let Some(value) = value {
-                            format!(" and previously selected *{}* as `{}`", key, value)
+                            format!(" and previously selected *{key}* as `{value}`")
                         } else {
-                            format!(" and previously selected *{}* as nothing", key)
+                            format!(" and previously selected *{key}* as nothing")
                         }
                     })
                     .collect()
@@ -213,12 +213,12 @@ pub fn get_selection_help() -> Vec<String> {
                 String::new()
             };
             let input = if let Ok(i) = JsonValue::from_str(e.input.as_str()) {
-                format!("for input: `{}`", i)
+                format!("for input: `{i}`")
             } else {
                 "regardless of the input".into()
             };
             let output = if let Some(o) = e.expected_output {
-                format!("will produce: `{}`", o)
+                format!("will produce: `{o}`")
             } else {
                 "will produce nothing".into()
             };
