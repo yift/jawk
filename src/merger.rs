@@ -99,7 +99,7 @@ mod tests {
             }
             fn process(&mut self, context: Context) -> Result<ProcessDesision> {
                 let input = context.input().deref().clone();
-                assert_eq!(self.data.borrow().is_none(), true);
+                assert!(self.data.borrow().is_none());
                 *self.data.borrow_mut() = Some(input);
                 Ok(ProcessDesision::Continue)
             }

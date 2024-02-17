@@ -399,7 +399,7 @@ mod tests {
                             assert_eq!(result, Some(json))
                         }
                         Some(ValidOutputForTest::Function(fun)) => {
-                            assert_eq!(fun(&result), true);
+                            assert!(fun(&result));
                         }
                     }
                     println!("\t\tPassed");
@@ -417,10 +417,10 @@ mod tests {
             println!("Looking at group: {}", group.name);
             for func in group.functions.iter() {
                 println!("\t looking at function: {}", func.name);
-                assert_eq!(names.insert(func.name.to_string()), true);
+                assert!(names.insert(func.name.to_string()));
                 for alias in &func.aliases {
                     println!("\t\t looking at alias: {}", alias);
-                    assert_eq!(names.insert(alias.to_string()), true);
+                    assert!(names.insert(alias.to_string()));
                 }
             }
         }
@@ -432,10 +432,10 @@ mod tests {
         let func = find_function("?")?;
         let error = func.create(Vec::new()).err().unwrap();
 
-        assert_eq!(
-            matches!(error, FunctionDefinitionsError::MissingArgument(_, _, _)),
-            true
-        );
+        assert!(matches!(
+            error,
+            FunctionDefinitionsError::MissingArgument(_, _, _)
+        ));
         Ok(())
     }
 
@@ -454,10 +454,10 @@ mod tests {
             .err()
             .unwrap();
 
-        assert_eq!(
-            matches!(error, FunctionDefinitionsError::TooManyArgument(_, _, _)),
-            true
-        );
+        assert!(matches!(
+            error,
+            FunctionDefinitionsError::TooManyArgument(_, _, _)
+        ));
         Ok(())
     }
 

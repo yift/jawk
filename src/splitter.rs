@@ -86,7 +86,7 @@ mod tests {
         let str = "(.len)3";
         let err = Splitter::from_str(str).err().unwrap();
 
-        assert_eq!(matches!(err, SelectionParseError::ExpectingEof(_, _)), true);
+        assert!(matches!(err, SelectionParseError::ExpectingEof(_, _)));
 
         Ok(())
     }

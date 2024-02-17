@@ -46,8 +46,8 @@ mod tests {
         let cach = RegexCache::new(0);
         match cach.compile_regex("[a-z]+").deref() {
             Ok(regex) => {
-                assert_eq!(regex.is_match("hello"), true);
-                assert_eq!(regex.is_match("1234"), false);
+                assert!(regex.is_match("hello"));
+                assert!(!regex.is_match("1234"));
             }
             Err(e) => return Err(e.clone()),
         }
@@ -59,30 +59,30 @@ mod tests {
         let cach = RegexCache::new(10);
         match cach.compile_regex("[a-z]+").deref() {
             Ok(regex) => {
-                assert_eq!(regex.is_match("hello"), true);
-                assert_eq!(regex.is_match("1234"), false);
+                assert!(regex.is_match("hello"));
+                assert!(!regex.is_match("1234"));
             }
             Err(e) => return Err(e.clone()),
         }
 
         match cach.compile_regex("[a-z]+").deref() {
             Ok(regex) => {
-                assert_eq!(regex.is_match("hello"), true);
-                assert_eq!(regex.is_match("1234"), false);
+                assert!(regex.is_match("hello"));
+                assert!(!regex.is_match("1234"));
             }
             Err(e) => return Err(e.clone()),
         }
         match cach.compile_regex("[a-z]+").deref() {
             Ok(regex) => {
-                assert_eq!(regex.is_match("hello"), true);
-                assert_eq!(regex.is_match("1234"), false);
+                assert!(regex.is_match("hello"));
+                assert!(!regex.is_match("1234"));
             }
             Err(e) => return Err(e.clone()),
         }
         match cach.compile_regex("[a-z]+").deref() {
             Ok(regex) => {
-                assert_eq!(regex.is_match("hello"), true);
-                assert_eq!(regex.is_match("1234"), false);
+                assert!(regex.is_match("hello"));
+                assert!(!regex.is_match("1234"));
             }
             Err(e) => return Err(e.clone()),
         }

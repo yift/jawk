@@ -42,7 +42,7 @@ fn test_example(dir: &Path) {
             let mut input_file = File::open(file).unwrap();
             let mut input_text = String::new();
             input_file.read_to_string(&mut input_text).unwrap();
-            input_text = input_text.replace("\r", "");
+            input_text = input_text.replace('\r', "");
 
             let target_dir = dir.join("target");
             fs::create_dir_all(&target_dir).ok();
@@ -71,10 +71,8 @@ fn test_example(dir: &Path) {
         } else {
             panic!("Expecting error: {}, got nothing", expected_result);
         }
-    } else {
-        if result.is_err() {
-            panic!("Expecting to pass, failed with: {:?}", result);
-        }
+    } else if result.is_err() {
+        panic!("Expecting to pass, failed with: {:?}", result);
     }
 
     let error_file = dir.join("error.txt");
@@ -84,7 +82,7 @@ fn test_example(dir: &Path) {
         let mut expected_error = String::new();
         error_file.read_to_string(&mut expected_error).unwrap();
         if cfg!(windows) {
-            expected_error = expected_error.replace("\r", "");
+            expected_error = expected_error.replace('\r', "");
         }
         assert_eq!(expected_error, error_text);
     } else if !error_text.is_empty() {
@@ -107,7 +105,7 @@ fn test_example(dir: &Path) {
         let mut expected_output = String::new();
         output_file.read_to_string(&mut expected_output).unwrap();
         if cfg!(windows) {
-            expected_output = expected_output.replace("\r", "");
+            expected_output = expected_output.replace('\r', "");
         }
         assert_eq!(expected_output, output_text)
     } else if !output_text.is_empty() {

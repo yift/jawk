@@ -347,10 +347,7 @@ impl FromStr for JsonValue {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        collections::hash_map::RandomState,
-        hash::{BuildHasher, Hasher},
-    };
+    use std::{collections::hash_map::RandomState, hash::BuildHasher};
 
     use crate::selection;
 
@@ -397,14 +394,12 @@ mod tests {
         let state = RandomState::new();
 
         let val1 = to_json(json);
-        let mut hasher = state.build_hasher();
-        val1.hash(&mut hasher);
-        let val1 = hasher.finish();
+
+        let val1 = state.hash_one(&val1);
 
         let val2 = to_json(json);
-        let mut hasher = state.build_hasher();
-        val2.hash(&mut hasher);
-        let val2 = hasher.finish();
+
+        let val2 = state.hash_one(&val2);
 
         assert_eq!(val1, val2);
         Ok(())

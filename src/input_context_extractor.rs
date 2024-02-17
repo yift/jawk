@@ -143,7 +143,7 @@ mod tests {
     fn from_name_return_error_for_unknown_name() -> SelectionResult<()> {
         let err = InputContextExtractor::from_name("nop".to_string()).err();
 
-        assert_eq!(err.is_some(), true);
+        assert!(err.is_some());
 
         Ok(())
     }
@@ -393,7 +393,7 @@ mod tests {
 
         let err = parse_input_context(&mut reader).err();
 
-        assert_eq!(err.is_some(), true);
+        assert!(err.is_some());
 
         Ok(())
     }

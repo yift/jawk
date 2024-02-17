@@ -70,13 +70,10 @@ mod tests {
         let mut reader = from_string(&text);
         let error = parse_get_variable(&mut reader).err().unwrap();
 
-        assert_eq!(
-            matches!(
-                error,
-                SelectionParseError::JsonError(JsonParserError::UnexpectedEof(_))
-            ),
-            true
-        );
+        assert!(matches!(
+            error,
+            SelectionParseError::JsonError(JsonParserError::UnexpectedEof(_))
+        ));
 
         Ok(())
     }
@@ -87,13 +84,10 @@ mod tests {
         let mut reader = from_string(&text);
         let error = parse_get_variable(&mut reader).err().unwrap();
 
-        assert_eq!(
-            matches!(
-                error,
-                SelectionParseError::JsonError(JsonParserError::UnexpectedCharacter(_, _, _))
-            ),
-            true
-        );
+        assert!(matches!(
+            error,
+            SelectionParseError::JsonError(JsonParserError::UnexpectedCharacter(_, _, _))
+        ));
 
         Ok(())
     }
@@ -104,13 +98,10 @@ mod tests {
         let mut reader = from_string(&text);
         let error = parse_get_variable(&mut reader).err().unwrap();
 
-        assert_eq!(
-            matches!(
-                error,
-                SelectionParseError::JsonError(JsonParserError::UnexpectedEof(_))
-            ),
-            true
-        );
+        assert!(matches!(
+            error,
+            SelectionParseError::JsonError(JsonParserError::UnexpectedEof(_))
+        ));
 
         Ok(())
     }

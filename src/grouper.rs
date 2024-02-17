@@ -109,7 +109,7 @@ mod tests {
         let str = "(.len)3";
         let err = Grouper::from_str(str).err().unwrap();
 
-        assert_eq!(matches!(err, SelectionParseError::ExpectingEof(_, _)), true);
+        assert!(matches!(err, SelectionParseError::ExpectingEof(_, _)));
 
         Ok(())
     }
@@ -162,7 +162,7 @@ mod tests {
             }
             fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
                 let input = context.input().deref().clone();
-                assert_eq!(self.data.borrow().is_none(), true);
+                assert!(self.data.borrow().is_none());
                 *self.data.borrow_mut() = Some(input);
                 Ok(ProcessDesision::Continue)
             }

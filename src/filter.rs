@@ -86,7 +86,7 @@ mod tests {
         let str = "(> . 0)   3";
         let err = Filter::from_str(str).err().unwrap();
 
-        assert_eq!(matches!(err, SelectionParseError::ExpectingEof(_, _)), true);
+        assert!(matches!(err, SelectionParseError::ExpectingEof(_, _)));
 
         Ok(())
     }

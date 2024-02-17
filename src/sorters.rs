@@ -196,7 +196,7 @@ mod tests {
     fn sort_will_fail_with_wrong_direction() -> ProcessResult<()> {
         let error = Sorter::from_str(" 1 bla").err().unwrap();
 
-        assert_eq!(matches!(error, SorterParserError::UnknownOrder(_)), true);
+        assert!(matches!(error, SorterParserError::UnknownOrder(_)));
 
         Ok(())
     }

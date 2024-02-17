@@ -196,7 +196,7 @@ mod tests {
         let next = Box::new(Next);
         let error = list.create_process(next).err().unwrap();
 
-        assert_eq!(matches!(error, PreSetParserError::NoEqualsError(_)), true);
+        assert!(matches!(error, PreSetParserError::NoEqualsError(_)));
 
         Ok(())
     }
@@ -220,7 +220,7 @@ mod tests {
         let next = Box::new(Next);
         let error = list.create_process(next).err().unwrap();
 
-        assert_eq!(matches!(error, PreSetParserError::EmptyName(_)), true);
+        assert!(matches!(error, PreSetParserError::EmptyName(_)));
 
         Ok(())
     }
@@ -244,7 +244,7 @@ mod tests {
         let next = Box::new(Next);
         let error = list.create_process(next).err().unwrap();
 
-        assert_eq!(matches!(error, PreSetParserError::EmptyName(_)), true);
+        assert!(matches!(error, PreSetParserError::EmptyName(_)));
 
         Ok(())
     }
@@ -267,7 +267,7 @@ mod tests {
         let next = Box::new(Next);
         let error = list.create_process(next).err().unwrap();
 
-        assert_eq!(matches!(error, PreSetParserError::DuplicateKeys(_)), true);
+        assert!(matches!(error, PreSetParserError::DuplicateKeys(_)));
 
         Ok(())
     }
@@ -290,7 +290,7 @@ mod tests {
         let next = Box::new(Next);
         let error = list.create_process(next).err().unwrap();
 
-        assert_eq!(matches!(error, PreSetParserError::DuplicateKeys(_)), true);
+        assert!(matches!(error, PreSetParserError::DuplicateKeys(_)));
 
         Ok(())
     }

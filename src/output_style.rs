@@ -556,7 +556,7 @@ mod tests {
 
         let error = options.get_processor(writer);
 
-        assert_eq!(matches!(error, Err(_)), true);
+        assert!(error.is_err());
 
         Ok(())
     }
@@ -574,7 +574,7 @@ mod tests {
 
         let error = options.get_processor(writer);
 
-        assert_eq!(matches!(error, Err(_)), true);
+        assert!(error.is_err());
 
         Ok(())
     }
@@ -592,7 +592,7 @@ mod tests {
 
         let result = options.get_processor(writer);
 
-        assert_eq!(matches!(result, Ok(_)), true);
+        assert!(result.is_ok());
 
         Ok(())
     }
@@ -610,7 +610,7 @@ mod tests {
 
         let error = options.get_processor(writer);
 
-        assert_eq!(matches!(error, Err(_)), true);
+        assert!(error.is_err());
 
         Ok(())
     }
@@ -628,7 +628,7 @@ mod tests {
 
         let result = options.get_processor(writer);
 
-        assert_eq!(matches!(result, Ok(_)), true);
+        assert!(result.is_ok());
 
         Ok(())
     }
@@ -646,7 +646,7 @@ mod tests {
 
         let result = options.get_processor(writer);
 
-        assert_eq!(matches!(result, Ok(_)), true);
+        assert!(result.is_ok());
 
         Ok(())
     }
@@ -664,7 +664,7 @@ mod tests {
 
         let error = options.get_processor(writer);
 
-        assert_eq!(matches!(error, Err(_)), true);
+        assert!(error.is_err());
 
         Ok(())
     }
@@ -682,7 +682,7 @@ mod tests {
 
         let result = options.get_processor(writer);
 
-        assert_eq!(matches!(result, Ok(_)), true);
+        assert!(result.is_ok());
 
         Ok(())
     }
@@ -700,7 +700,7 @@ mod tests {
 
         let result = options.get_processor(writer);
 
-        assert_eq!(matches!(result, Ok(_)), true);
+        assert!(result.is_ok());
 
         Ok(())
     }
