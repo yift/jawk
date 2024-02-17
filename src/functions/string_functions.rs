@@ -1,5 +1,5 @@
 use std::env::var;
-use std::ops::Deref;
+
 use std::rc::Rc;
 use std::str::FromStr;
 
@@ -92,7 +92,7 @@ pub fn get_string_functions() -> FunctionsGroup {
                 .add_example(
                     Example::new()
                         .add_argument("\"PATH\"")
-                        .expected_json(var("PATH").map(|f| f.into()).ok())
+                        .expected_json(var("PATH").map(std::convert::Into::into).ok())
                         .more_or_less()
                 )
         )
@@ -283,7 +283,7 @@ pub fn get_string_functions() -> FunctionsGroup {
                                 self.0.apply(value, 1),
                             )
                         {
-                            if let Ok(regex) = value.compile_regex(&regex).deref() {
+                            if let Ok(regex) = &*value.compile_regex(&regex) {
                                 Some(regex.is_match(&str).into())
                             } else {
                                 None
@@ -338,7 +338,7 @@ pub fn get_string_functions() -> FunctionsGroup {
                         {
                             if
                                 let (Ok(regex), Ok(index)) = (
-                                    value.compile_regex(&regex).deref(),
+                                    &*value.compile_regex(&regex),
                                     TryInto::<usize>::try_into(index),
                                 )
                             {

@@ -124,7 +124,7 @@ mod tests {
         }
 
         let binding = data.borrow();
-        let data = binding.deref();
+        let data = &*binding;
         assert_eq!(data, &true);
 
         Ok(())
@@ -154,7 +154,7 @@ mod tests {
         }
 
         let binding = data.borrow();
-        let data = binding.deref();
+        let data = &*binding;
         assert_eq!(data, &true);
 
         Ok(())

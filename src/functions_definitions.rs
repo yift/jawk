@@ -77,7 +77,7 @@ impl Example {
         self
     }
     pub fn expected_json(mut self, output: Option<JsonValue>) -> Self {
-        self.output = output.map(|v| ValidOutputForTest::String(format!("{}", v).into()));
+        self.output = output.map(|v| ValidOutputForTest::String(format!("{v}").into()));
         self
     }
     pub fn explain(mut self, explain: &'static str) -> Self {
@@ -273,7 +273,7 @@ pub fn get_fn_help(help_type: &str) -> Vec<String> {
         if let Some(&function) = function {
             get_function_help(function)
         } else {
-            panic!("Can not find function {}", help_type)
+            panic!("Can not find function {help_type}")
         }
     }
 }
@@ -313,12 +313,12 @@ fn get_group_help(group: &FunctionsGroup) -> Vec<String> {
 fn get_function_help(func: &FunctionDefinitions) -> Vec<String> {
     let mut help = Vec::new();
     let name = func.name;
-    help.push(format!("# `{}` function:", name));
+    help.push(format!("# `{name}` function:"));
     for alias in &func.aliases {
-        help.push(format!("* Can also be called as `{}`\n", alias));
+        help.push(format!("* Can also be called as `{alias}`\n"));
     }
     for description in &func.description {
-        help.push(description.to_string());
+        help.push((*description).to_string());
     }
     help.push(String::new());
     help.push("## Examples:".into());
@@ -330,25 +330,25 @@ fn get_function_help(func: &FunctionDefinitions) -> Vec<String> {
             let input = format!(" for input: ```{}```", &json);
             (json, input)
         } else {
-            (JsonValue::Null, "".to_string())
+            (JsonValue::Null, String::new())
         };
         let args = example.arguments.join(", ");
-        let run = format!("({} {})", name, args);
-        help.push(format!("* running: `{}`{}", run, input));
+        let run = format!("({name} {args})");
+        help.push(format!("* running: `{run}`{input}"));
         let selection = Selection::from_str(&run).unwrap();
         match selection.get(&Context::new_with_no_context(json)) {
             None => help.push("  will return nothing".into()),
             Some(result) => {
                 if example.acurate {
-                    help.push(format!("  will give: `{}`", result))
+                    help.push(format!("  will give: `{result}`"));
                 } else {
-                    help.push(format!("  can give something like: `{}`", result))
+                    help.push(format!("  can give something like: `{result}`"));
                 }
             }
         };
         match &example.explain {
             None => {}
-            Some(explain) => help.push(format!("  Because {}", explain)),
+            Some(explain) => help.push(format!("  Because {explain}")),
         }
         help.push("----".into());
         help.push(String::new());
@@ -368,7 +368,7 @@ mod tests {
     fn test_functions() -> selection::Result<()> {
         for group in ALL_FUNCTIONS.iter() {
             println!("Running group: {}", group.name);
-            for func in group.functions.iter() {
+            for func in &group.functions {
                 println!("\tRunning function: {}", func.name);
                 for example in &func.examples {
                     let json = if let Some(input) = example.input {
@@ -380,12 +380,12 @@ mod tests {
                         JsonValue::Null
                     };
                     let args = example.arguments.join(", ");
-                    println!("\t\tRunning example: {}...", args);
+                    println!("\t\tRunning example: {args}...");
                     let run = format!("({} {})", func.name, args);
                     let selection = Selection::from_str(&run)?;
                     let result = selection.get(&Context::new_with_no_context(json));
                     match &result {
-                        Some(result) => println!("\t\t\tgot: {}", result),
+                        Some(result) => println!("\t\t\tgot: {result}"),
                         None => println!("\t\t\tgot nothing"),
                     }
                     match &example.output {
@@ -396,7 +396,7 @@ mod tests {
                             let input = str.to_string();
                             let mut reader = from_string(&input);
                             let json = reader.next_json_value().unwrap().unwrap();
-                            assert_eq!(result, Some(json))
+                            assert_eq!(result, Some(json));
                         }
                         Some(ValidOutputForTest::Function(fun)) => {
                             assert!(fun(&result));
@@ -415,12 +415,12 @@ mod tests {
         let mut names = HashSet::new();
         for group in ALL_FUNCTIONS.iter() {
             println!("Looking at group: {}", group.name);
-            for func in group.functions.iter() {
+            for func in &group.functions {
                 println!("\t looking at function: {}", func.name);
                 assert!(names.insert(func.name.to_string()));
                 for alias in &func.aliases {
-                    println!("\t\t looking at alias: {}", alias);
-                    assert!(names.insert(alias.to_string()));
+                    println!("\t\t looking at alias: {alias}");
+                    assert!(names.insert((*alias).to_string()));
                 }
             }
         }

@@ -104,7 +104,7 @@ impl Process for SortProcess {
                 if space_left == 0 {
                     self.remove_last_item();
                 } else {
-                    self.space_left = Some(space_left - 1)
+                    self.space_left = Some(space_left - 1);
                 }
             }
         }

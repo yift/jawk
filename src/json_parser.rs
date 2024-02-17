@@ -262,9 +262,9 @@ impl<R: Read> JsonParserUtils for Reader<R> {
                                 }
                                 Some(c) => {
                                     let d = match c {
-                                        b'0'..=b'9' => (c - b'0') as u32,
-                                        b'a'..=b'f' => (c - b'a' + 10) as u32,
-                                        b'A'..=b'F' => (c - b'A' + 10) as u32,
+                                        b'0'..=b'9' => u32::from(c - b'0'),
+                                        b'a'..=b'f' => u32::from(c - b'a' + 10),
+                                        b'A'..=b'F' => u32::from(c - b'A' + 10),
                                         ch => {
                                             let mut expected: Vec<char> = ('0'..='9').collect();
                                             let letters: Vec<char> = ('a'..='f').collect();
@@ -347,7 +347,7 @@ fn create_unexpected_character<R: Read, T: IntoIterator<Item = char>>(
         ch as char,
         expected
             .into_iter()
-            .map(|c| format!("{}", c))
+            .map(|c| format!("{c}"))
             .collect::<Vec<_>>()
             .join(", "),
     )
@@ -579,7 +579,7 @@ mod tests {
         assert!(matches!(
             reader.next_json_value(),
             Err(JsonParserError::IncompleteReservedWord(_, _, _, _))
-        ))
+        ));
     }
 
     #[test]
@@ -590,7 +590,7 @@ mod tests {
         assert!(matches!(
             reader.next_json_value(),
             Err(JsonParserError::UnexpectedEof(_))
-        ))
+        ));
     }
     #[test]
     fn never_ended_array() {
@@ -600,7 +600,7 @@ mod tests {
         assert!(matches!(
             reader.next_json_value(),
             Err(JsonParserError::UnexpectedEof(_))
-        ))
+        ));
     }
     #[test]
     fn never_ended_array_with_comma() {
@@ -610,7 +610,7 @@ mod tests {
         assert!(matches!(
             reader.next_json_value(),
             Err(JsonParserError::UnexpectedEof(_))
-        ))
+        ));
     }
     #[test]
     fn array_with_no_comma() {
@@ -620,7 +620,7 @@ mod tests {
         assert!(matches!(
             reader.next_json_value(),
             Err(JsonParserError::UnexpectedCharacter(_, _, _))
-        ))
+        ));
     }
     #[test]
     fn missing_colon_after_key() {
@@ -630,7 +630,7 @@ mod tests {
         assert!(matches!(
             reader.next_json_value(),
             Err(JsonParserError::UnexpectedCharacter(_, _, _))
-        ))
+        ));
     }
     #[test]
     fn noting_after_key() {
@@ -640,7 +640,7 @@ mod tests {
         assert!(matches!(
             reader.next_json_value(),
             Err(JsonParserError::UnexpectedEof(_))
-        ))
+        ));
     }
     #[test]
     fn noting_after_colon() {
@@ -650,7 +650,7 @@ mod tests {
         assert!(matches!(
             reader.next_json_value(),
             Err(JsonParserError::UnexpectedEof(_))
-        ))
+        ));
     }
     #[test]
     fn not_a_string_key() {
@@ -660,7 +660,7 @@ mod tests {
         assert!(matches!(
             reader.next_json_value(),
             Err(JsonParserError::StringKeyMissing(_, _))
-        ))
+        ));
     }
     #[test]
     fn missing_next_key() {
@@ -670,7 +670,7 @@ mod tests {
         assert!(matches!(
             reader.next_json_value(),
             Err(JsonParserError::UnexpectedEof(_))
-        ))
+        ));
     }
     #[test]
     fn eof_after_value() {
@@ -680,7 +680,7 @@ mod tests {
         assert!(matches!(
             reader.next_json_value(),
             Err(JsonParserError::UnexpectedEof(_))
-        ))
+        ));
     }
     #[test]
     fn unexpected_char_after_value() {
@@ -690,7 +690,7 @@ mod tests {
         assert!(matches!(
             reader.next_json_value(),
             Err(JsonParserError::UnexpectedCharacter(_, _, _))
-        ))
+        ));
     }
     #[test]
     fn eof_after_minus() {
@@ -700,7 +700,7 @@ mod tests {
         assert!(matches!(
             reader.next_json_value(),
             Err(JsonParserError::UnexpectedEof(_))
-        ))
+        ));
     }
     #[test]
     fn invalid_number() {
@@ -710,7 +710,7 @@ mod tests {
         assert!(matches!(
             reader.next_json_value(),
             Err(JsonParserError::NumberParseIntError(_, _))
-        ))
+        ));
     }
     #[test]
     fn invalid_negative_number() {
@@ -720,7 +720,7 @@ mod tests {
         assert!(matches!(
             reader.next_json_value(),
             Err(JsonParserError::NumberParseIntError(_, _))
-        ))
+        ));
     }
     #[test]
     fn never_ending_string() {
@@ -730,7 +730,7 @@ mod tests {
         assert!(matches!(
             reader.next_json_value(),
             Err(JsonParserError::UnexpectedEof(_))
-        ))
+        ));
     }
     #[test]
     fn never_ending_escape() {
@@ -740,7 +740,7 @@ mod tests {
         assert!(matches!(
             reader.next_json_value(),
             Err(JsonParserError::UnexpectedEof(_))
-        ))
+        ));
     }
     #[test]
     fn invalid_hex() {
@@ -750,7 +750,7 @@ mod tests {
         assert!(matches!(
             reader.next_json_value(),
             Err(JsonParserError::UnexpectedCharacter(_, _, _))
-        ))
+        ));
     }
     #[test]
     fn incomplete_hex() {
@@ -760,7 +760,7 @@ mod tests {
         assert!(matches!(
             reader.next_json_value(),
             Err(JsonParserError::UnexpectedEof(_))
-        ))
+        ));
     }
     #[test]
     fn incomplete_uncide() {
@@ -770,7 +770,7 @@ mod tests {
         assert!(matches!(
             reader.next_json_value(),
             Err(JsonParserError::InvalidChacterHex(_, _))
-        ))
+        ));
     }
     #[test]
     fn unknonw_escape() {
@@ -780,7 +780,7 @@ mod tests {
         assert!(matches!(
             reader.next_json_value(),
             Err(JsonParserError::UnexpectedCharacter(_, _, _))
-        ))
+        ));
     }
     #[test]
     fn unknonw_char() {
@@ -790,6 +790,6 @@ mod tests {
         assert!(matches!(
             reader.next_json_value(),
             Err(JsonParserError::UnexpectedCharacter(_, _, _))
-        ))
+        ));
     }
 }

@@ -133,7 +133,7 @@ impl Process for PreSetProcessor {
 #[cfg(test)]
 mod tests {
     use std::cell::RefCell;
-    use std::ops::Deref;
+
     use std::rc::Rc;
 
     use super::*;
@@ -171,7 +171,7 @@ mod tests {
         preseters.process(context)?;
 
         let binding = data.borrow();
-        let data = binding.deref();
+        let data = &*binding;
         assert_eq!(data, &true);
 
         Ok(())

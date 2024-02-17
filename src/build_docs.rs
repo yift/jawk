@@ -51,22 +51,21 @@ pub fn build_docs() -> Result<()> {
     let functions = get_groups_and_funs();
     let mut summary = String::new();
     for (group_name, functions) in functions {
-        let group_file = target.join(format!("{}.md", group_name));
+        let group_file = target.join(format!("{group_name}.md"));
         let code = get_fn_help(group_name.as_str()).join("\n");
         fs::write(group_file, code)?;
-        summary += format!("\n    - [{} functions]({}.md)", group_name, group_name).as_str();
+        summary += format!("\n    - [{group_name} functions]({group_name}.md)").as_str();
         for function_name in functions {
-            println!("Creating {}", function_name);
+            println!("Creating {function_name}");
             let mut function_file_name = function_name.clone();
             for (replace, by) in &replacer {
                 function_file_name = function_file_name.replace(replace, by);
             }
-            let function_file = target.join(format!("{}.md", function_file_name));
+            let function_file = target.join(format!("{function_file_name}.md"));
             let code = get_fn_help(function_name.as_str()).join("\n");
             let code = add_links(&code);
             fs::write(function_file, code)?;
-            summary +=
-                format!("\n        - [{}]({}.md)", function_name, function_file_name).as_str();
+            summary += format!("\n        - [{function_name}]({function_file_name}.md)").as_str();
         }
     }
     let summary_file = target.join("SUMMARY.md");
@@ -106,7 +105,7 @@ fn create_example_dir(source: &PathBuf, target: &PathBuf) -> Result<String> {
         let paths = fs::read_dir(source)?;
         let mut dirs: Vec<_> = paths
             .into_iter()
-            .filter_map(|t| t.ok())
+            .filter_map(std::result::Result::ok)
             .map(|f| f.path())
             .filter(|t| t.is_dir())
             .collect();
@@ -126,35 +125,34 @@ fn create_single_example(source: &Path, target: &PathBuf) -> Result<Option<Strin
         let title = fs::read_to_string(title)?;
         let lower_case_title = title.to_ascii_lowercase();
         let md_file_name = title.replace(' ', "_");
-        let example_file = target.join(format!("{}.md", md_file_name));
+        let example_file = target.join(format!("{md_file_name}.md"));
         let input = fs::read_to_string(source.join("input.txt"))?;
         let args: String = bash_args(fs::read_to_string(source.join("args.txt"))?);
         let output = fs::read_to_string(source.join("output.txt"))?;
 
         let md = format!(
             r#"
-# {}
-In this example we will see how to {}.
+# {title}
+In this example we will see how to {lower_case_title}.
 
 If your input looks like
 ```json
-{}
+{input}
 ```
 You can use `jawk` like:
 ```bash
-{}
+{args}
 ```
 To produce:
 ```
-{}
+{output}
 ```
 
-"#,
-            title, lower_case_title, input, args, output
+"#
         );
 
         fs::write(example_file, md)?;
-        Ok(Some(format!("\n    - [{}]({}.md)", title, md_file_name)))
+        Ok(Some(format!("\n    - [{title}]({md_file_name}.md)")))
     } else {
         Ok(None)
     }
@@ -167,7 +165,7 @@ fn bash_args(args: String) -> String {
             if index == 0 {
                 line.to_string()
             } else {
-                format!(" \\\n    {}", line)
+                format!(" \\\n    {line}")
             }
         })
         .map(|line| {
@@ -179,7 +177,7 @@ fn bash_args(args: String) -> String {
                     || arg.contains('(')
                     || arg.contains(')')
                 {
-                    format!("'{}'", arg)
+                    format!("'{arg}'")
                 } else {
                     arg
                 };

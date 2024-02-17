@@ -59,7 +59,7 @@ pub fn parse_get_variable<R: Read>(reader: &mut Reader<R>) -> Result<Rc<dyn Get>
 
 #[cfg(test)]
 mod tests {
-    use std::{cell::RefCell, ops::Deref, str::FromStr};
+    use std::{cell::RefCell, str::FromStr};
 
     use super::*;
     use crate::{json_value::JsonValue, reader::from_string, selection::SelectionParseError};
@@ -128,7 +128,7 @@ mod tests {
         {
             assert_eq!(value, JsonValue::from_str("12").ok());
             let binding = data.borrow();
-            let data = binding.deref();
+            let data = &*binding;
             assert_eq!(data, &1);
         }
 
@@ -136,7 +136,7 @@ mod tests {
             let value = getter.get(&context);
             assert_eq!(value, JsonValue::from_str("12").ok());
             let binding = data.borrow();
-            let data = binding.deref();
+            let data = &*binding;
             assert_eq!(data, &2);
         }
 
