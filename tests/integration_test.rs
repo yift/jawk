@@ -1,5 +1,5 @@
 use clap::Parser;
-use jawk::{Cli, Master};
+use jawk::{go, Cli};
 use std::cell::RefCell;
 use std::io::Read;
 use std::ops::Deref;
@@ -57,8 +57,7 @@ fn test_example(dir: &Path) {
     };
     let input_file = Rc::new(input_file.clone());
     let stdin = Box::new(move || File::open(input_file.deref().clone()).unwrap());
-    let master = Master::new(cli, stdout.clone(), stderr.clone(), stdin);
-    let result = master.go();
+    let result = go(cli, stdout.clone(), stderr.clone(), stdin);
 
     let results_file = dir.join("results.txt");
     if results_file.exists() {
