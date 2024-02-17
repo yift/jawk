@@ -92,7 +92,7 @@ pub fn get_string_functions() -> FunctionsGroup {
                 .add_example(
                     Example::new()
                         .add_argument("\"PATH\"")
-                        .expected_json(var("PATH").map(std::convert::Into::into).ok())
+                        .expected_json(var("PATH").map(Into::into).ok())
                         .more_or_less()
                 )
         )

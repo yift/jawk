@@ -105,7 +105,7 @@ fn create_example_dir(source: &PathBuf, target: &PathBuf) -> Result<String> {
         let paths = fs::read_dir(source)?;
         let mut dirs: Vec<_> = paths
             .into_iter()
-            .filter_map(std::result::Result::ok)
+            .filter_map(Result::ok)
             .map(|f| f.path())
             .filter(|t| t.is_dir())
             .collect();
