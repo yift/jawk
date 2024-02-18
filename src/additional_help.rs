@@ -47,7 +47,7 @@ fn make_skin() -> MadSkin {
 fn display_help(w: &mut Stdout, help: &str) -> Result<(), HelpError> {
     let skin = make_skin();
     let help = skin.term_text(help);
-    writeln!(w, "{help}",)?;
+    writeln!(w, "{help}")?;
     Ok(())
 }
 #[cfg(any(target_os = "windows", not(feature = "termimad-help")))]

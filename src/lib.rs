@@ -144,7 +144,13 @@ pub struct Cli {
     /// Additional help.
     ///
     /// Display additional help. Use the function name to get additional help on a specific function.
-    #[arg(long, short, default_value = None, value_parser = create_possible_values(), ignore_case = true)]
+    #[arg(
+        long,
+        short,
+        default_value = None,
+        value_parser = create_possible_values(),
+        ignore_case = true
+    )]
     additional_help: Option<String>,
 
     /// Avoid posting the same output more than once.
@@ -332,7 +338,9 @@ impl<S: Read> Master<S> {
                         &self.regular_expression_cache,
                     );
                     match process.process(context)? {
-                        ProcessDesision::Break => break Ok(()),
+                        ProcessDesision::Break => {
+                            break Ok(());
+                        }
                         ProcessDesision::Continue => {
                             in_file_index += 1;
                             *index += 1;

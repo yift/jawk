@@ -49,7 +49,9 @@ mod tests {
                 assert!(regex.is_match("hello"));
                 assert!(!regex.is_match("1234"));
             }
-            Err(e) => return Err(e.clone()),
+            Err(e) => {
+                return Err(e.clone());
+            }
         }
         Ok(())
     }
@@ -62,7 +64,9 @@ mod tests {
                 assert!(regex.is_match("hello"));
                 assert!(!regex.is_match("1234"));
             }
-            Err(e) => return Err(e.clone()),
+            Err(e) => {
+                return Err(e.clone());
+            }
         }
 
         match &*cach.compile_regex("[a-z]+") {
@@ -70,21 +74,27 @@ mod tests {
                 assert!(regex.is_match("hello"));
                 assert!(!regex.is_match("1234"));
             }
-            Err(e) => return Err(e.clone()),
+            Err(e) => {
+                return Err(e.clone());
+            }
         }
         match &*cach.compile_regex("[a-z]+") {
             Ok(regex) => {
                 assert!(regex.is_match("hello"));
                 assert!(!regex.is_match("1234"));
             }
-            Err(e) => return Err(e.clone()),
+            Err(e) => {
+                return Err(e.clone());
+            }
         }
         match &*cach.compile_regex("[a-z]+") {
             Ok(regex) => {
                 assert!(regex.is_match("hello"));
                 assert!(!regex.is_match("1234"));
             }
-            Err(e) => return Err(e.clone()),
+            Err(e) => {
+                return Err(e.clone());
+            }
         }
         Ok(())
     }

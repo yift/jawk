@@ -80,7 +80,7 @@ pub fn parse_input_context<R: Read>(reader: &mut Reader<R>) -> SelectionResult<R
             name.push(b'-');
         } else {
             break;
-        };
+        }
     }
     let name = String::from_utf8(name)?;
     let getter = InputContextExtractor::from_name(name)?;
@@ -168,7 +168,7 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(ext.get(&conext), Some(61.into()));
+        assert_eq!(ext.get(&conext), Some((61).into()));
 
         Ok(())
     }
@@ -193,7 +193,7 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(ext.get(&conext), Some(10.into()));
+        assert_eq!(ext.get(&conext), Some((10).into()));
 
         Ok(())
     }
@@ -218,7 +218,7 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(ext.get(&conext), Some(41.into()));
+        assert_eq!(ext.get(&conext), Some((41).into()));
 
         Ok(())
     }
@@ -243,7 +243,7 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(ext.get(&conext), Some(42.into()));
+        assert_eq!(ext.get(&conext), Some((42).into()));
 
         Ok(())
     }
@@ -268,7 +268,7 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(ext.get(&conext), Some(11.into()));
+        assert_eq!(ext.get(&conext), Some((11).into()));
 
         Ok(())
     }
@@ -293,7 +293,7 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(ext.get(&conext), Some(20.into()));
+        assert_eq!(ext.get(&conext), Some((20).into()));
 
         Ok(())
     }
@@ -381,7 +381,7 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(selection.get(&conext), Some(20.into()));
+        assert_eq!(selection.get(&conext), Some((20).into()));
 
         Ok(())
     }

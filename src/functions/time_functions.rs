@@ -24,24 +24,22 @@ pub fn get_time_functions() -> FunctionsGroup {
                 }
                 Rc::new(Impl)
             })
-            .add_description_line("Return the current time as seconds since epoch.")
-            .add_example(
-                Example::new()
-                .validate_output(|value| {
-                    match value {
-                        Some(JsonValue::Number(NumberValue::Float(num))) => {
-                            match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
-                                Ok(d) => {
-                                    d.as_secs_f64() >= *num
-                                },
-                                _ => false
+                .add_description_line("Return the current time as seconds since epoch.")
+                .add_example(
+                    Example::new()
+                        .validate_output(|value| {
+                            match value {
+                                Some(JsonValue::Number(NumberValue::Float(num))) => {
+                                    match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
+                                        Ok(d) => { d.as_secs_f64() >= *num }
+                                        _ => false,
+                                    }
+                                }
+                                _ => false,
                             }
-                        },
-                        _ => false
-                    }
-                })
-                .more_or_less()
-            ),
+                        })
+                        .more_or_less()
+                )
         )
         .add_function(
             FunctionDefinitions::new("format_time", 2, 2, |args| {
@@ -51,7 +49,7 @@ pub fn get_time_functions() -> FunctionsGroup {
                         if let Some(JsonValue::Number(time)) = self.0.apply(value, 0) {
                             let since_epoch: f64 = time.into();
                             let seconds = since_epoch as i64;
-                            let nsecs = ((since_epoch - seconds as f64) * 1e9) as u32;
+                            let nsecs = ((since_epoch - (seconds as f64)) * 1e9) as u32;
                             if let Some(datetime) = Utc.timestamp_opt(seconds, nsecs).single() {
                                 if let Some(JsonValue::String(format)) = self.0.apply(value, 1) {
                                     Some(datetime.format(&format).to_string().into())
@@ -68,28 +66,26 @@ pub fn get_time_functions() -> FunctionsGroup {
                 }
                 Rc::new(Impl(args))
             })
-            .add_description_line("Format a date/time into a string")
-            .add_description_line("The first argemnt should be the number of seconds since epoch")
-            .add_description_line("The second argemnt should be the format as string")
-            .add_description_line(
-                "See details in [https://docs.rs/chrono/latest/chrono/format/strftime/index.html].",
-            )
-            .add_example(
-                Example::new()
-                    .add_argument("1701611515.3603675")
-                    .add_argument("122"),
-            )
-            .add_example(
-                Example::new()
-                    .add_argument("{}")
-                    .add_argument("\"%a %b %e %T %Y - %H:%M:%S%.f\""),
-            )
-            .add_example(
-                Example::new()
-                    .add_argument("1701611515.3603675")
-                    .expected_output("\"Sun Dec  3 13:51:55 2023 - 13:51:55.360367536\"")
-                    .add_argument("\"%a %b %e %T %Y - %H:%M:%S%.f\""),
-            ),
+                .add_description_line("Format a date/time into a string")
+                .add_description_line(
+                    "The first argemnt should be the number of seconds since epoch"
+                )
+                .add_description_line("The second argemnt should be the format as string")
+                .add_description_line(
+                    "See details in [https://docs.rs/chrono/latest/chrono/format/strftime/index.html]."
+                )
+                .add_example(Example::new().add_argument("1701611515.3603675").add_argument("122"))
+                .add_example(
+                    Example::new()
+                        .add_argument("{}")
+                        .add_argument("\"%a %b %e %T %Y - %H:%M:%S%.f\"")
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("1701611515.3603675")
+                        .expected_output("\"Sun Dec  3 13:51:55 2023 - 13:51:55.360367536\"")
+                        .add_argument("\"%a %b %e %T %Y - %H:%M:%S%.f\"")
+                )
         )
 
         .add_function(
@@ -97,13 +93,15 @@ pub fn get_time_functions() -> FunctionsGroup {
                 struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
-                        if let (Some(JsonValue::String(str)), Some(JsonValue::String(format))) =
-                            (self.0.apply(value, 0), self.0.apply(value, 1))
+                        if
+                            let (Some(JsonValue::String(str)), Some(JsonValue::String(format))) = (
+                                self.0.apply(value, 0),
+                                self.0.apply(value, 1),
+                            )
                         {
                             if let Ok(time) = DateTime::parse_from_str(&str, &format) {
                                 let diff = time.signed_duration_since(DateTime::UNIX_EPOCH);
-                                diff.num_microseconds()
-                                    .map(|ms| (ms as f64 / 1_000_000.0).into())
+                                diff.num_microseconds().map(|ms| ((ms as f64) / 1_000_000.0).into())
                             } else {
                                 None
                             }
@@ -114,28 +112,26 @@ pub fn get_time_functions() -> FunctionsGroup {
                 }
                 Rc::new(Impl(args))
             })
-            .add_description_line("Parse a date/time from a string into seconds since epoc. This version expect to get the time zone as well")
-            .add_description_line("The first argemnt should be the date")
-            .add_description_line("The second argemnt should be the format as string")
-            .add_description_line(
-                "See details in [https://docs.rs/chrono/latest/chrono/format/strftime/index.html].",
-            )
-            .add_example(
-                Example::new()
-                    .add_argument("\"2023 Dec 3 13:51:55.360 +0500\"")
-                    .add_argument("\"%Y %b %d %H:%M:%S%.3f %z\"")
-                    .expected_output("1701593515.360"),
-            )
-            .add_example(
-                Example::new()
-                    .add_argument("\" 3-Dec-2023 - 13:51:55.360\"")
-                    .add_argument("122"),
-            )
-            .add_example(
-                Example::new()
-                    .add_argument("{}")
-                    .add_argument("\"%v - %T%.3f\""),
-            ),
+                .add_description_line(
+                    "Parse a date/time from a string into seconds since epoc. This version expect to get the time zone as well"
+                )
+                .add_description_line("The first argemnt should be the date")
+                .add_description_line("The second argemnt should be the format as string")
+                .add_description_line(
+                    "See details in [https://docs.rs/chrono/latest/chrono/format/strftime/index.html]."
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("\"2023 Dec 3 13:51:55.360 +0500\"")
+                        .add_argument("\"%Y %b %d %H:%M:%S%.3f %z\"")
+                        .expected_output("1701593515.360")
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("\" 3-Dec-2023 - 13:51:55.360\"")
+                        .add_argument("122")
+                )
+                .add_example(Example::new().add_argument("{}").add_argument("\"%v - %T%.3f\""))
         )
 
         .add_function(
@@ -143,13 +139,15 @@ pub fn get_time_functions() -> FunctionsGroup {
                 struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
-                        if let (Some(JsonValue::String(str)), Some(JsonValue::String(format))) =
-                            (self.0.apply(value, 0), self.0.apply(value, 1))
+                        if
+                            let (Some(JsonValue::String(str)), Some(JsonValue::String(format))) = (
+                                self.0.apply(value, 0),
+                                self.0.apply(value, 1),
+                            )
                         {
                             if let Ok(time) = NaiveDateTime::parse_from_str(&str, &format) {
                                 let diff = time.signed_duration_since(NaiveDateTime::UNIX_EPOCH);
-                                diff.num_microseconds()
-                                    .map(|ms| (ms as f64 / 1_000_000.0).into())
+                                diff.num_microseconds().map(|ms| ((ms as f64) / 1_000_000.0).into())
                             } else {
                                 None
                             }
@@ -160,33 +158,29 @@ pub fn get_time_functions() -> FunctionsGroup {
                 }
                 Rc::new(Impl(args))
             })
-            .add_description_line("Parse a date/time from a string into seconds since epoc")
-            .add_description_line("The first argemnt should be the date")
-            .add_description_line("The second argemnt should be the format as string")
-            .add_description_line(
-                "See details in [https://docs.rs/chrono/latest/chrono/format/strftime/index.html].",
-            )
-            .add_example(
-                Example::new()
-                    .add_argument("\" 3-Dec-2023 - 13:51:55.360\"")
-                    .add_argument("\"%v - %T%.3f\"")
-                    .expected_output("1701611515.360"),
-            )
-            .add_example(
-                Example::new()
-                    .add_argument("\"2023 Dec 3 13:51:55.360 +0500\"")
-                    .add_argument("\"%Y %b %d %H:%M:%S%.3f %z\"")
-                    .expected_output("1701611515.360"),
-            )
-            .add_example(
-                Example::new()
-                    .add_argument("\" 3-Dec-2023 - 13:51:55.360\"")
-                    .add_argument("122"),
-            )
-            .add_example(
-                Example::new()
-                    .add_argument("{}")
-                    .add_argument("\"%v - %T%.3f\""),
-            ),
+                .add_description_line("Parse a date/time from a string into seconds since epoc")
+                .add_description_line("The first argemnt should be the date")
+                .add_description_line("The second argemnt should be the format as string")
+                .add_description_line(
+                    "See details in [https://docs.rs/chrono/latest/chrono/format/strftime/index.html]."
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("\" 3-Dec-2023 - 13:51:55.360\"")
+                        .add_argument("\"%v - %T%.3f\"")
+                        .expected_output("1701611515.360")
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("\"2023 Dec 3 13:51:55.360 +0500\"")
+                        .add_argument("\"%Y %b %d %H:%M:%S%.3f %z\"")
+                        .expected_output("1701611515.360")
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("\" 3-Dec-2023 - 13:51:55.360\"")
+                        .add_argument("122")
+                )
+                .add_example(Example::new().add_argument("{}").add_argument("\"%v - %T%.3f\""))
         )
 }

@@ -193,7 +193,7 @@ mod tests {
                 .with_result(&one, Some((3).into()))
                 .with_result(&two, Some((4).into()));
             grouper.process(context)?;
-            let context = Context::new_with_no_context(1.into())
+            let context = Context::new_with_no_context((1).into())
                 .with_result(&one, Some((10).into()))
                 .with_result(&two, Some((20).into()));
             grouper.process(context)?;

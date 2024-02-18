@@ -149,7 +149,7 @@ mod tests {
         let mut reader = from_string(&text);
         let getter = parse_get_variable(&mut reader)?;
 
-        let context = Context::new_empty().with_variable("name".to_string(), 22.into());
+        let context = Context::new_empty().with_variable("name".to_string(), (22).into());
 
         let value = getter.get(&context);
 

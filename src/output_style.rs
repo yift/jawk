@@ -418,7 +418,7 @@ impl JsonOutputOptions {
                 JsonValue::Array(value) => self.print_array_with_indent(f, value, indent + 1)?,
                 JsonValue::Object(value) => self.print_object_with_indent(f, value, indent + 1)?,
                 _ => self.print_something(f, value)?,
-            };
+            }
             if index != size - 1 {
                 self.insert_comma(f)?;
             }
@@ -443,7 +443,7 @@ impl JsonOutputOptions {
                 JsonValue::Array(value) => self.print_array_with_indent(f, value, indent + 1)?,
                 JsonValue::Object(value) => self.print_object_with_indent(f, value, indent + 1)?,
                 _ => self.print_something(f, value)?,
-            };
+            }
             if index != size - 1 {
                 self.insert_comma(f)?;
             }

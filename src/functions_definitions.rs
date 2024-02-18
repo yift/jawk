@@ -251,7 +251,9 @@ pub fn get_fn_help(help_type: &str) -> Vec<String> {
     if help_type == "functions" {
         let mut help = Vec::new();
         help.push("# Functions".into());
-        help.push("Functions allow one to manipulate the input. The functions format is `(<function-name> <arg0> <arg1> ..)` where `<argN>` are functions or other types of selection.".into());
+        help.push(
+            "Functions allow one to manipulate the input. The functions format is `(<function-name> <arg0> <arg1> ..)` where `<argN>` are functions or other types of selection.".into()
+        );
         help.push("See additional help for selection for more details.".into());
         help.push(format!(
             "There are {} functions group available:",
@@ -261,7 +263,9 @@ pub fn get_fn_help(help_type: &str) -> Vec<String> {
             help.push(format!("* *{}* functions.", group.name));
         }
         help.push(String::new());
-        help.push("See additional help with the group name to see the list of available functions in that group.".into());
+        help.push(
+            "See additional help with the group name to see the list of available functions in that group.".into()
+        );
         help
     } else {
         for &group in ALL_FUNCTIONS.iter() {
@@ -291,7 +295,7 @@ pub fn get_groups_and_funs() -> Vec<(String, Vec<String>)> {
 
 fn get_group_help(group: &FunctionsGroup) -> Vec<String> {
     let mut help = Vec::new();
-    help.push(format!("# Function group {}", group.name,));
+    help.push(format!("# Function group {}", group.name));
     help.push(format!(
         "Function group {} has {} functions:",
         group.name,
@@ -345,7 +349,7 @@ fn get_function_help(func: &FunctionDefinitions) -> Vec<String> {
                     help.push(format!("  can give something like: `{result}`"));
                 }
             }
-        };
+        }
         match &example.explain {
             None => {}
             Some(explain) => help.push(format!("  Because {explain}")),
@@ -465,7 +469,7 @@ mod tests {
     fn name_return_the_function_name() -> selection::Result<()> {
         let func = find_function("if")?;
 
-        assert_eq!(func.name(), "?".to_string(),);
+        assert_eq!(func.name(), "?".to_string());
         Ok(())
     }
 }
