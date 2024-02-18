@@ -4,6 +4,7 @@ use std::rc::Rc;
 
 use crate::functions::basic_functions::get_basic_functions;
 use crate::functions::boolean_functions::get_boolean_functions;
+use crate::functions::exec::get_exec_functions;
 use crate::functions::list_functions::get_list_functions;
 use crate::functions::number_functions::get_number_functions;
 use crate::functions::object_functions::get_object_functions;
@@ -201,6 +202,7 @@ lazy_static! {
     static ref BOOLEAN_FUNCTIONS: FunctionsGroup = get_boolean_functions();
     static ref TIME_FUNCTIONS: FunctionsGroup = get_time_functions();
     static ref VARIABLE_FUNCTIONS: FunctionsGroup = get_variable_functions();
+    static ref EXEC_FUNCTIONS: FunctionsGroup = get_exec_functions();
     static ref ALL_FUNCTIONS: Vec<&'static FunctionsGroup> = vec![
         &BASIC_FUNCTIONS,
         &TYPES_FUNCTIONS,
@@ -211,6 +213,7 @@ lazy_static! {
         &BOOLEAN_FUNCTIONS,
         &TIME_FUNCTIONS,
         &VARIABLE_FUNCTIONS,
+        &EXEC_FUNCTIONS,
     ];
     static ref NAME_TO_FUNCTION: HashMap<&'static str, &'static FunctionDefinitions> =
         ALL_FUNCTIONS
