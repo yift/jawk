@@ -2,6 +2,7 @@ use base64::prelude::*;
 use std::{
     process::{Command, Stdio},
     rc::Rc,
+    str::FromStr,
 };
 
 use indexmap::IndexMap;
@@ -86,17 +87,28 @@ pub fn get_exec_functions() -> FunctionsGroup {
                         .add_argument("\"echo\"")
                         .add_argument("\"hello\"")
                         .add_argument("\"world\"")
-                        .expected_output(
-                            r#"{"success": true, "exit_code": 0, "raw_stdout": "aGVsbG8gd29ybGQK", "stdout": "hello world\n", "raw_stderr": "", "stderr": ""}"#
-                        )
+                        .validate_output(|o| {
+                            if cfg!(windows) {
+                                matches!(o, None)
+                            } else {
+                                let expected =
+                                  JsonValue::from_str(r#"{"success": true, "exit_code": 0, "raw_stdout": "aGVsbG8gd29ybGQK", "stdout": "hello world\n", "raw_stderr": "", "stderr": ""}"#).ok();
+                                expected == *o
+                            }
+                        })
                 )
                 .add_example(
                     Example::new()
                         .add_argument("\"cat\"")
                         .add_argument("\"no such file\"")
-                        .expected_output(
-                            r#"{"success": false, "exit_code": 1, "raw_stdout": "", "stdout": "", "raw_stderr": "Y2F0OiAnbm8gc3VjaCBmaWxlJzogTm8gc3VjaCBmaWxlIG9yIGRpcmVjdG9yeQo=", "stderr": "cat: 'no such file': No such file or directory\n"}"#
-                        )
+                        .validate_output(|o| {
+                            if cfg!(windows) {
+                                matches!(o, None)
+                            } else {
+                                let expected = JsonValue::from_str(r#"{"success": false, "exit_code": 1, "raw_stdout": "", "stdout": "", "raw_stderr": "Y2F0OiAnbm8gc3VjaCBmaWxlJzogTm8gc3VjaCBmaWxlIG9yIGRpcmVjdG9yeQo=", "stderr": "cat: 'no such file': No such file or directory\n"}"#).ok();
+                                expected == *o
+                            }
+                        })
                 )
                 .add_example(Example::new().add_argument("\"no such exec\""))
                 .add_example(Example::new().add_argument("23").explain("23 is not a string"))
@@ -140,7 +152,14 @@ pub fn get_exec_functions() -> FunctionsGroup {
                         .add_argument("\"echo\"")
                         .add_argument("\"hello\"")
                         .add_argument("\"world\"")
-                        .validate_output(|output| { matches!(output, Some(JsonValue::Number(_))) })
+                        .validate_output(|output| {
+                            if cfg!(windows) {
+                                matches!(output, None)
+                            } else {
+                                matches!(output, Some(JsonValue::Number(_)))
+                            }
+                            }
+                        )
                 )
                 .add_example(Example::new().add_argument("\"no such exec\""))
                 .add_example(Example::new().add_argument("23").explain("23 is not a string"))
