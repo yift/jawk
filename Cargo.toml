@@ -10,7 +10,7 @@ documentation = "https://jawk.ykaplan.me/"
 readme = "README.md"
 
 [dependencies]
-clap = { version = "4", features = ["derive"] }
+clap = { version = "4.5", features = ["derive"] }
 lazy_static = "1.4"
 thiserror = "1.0"
 indexmap = "2.2"
