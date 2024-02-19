@@ -89,7 +89,7 @@ pub fn get_exec_functions() -> FunctionsGroup {
                         .add_argument("\"world\"")
                         .validate_output(|o| {
                             if cfg!(windows) {
-                                matches!(o, None)
+                                o.is_none()
                             } else {
                                 let expected =
                                   JsonValue::from_str(r#"{"success": true, "exit_code": 0, "raw_stdout": "aGVsbG8gd29ybGQK", "stdout": "hello world\n", "raw_stderr": "", "stderr": ""}"#).ok();
@@ -103,7 +103,7 @@ pub fn get_exec_functions() -> FunctionsGroup {
                         .add_argument("\"no such file\"")
                         .validate_output(|o| {
                             if cfg!(windows) {
-                                matches!(o, None)
+                                o.is_none()
                             } else {
                                 let expected = JsonValue::from_str(r#"{"success": false, "exit_code": 1, "raw_stdout": "", "stdout": "", "raw_stderr": "Y2F0OiAnbm8gc3VjaCBmaWxlJzogTm8gc3VjaCBmaWxlIG9yIGRpcmVjdG9yeQo=", "stderr": "cat: 'no such file': No such file or directory\n"}"#).ok();
                                 expected == *o
@@ -154,7 +154,7 @@ pub fn get_exec_functions() -> FunctionsGroup {
                         .add_argument("\"world\"")
                         .validate_output(|output| {
                             if cfg!(windows) {
-                                matches!(output, None)
+                                output.is_none()
                             } else {
                                 matches!(output, Some(JsonValue::Number(_)))
                             }
