@@ -86,7 +86,9 @@ pub fn get_basic_functions() -> FunctionsGroup {
                         .add_argument("(get . \"key-2\")")
                         .expected_output("100")
                         .input("{\"key\": [20, 40, 60, {\"key-2\": 100}]}")
-                        .explain("the first `get` will return the list in the input, the second one will return the fourth item in the list, and the last one will get the `key-2` element in that item.")
+                        .explain(
+                            "the first `get` will return the list in the input, the second one will return the fourth item in the list, and the last one will get the `key-2` element in that item."
+                        )
                 )
                 .add_example(
                     Example::new()
@@ -96,7 +98,9 @@ pub fn get_basic_functions() -> FunctionsGroup {
                         .add_argument("(+ . 10)")
                         .add_argument("(+ . (len ^^^))")
                         .expected_output("20")
-                        .explain("The first get will return 2, the second one will add 4, then third one will add 10, and the last one will add the size of the original list, so `2 + 4 + 10 + 4 = 20`.")
+                        .explain(
+                            "The first get will return 2, the second one will add 4, then third one will add 10, and the last one will add the size of the original list, so `2 + 4 + 10 + 4 = 20`."
+                        )
                 )
         )
 
@@ -128,7 +132,11 @@ pub fn get_basic_functions() -> FunctionsGroup {
                         .expected_output("2")
                 )
                 .add_example(Example::new().add_argument("\"123\"").expected_output("3"))
-                .add_example(Example::new().add_argument("50").explain("50 is not an array, not an object nor a string."))
+                .add_example(
+                    Example::new()
+                        .add_argument("50")
+                        .explain("50 is not an array, not an object nor a string.")
+                )
         )
 
         .add_function(
@@ -382,7 +390,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
                             }
                             Some(JsonValue::String(str)) => {
                                 if start >= str.len() || length == 0 {
-                                    Some("".to_string().into())
+                                    Some(String::new().into())
                                 } else {
                                     let last_index = start + length;
                                     let last_index = if last_index >= str.len() {
@@ -543,7 +551,9 @@ pub fn get_basic_functions() -> FunctionsGroup {
                         .add_argument("22")
                         .expected_output("1")
                         .input("{\"key-1\": 1, \"key-2\": false}")
-                        .explain("the first get will return nothing because the input is an object and get should have a string argument, the second get will return 1, which is not a nothing, so it will be the returned value.")
+                        .explain(
+                            "the first get will return nothing because the input is an object and get should have a string argument, the second get will return 1, which is not a nothing, so it will be the returned value."
+                        )
                 )
                 .add_example(
                     Example::new()
@@ -552,16 +562,14 @@ pub fn get_basic_functions() -> FunctionsGroup {
                         .add_argument("22")
                         .expected_output("22")
                         .input("{\"key-1\": 1, \"key-2\": false}")
-                        .explain("all the `get` will return nothing, so 22 is the first non nothing argument.")
+                        .explain(
+                            "all the `get` will return nothing, so 22 is the first non nothing argument."
+                        )
                 )
                 .add_example(
-                    Example::new()
-                        .add_argument("(.get 1)")
-                        .add_argument("(.get 2)")
-                        .input("100")
+                    Example::new().add_argument("(.get 1)").add_argument("(.get 2)").input("100")
                 )
         )
-
 
         .add_function(
             FunctionDefinitions::new("?", 3, 3, |args| {
@@ -615,10 +623,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
                         .input("[1, 2, 3]")
                 )
                 .add_example(
-                    Example::new()
-                        .add_argument("100")
-                        .add_argument("true")
-                        .add_argument("false")
+                    Example::new().add_argument("100").add_argument("true").add_argument("false")
                 )
         )
 
@@ -627,7 +632,7 @@ pub fn get_basic_functions() -> FunctionsGroup {
                 struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
-                        self.0.apply(value, 0).map(|val| format!("{}", val).into())
+                        self.0.apply(value, 0).map(|val| format!("{val}").into())
                     }
                 }
                 Rc::new(Impl(args))
@@ -640,10 +645,6 @@ pub fn get_basic_functions() -> FunctionsGroup {
                         .add_argument("{\"key\": [1, 2, \"3\"]}")
                         .expected_output("\"{\\\"key\\\": [1, 2, \\\"3\\\"]}\"")
                 )
-                .add_example(
-                    Example::new()
-                        .add_argument("(+ 10 20)")
-                        .expected_output("\"30\"")
-                )
+                .add_example(Example::new().add_argument("(+ 10 20)").expected_output("\"30\""))
         )
 }

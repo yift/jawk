@@ -1,6 +1,6 @@
 [package]
 name = "jawk"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 license = "MIT"
 description = "JSON AWK."
@@ -10,13 +10,14 @@ documentation = "https://jawk.ykaplan.me/"
 readme = "README.md"
 
 [dependencies]
-clap = { version = "4", features = ["derive"] }
+clap = { version = "4.5", features = ["derive"] }
 lazy_static = "1.4"
 thiserror = "1.0"
 indexmap = "2.2"
 regex = "1.10"
 chrono = "0.4"
 cached = "0.48"
+base64 = "0.21"
 termimad = { version = "0.29", optional = true }
 clap-markdown = { version = "0.1", optional = true }
 mdbook = { version = "0.4", optional = true }

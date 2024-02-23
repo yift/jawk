@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@master
     - name: Run check
-      run: cargo check
+      run: cargo check --all-targets
     - name: Build
       run: cargo build
     - name: Run tests
@@ -20,7 +20,7 @@ jobs:
     - name: Run Format
       run: cargo fmt --all --check
     - name: Run Clippy
-      run: cargo clippy -- -D warnings
+      run: cargo clippy --all-targets --all-features -- -D warnings
 
   coverage:
     runs-on: ubuntu-latest

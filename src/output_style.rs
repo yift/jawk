@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::{Result as FmtResult, Write};
-use std::ops::Deref;
+
 use std::{cell::RefCell, rc::Rc};
 
 use clap::Args;
@@ -261,7 +261,7 @@ impl TextOutputOptions {
 impl<W: Write> Print<W> for TextPrinter {
     fn print_nothing(&self, f: &mut W) -> FmtResult {
         if let Some(missing_value_keyword) = &self.options.missing_value_keyword {
-            write!(f, "{}", missing_value_keyword)
+            write!(f, "{missing_value_keyword}")
         } else {
             Ok(())
         }
@@ -276,21 +276,21 @@ impl<W: Write> Print<W> for TextPrinter {
         write!(f, "{}", self.options.false_keyword)
     }
     fn print_f64(&self, f: &mut W, value: &f64) -> FmtResult {
-        write!(f, "{}", value)
+        write!(f, "{value}")
     }
     fn print_u64(&self, f: &mut W, value: &u64) -> FmtResult {
-        write!(f, "{}", value)
+        write!(f, "{value}")
     }
     fn print_i64(&self, f: &mut W, value: &i64) -> FmtResult {
-        write!(f, "{}", value)
+        write!(f, "{value}")
     }
     fn print_string(&self, f: &mut W, value: &str) -> FmtResult {
         write!(f, "{}", self.options.string_prefix)?;
         for ch in value.chars() {
             if let Some(str) = self.escape_sequandes.get(&ch) {
-                write!(f, "{}", str)?;
+                write!(f, "{str}")?;
             } else {
-                write!(f, "{}", ch)?;
+                write!(f, "{ch}")?;
             }
         }
         write!(f, "{}", self.options.string_postfix)
@@ -329,13 +329,13 @@ impl<W: Write> Print<W> for JsonOutputOptions {
         write!(f, "false")
     }
     fn print_f64(&self, f: &mut W, value: &f64) -> FmtResult {
-        write!(f, "{}", value)
+        write!(f, "{value}")
     }
     fn print_u64(&self, f: &mut W, value: &u64) -> FmtResult {
-        write!(f, "{}", value)
+        write!(f, "{value}")
     }
     fn print_i64(&self, f: &mut W, value: &i64) -> FmtResult {
-        write!(f, "{}", value)
+        write!(f, "{value}")
     }
     fn print_string(&self, f: &mut W, value: &str) -> FmtResult {
         write!(f, "\"")?;
@@ -351,7 +351,7 @@ impl<W: Write> Print<W> for JsonOutputOptions {
                 '\t' => write!(f, "\\t")?,
                 ch => {
                     if self.utf8_strings || (' '..='~').contains(&ch) {
-                        write!(f, "{}", ch)?;
+                        write!(f, "{ch}")?;
                     } else {
                         write!(f, "\\u{:04x}", ch as u64)?;
                     }
@@ -418,7 +418,7 @@ impl JsonOutputOptions {
                 JsonValue::Array(value) => self.print_array_with_indent(f, value, indent + 1)?,
                 JsonValue::Object(value) => self.print_object_with_indent(f, value, indent + 1)?,
                 _ => self.print_something(f, value)?,
-            };
+            }
             if index != size - 1 {
                 self.insert_comma(f)?;
             }
@@ -443,7 +443,7 @@ impl JsonOutputOptions {
                 JsonValue::Array(value) => self.print_array_with_indent(f, value, indent + 1)?,
                 JsonValue::Object(value) => self.print_object_with_indent(f, value, indent + 1)?,
                 _ => self.print_something(f, value)?,
-            };
+            }
             if index != size - 1 {
                 self.insert_comma(f)?;
             }
@@ -469,7 +469,7 @@ impl TextProcess {
         for (index, value) in list.iter().enumerate() {
             let mut str = String::new();
             self.printer.print(&mut str, value)?;
-            write!(self.writer.borrow_mut(), "{}", str)?;
+            write!(self.writer.borrow_mut(), "{str}")?;
             if index < self.length - 1 {
                 write!(
                     self.writer.borrow_mut(),
@@ -506,8 +506,7 @@ impl Process for TextProcess {
             self.print_list(context.to_list())
         } else {
             let mut str = String::new();
-            self.printer
-                .print_something(&mut str, context.input().deref())?;
+            self.printer.print_something(&mut str, context.input())?;
             write!(self.writer.borrow_mut(), "{}{}", str, self.line_seperator)?;
             Ok(ProcessDesision::Continue)
         }
@@ -547,7 +546,7 @@ mod tests {
     fn get_processor_will_fail_when_csv_has_json_options() -> ProcessResult<()> {
         let options = OutputOptions {
             output_style: OutputStyle::Csv,
-            row_seperator: "".to_string(),
+            row_seperator: String::new(),
             json_options: Some(JsonOutputOptions::default()),
             text_options: None,
         };
@@ -556,7 +555,7 @@ mod tests {
 
         let error = options.get_processor(writer);
 
-        assert_eq!(matches!(error, Err(_)), true);
+        assert!(error.is_err());
 
         Ok(())
     }
@@ -565,7 +564,7 @@ mod tests {
     fn get_processor_will_fail_when_csv_has_text_options() -> ProcessResult<()> {
         let options = OutputOptions {
             output_style: OutputStyle::Csv,
-            row_seperator: "".to_string(),
+            row_seperator: String::new(),
             json_options: None,
             text_options: Some(TextOutputOptions::default()),
         };
@@ -574,7 +573,7 @@ mod tests {
 
         let error = options.get_processor(writer);
 
-        assert_eq!(matches!(error, Err(_)), true);
+        assert!(error.is_err());
 
         Ok(())
     }
@@ -583,7 +582,7 @@ mod tests {
     fn get_processor_will_pass_when_csv_has_no_options() -> ProcessResult<()> {
         let options = OutputOptions {
             output_style: OutputStyle::Csv,
-            row_seperator: "".to_string(),
+            row_seperator: String::new(),
             json_options: None,
             text_options: None,
         };
@@ -592,7 +591,7 @@ mod tests {
 
         let result = options.get_processor(writer);
 
-        assert_eq!(matches!(result, Ok(_)), true);
+        assert!(result.is_ok());
 
         Ok(())
     }
@@ -601,7 +600,7 @@ mod tests {
     fn get_processor_will_fail_when_text_has_json_options() -> ProcessResult<()> {
         let options = OutputOptions {
             output_style: OutputStyle::Text,
-            row_seperator: "".to_string(),
+            row_seperator: String::new(),
             json_options: Some(JsonOutputOptions::default()),
             text_options: None,
         };
@@ -610,7 +609,7 @@ mod tests {
 
         let error = options.get_processor(writer);
 
-        assert_eq!(matches!(error, Err(_)), true);
+        assert!(error.is_err());
 
         Ok(())
     }
@@ -619,7 +618,7 @@ mod tests {
     fn get_processor_will_pass_when_text_has_no_options() -> ProcessResult<()> {
         let options = OutputOptions {
             output_style: OutputStyle::Text,
-            row_seperator: "".to_string(),
+            row_seperator: String::new(),
             json_options: None,
             text_options: None,
         };
@@ -628,7 +627,7 @@ mod tests {
 
         let result = options.get_processor(writer);
 
-        assert_eq!(matches!(result, Ok(_)), true);
+        assert!(result.is_ok());
 
         Ok(())
     }
@@ -637,7 +636,7 @@ mod tests {
     fn get_processor_will_pass_when_text_has_text_options() -> ProcessResult<()> {
         let options = OutputOptions {
             output_style: OutputStyle::Text,
-            row_seperator: "".to_string(),
+            row_seperator: String::new(),
             json_options: None,
             text_options: Some(TextOutputOptions::default()),
         };
@@ -646,7 +645,7 @@ mod tests {
 
         let result = options.get_processor(writer);
 
-        assert_eq!(matches!(result, Ok(_)), true);
+        assert!(result.is_ok());
 
         Ok(())
     }
@@ -655,7 +654,7 @@ mod tests {
     fn get_processor_will_fail_when_json_has_text_options() -> ProcessResult<()> {
         let options = OutputOptions {
             output_style: OutputStyle::Json,
-            row_seperator: "".to_string(),
+            row_seperator: String::new(),
             json_options: None,
             text_options: Some(TextOutputOptions::csv()),
         };
@@ -664,7 +663,7 @@ mod tests {
 
         let error = options.get_processor(writer);
 
-        assert_eq!(matches!(error, Err(_)), true);
+        assert!(error.is_err());
 
         Ok(())
     }
@@ -673,7 +672,7 @@ mod tests {
     fn get_processor_will_pass_when_json_has_no_options() -> ProcessResult<()> {
         let options = OutputOptions {
             output_style: OutputStyle::Json,
-            row_seperator: "".to_string(),
+            row_seperator: String::new(),
             json_options: None,
             text_options: None,
         };
@@ -682,7 +681,7 @@ mod tests {
 
         let result = options.get_processor(writer);
 
-        assert_eq!(matches!(result, Ok(_)), true);
+        assert!(result.is_ok());
 
         Ok(())
     }
@@ -691,7 +690,7 @@ mod tests {
     fn get_processor_will_pass_when_json_has_json_options() -> ProcessResult<()> {
         let options = OutputOptions {
             output_style: OutputStyle::Json,
-            row_seperator: "".to_string(),
+            row_seperator: String::new(),
             json_options: Some(JsonOutputOptions::default()),
             text_options: None,
         };
@@ -700,7 +699,7 @@ mod tests {
 
         let result = options.get_processor(writer);
 
-        assert_eq!(matches!(result, Ok(_)), true);
+        assert!(result.is_ok());
 
         Ok(())
     }
@@ -845,7 +844,7 @@ mod tests {
         let options = TextOutputOptions {
             string_prefix: "<".into(),
             string_postfix: ">".into(),
-            escape_sequance: vec!["<&lt;".into(), ">&gt;".into(), "".into(), "T".into()],
+            escape_sequance: vec!["<&lt;".into(), ">&gt;".into(), String::new(), "T".into()],
             ..TextOutputOptions::default()
         };
         let mut text = String::new();

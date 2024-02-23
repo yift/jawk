@@ -21,8 +21,12 @@ pub fn parse_get_selection<R: Read>(reader: &mut Reader<R>) -> Result<Rc<dyn Get
     let mut name = Vec::new();
     loop {
         match reader.next()? {
-            None => return Err(JsonParserError::UnexpectedEof(reader.where_am_i()).into()),
-            Some(b'/') => break,
+            None => {
+                return Err(JsonParserError::UnexpectedEof(reader.where_am_i()).into());
+            }
+            Some(b'/') => {
+                break;
+            }
             Some(ch) => name.push(ch),
         };
     }
@@ -37,7 +41,6 @@ pub fn parse_get_selection<R: Read>(reader: &mut Reader<R>) -> Result<Rc<dyn Get
 
 #[cfg(test)]
 mod tests {
-
     use super::*;
     use crate::{reader::from_string, selection::SelectionParseError};
 
@@ -47,13 +50,10 @@ mod tests {
         let mut reader = from_string(&text);
         let error = parse_get_selection(&mut reader).err().unwrap();
 
-        assert_eq!(
-            matches!(
-                error,
-                SelectionParseError::JsonError(JsonParserError::UnexpectedEof(_))
-            ),
-            true
-        );
+        assert!(matches!(
+            error,
+            SelectionParseError::JsonError(JsonParserError::UnexpectedEof(_))
+        ));
 
         Ok(())
     }
@@ -64,13 +64,10 @@ mod tests {
         let mut reader = from_string(&text);
         let error = parse_get_selection(&mut reader).err().unwrap();
 
-        assert_eq!(
-            matches!(
-                error,
-                SelectionParseError::JsonError(JsonParserError::UnexpectedEof(_))
-            ),
-            true
-        );
+        assert!(matches!(
+            error,
+            SelectionParseError::JsonError(JsonParserError::UnexpectedEof(_))
+        ));
 
         Ok(())
     }
@@ -81,13 +78,10 @@ mod tests {
         let mut reader = from_string(&text);
         let error = parse_get_selection(&mut reader).err().unwrap();
 
-        assert_eq!(
-            matches!(
-                error,
-                SelectionParseError::JsonError(JsonParserError::UnexpectedEof(_))
-            ),
-            true
-        );
+        assert!(matches!(
+            error,
+            SelectionParseError::JsonError(JsonParserError::UnexpectedEof(_))
+        ));
 
         Ok(())
     }
@@ -98,7 +92,7 @@ mod tests {
         let mut reader = from_string(&text);
         let selection = parse_get_selection(&mut reader).unwrap();
 
-        let result = Some(1.into());
+        let result = Some((1).into());
         let input = Context::new_empty().with_result(&Rc::new("test".to_string()), result.clone());
 
         let value = selection.get(&input);
@@ -114,7 +108,7 @@ mod tests {
         let mut reader = from_string(&text);
         let selection = parse_get_selection(&mut reader).unwrap();
 
-        let result = Some(1.into());
+        let result = Some((1).into());
         let input =
             Context::new_empty().with_result(&Rc::new("test-2".to_string()), result.clone());
 

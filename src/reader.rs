@@ -22,7 +22,7 @@ pub fn from_file(file_name: &PathBuf) -> Result<Reader<BufReader<File>>> {
     let reader = BufReader::new(file);
     Ok(Reader::new(
         reader,
-        file_name.to_str().map(|f| f.to_string()),
+        file_name.to_str().map(ToString::to_string),
     ))
 }
 pub fn from_std_in<R: Read>(stdin: R) -> Reader<R> {

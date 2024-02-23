@@ -90,7 +90,7 @@ impl FromStr for Selection {
         };
         let getter = extractors;
         let name = Rc::new(name);
-        Ok(Selection { name, getter })
+        Ok(Selection { getter, name })
     }
 }
 
@@ -120,7 +120,7 @@ pub fn read_getter<R: Read>(reader: &mut Reader<R>) -> Result<Rc<dyn Get>> {
     reader.eat_whitespace()?;
     match reader.peek()? {
         None => Err(SelectionParseError::UnexpectedEof),
-        Some(b'.') | Some(b'#') | Some(b'^') => parse_extractor(reader),
+        Some(b'.' | b'#' | b'^') => parse_extractor(reader),
         Some(b'(') => parse_function(reader),
         Some(b':' | b'@') => parse_get_variable(reader),
         Some(b'&') => parse_input_context(reader),

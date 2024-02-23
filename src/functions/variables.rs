@@ -10,7 +10,7 @@ use crate::{
 pub fn get_variable_functions() -> FunctionsGroup {
     FunctionsGroup::new("variables")
 
-    .add_function(
+        .add_function(
             FunctionDefinitions::new("set", 3, 3, |args| {
                 struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
@@ -81,16 +81,17 @@ pub fn get_variable_functions() -> FunctionsGroup {
                 .add_example(Example::new().add_argument("\"foo\""))
         )
 
-
         .add_function(
             FunctionDefinitions::new("define", 3, 3, |args| {
                 struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, context: &Context) -> Option<JsonValue> {
-                        if let (
-                            Some(JsonValue::String(name)),
-                            Some(definition)
-                         ) = (self.0.apply(context, 0), self.0.get(1)) {
+                        if
+                            let (Some(JsonValue::String(name)), Some(definition)) = (
+                                self.0.apply(context, 0),
+                                self.0.get(1),
+                            )
+                        {
                             let new_context = context.with_definition(name, definition);
                             self.0.apply(&new_context, 2)
                         } else {
@@ -100,9 +101,9 @@ pub fn get_variable_functions() -> FunctionsGroup {
                 }
                 Rc::new(Impl(args))
             })
-            .add_alias("macro")
-            .add_alias("def")
-            .add_alias("#")
+                .add_alias("macro")
+                .add_alias("def")
+                .add_alias("#")
                 .add_description_line(
                     "Define a new macro definition. The first argument should be the macro definition name, the second one should be macro and the third"
                 )
@@ -150,7 +151,9 @@ pub fn get_variable_functions() -> FunctionsGroup {
                 }
                 Rc::new(Impl(args))
             })
-                .add_description_line("Return the value of a named variable. See define for examples.")
+                .add_description_line(
+                    "Return the value of a named variable. See define for examples."
+                )
                 .add_example(Example::new().add_argument("\"foo\""))
         )
 }

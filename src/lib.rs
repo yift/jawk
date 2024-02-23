@@ -144,7 +144,13 @@ pub struct Cli {
     /// Additional help.
     ///
     /// Display additional help. Use the function name to get additional help on a specific function.
-    #[arg(long, short, default_value = None, value_parser = create_possible_values(), ignore_case = true)]
+    #[arg(
+        long,
+        short,
+        default_value = None,
+        value_parser = create_possible_values(),
+        ignore_case = true
+    )]
     additional_help: Option<String>,
 
     /// Avoid posting the same output more than once.
@@ -195,7 +201,24 @@ enum OnError {
     Stdout,
 }
 
-pub struct Master<R: Read> {
+/// Start JAWK and return a resuilt.
+///
+/// # Arguments
+///
+/// * `cli` - A the CLI that define this run.
+/// * `stdout` - A reference to the output stream to write the output.
+/// * `stderr` - A reference to the error stream to write the errors (if needed).
+/// * `stdin` - A reference to the input stream to read the inputs (if needed).
+pub fn go<R: Read>(
+    cli: Cli,
+    stdout: Rc<RefCell<dyn std::io::Write + Send>>,
+    stderr: Rc<RefCell<dyn std::io::Write + Send>>,
+    stdin: Box<dyn Fn() -> R>,
+) -> Result<()> {
+    let master = Master::new(cli, stdout, stderr, stdin);
+    master.go()
+}
+struct Master<R: Read> {
     cli: Cli,
     stdout: Rc<RefCell<dyn std::io::Write + Send>>,
     stderr: Rc<RefCell<dyn std::io::Write + Send>>,
@@ -212,9 +235,9 @@ impl<S: Read> Master<S> {
         let regular_expression_cache = RegexCache::new(cli.regular_expression_cache_size);
         Master {
             cli,
-            stdin,
-            stderr,
             stdout,
+            stderr,
+            stdin,
             regular_expression_cache,
         }
     }
@@ -274,9 +297,7 @@ impl<S: Read> Master<S> {
     }
 
     fn read_file(&self, file: &PathBuf, index: &mut u64, process: &mut dyn Process) -> Result<()> {
-        if !file.exists() {
-            panic!("File {:?} not exists", file);
-        }
+        assert!(file.exists(), "File {file:?} not exists");
         if file.is_dir() {
             for entry in read_dir(file)? {
                 let path = entry?.path();
@@ -317,7 +338,9 @@ impl<S: Read> Master<S> {
                         &self.regular_expression_cache,
                     );
                     match process.process(context)? {
-                        ProcessDesision::Break => break Ok(()),
+                        ProcessDesision::Break => {
+                            break Ok(());
+                        }
                         ProcessDesision::Continue => {
                             in_file_index += 1;
                             *index += 1;
@@ -336,8 +359,8 @@ impl<S: Read> Master<S> {
                         OnError::Panic => {
                             return Err(e.into());
                         }
-                        OnError::Stdout => writeln!(self.stdout.borrow_mut(), "error:{}", e)?,
-                        OnError::Stderr => writeln!(self.stderr.borrow_mut(), "error:{}", e)?,
+                        OnError::Stdout => writeln!(self.stdout.borrow_mut(), "error:{e}")?,
+                        OnError::Stderr => writeln!(self.stderr.borrow_mut(), "error:{e}")?,
                     }
                 }
             };
@@ -345,6 +368,7 @@ impl<S: Read> Master<S> {
     }
 }
 
+/// A result from running the go function
 pub type Result<T> = std::result::Result<T, MainError>;
 
 #[derive(Debug, Error)]

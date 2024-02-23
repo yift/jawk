@@ -73,14 +73,14 @@ pub fn parse_input_context<R: Read>(reader: &mut Reader<R>) -> SelectionResult<R
     let mut name = Vec::new();
     while let Some(ch) = reader.next()? {
         if ch.is_ascii_lowercase() {
-            name.push(ch)
+            name.push(ch);
         } else if ch.is_ascii_uppercase() {
-            name.push(ch.to_ascii_lowercase())
+            name.push(ch.to_ascii_lowercase());
         } else if ch == b'_' || ch == b'-' {
-            name.push(b'-')
+            name.push(b'-');
         } else {
             break;
-        };
+        }
     }
     let name = String::from_utf8(name)?;
     let getter = InputContextExtractor::from_name(name)?;
@@ -143,7 +143,7 @@ mod tests {
     fn from_name_return_error_for_unknown_name() -> SelectionResult<()> {
         let err = InputContextExtractor::from_name("nop".to_string()).err();
 
-        assert_eq!(err.is_some(), true);
+        assert!(err.is_some());
 
         Ok(())
     }
@@ -168,7 +168,7 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(ext.get(&conext), Some(61.into()));
+        assert_eq!(ext.get(&conext), Some((61).into()));
 
         Ok(())
     }
@@ -193,7 +193,7 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(ext.get(&conext), Some(10.into()));
+        assert_eq!(ext.get(&conext), Some((10).into()));
 
         Ok(())
     }
@@ -218,7 +218,7 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(ext.get(&conext), Some(41.into()));
+        assert_eq!(ext.get(&conext), Some((41).into()));
 
         Ok(())
     }
@@ -243,7 +243,7 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(ext.get(&conext), Some(42.into()));
+        assert_eq!(ext.get(&conext), Some((42).into()));
 
         Ok(())
     }
@@ -268,7 +268,7 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(ext.get(&conext), Some(11.into()));
+        assert_eq!(ext.get(&conext), Some((11).into()));
 
         Ok(())
     }
@@ -293,7 +293,7 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(ext.get(&conext), Some(20.into()));
+        assert_eq!(ext.get(&conext), Some((20).into()));
 
         Ok(())
     }
@@ -381,7 +381,7 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(selection.get(&conext), Some(20.into()));
+        assert_eq!(selection.get(&conext), Some((20).into()));
 
         Ok(())
     }
@@ -393,7 +393,7 @@ mod tests {
 
         let err = parse_input_context(&mut reader).err();
 
-        assert_eq!(err.is_some(), true);
+        assert!(err.is_some());
 
         Ok(())
     }

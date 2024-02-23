@@ -226,7 +226,9 @@ pub fn get_list_functions() -> FunctionsGroup {
                         .expected_output(
                             "{\"one\":[{\"g\":\"one\",\"v\":1},{\"g\":\"one\",\"v\":33}],\"two\":[{\"g\":\"two\",\"v\":2},{\"g\":\"two\",\"v\":false}]}"
                         )
-                        .explain("this group the element by a key that is taken from the input (`\"key\"`).")
+                        .explain(
+                            "this group the element by a key that is taken from the input (`\"key\"`)."
+                        )
                 )
                 .add_example(Example::new().add_argument("344").add_argument("(stringify (len .))"))
                 .add_example(
@@ -270,7 +272,9 @@ pub fn get_list_functions() -> FunctionsGroup {
                         .add_argument("[\"12345\", \"5\", \"23\", \"abc\", \"-1-2\", \"\"]")
                         .add_argument("(len .)")
                         .expected_output("[\"\",\"5\",\"23\",\"abc\",\"-1-2\",\"12345\"]")
-                        .explain("it sort the elements by their length, so the empty string (length zero) is the first.")
+                        .explain(
+                            "it sort the elements by their length, so the empty string (length zero) is the first."
+                        )
                 )
                 .add_example(Example::new().add_argument("true").add_argument("(len .)"))
                 .add_example(
@@ -311,7 +315,9 @@ pub fn get_list_functions() -> FunctionsGroup {
             })
                 .add_description_line("Sum all the items in the list.")
                 .add_description_line("If list have non numeric items, it will return nuthing.")
-                .add_description_line("One can `filter` with `number?` to ensure there is a result.")
+                .add_description_line(
+                    "One can `filter` with `number?` to ensure there is a result."
+                )
                 .add_example(Example::new().add_argument("[1, 5, 1.1]").expected_output("7.1"))
                 .add_example(Example::new().add_argument("[]").expected_output("0"))
                 .add_example(Example::new().add_argument("[1, 5, 1.1, \"text\"]"))
@@ -368,14 +374,18 @@ pub fn get_list_functions() -> FunctionsGroup {
                         .add_argument("100")
                         .add_argument("(+ .index .so_far .value)")
                         .expected_output("114.6")
-                        .explain("the first argument is 100, and then the fold will add all the argument in the list, 100 + 1 + 10 + 0.6 = 114.6.")
+                        .explain(
+                            "the first argument is 100, and then the fold will add all the argument in the list, 100 + 1 + 10 + 0.6 = 114.6."
+                        )
                 )
                 .add_example(
                     Example::new()
                         .add_argument("[1, 10, 0.6]")
                         .add_argument("(? (number? .so_far) (+ .so_far .value) .value)")
                         .expected_output("11.6")
-                        .explain("if `so_far` is not a number, we started the fold, so we can return the value, hene this is a simple sum, 1 + 10 + 0.6 = 11.6.")
+                        .explain(
+                            "if `so_far` is not a number, we started the fold, so we can return the value, hene this is a simple sum, 1 + 10 + 0.6 = 11.6."
+                        )
                 )
                 .add_example(Example::new().add_argument("{}").add_argument("1").add_argument("2"))
         )
@@ -406,15 +416,15 @@ pub fn get_list_functions() -> FunctionsGroup {
                 )
                 .add_example(
                     Example::new()
-                    .add_argument("(map (range 4) (.= 2))")
-                    .expected_output("true")
-                    .explain("there is 2 in the list of numbers from 0 to 4.")
+                        .add_argument("(map (range 4) (.= 2))")
+                        .expected_output("true")
+                        .explain("there is 2 in the list of numbers from 0 to 4.")
                 )
                 .add_example(
                     Example::new()
-                    .add_argument("(map (range 4) (.= 12))")
-                    .expected_output("false")
-                    .explain("there is no 12 in the list of numbers from 0 to 4.")
+                        .add_argument("(map (range 4) (.= 12))")
+                        .expected_output("false")
+                        .explain("there is no 12 in the list of numbers from 0 to 4.")
                 )
                 .add_example(Example::new().add_argument("[]").expected_output("false"))
                 .add_example(
@@ -458,15 +468,15 @@ pub fn get_list_functions() -> FunctionsGroup {
                 )
                 .add_example(
                     Example::new()
-                    .add_argument("(map (range 4) (.= 2))")
-                    .expected_output("false")
-                    .explain("not all the numbers between 0 and 4 are 2.")
+                        .add_argument("(map (range 4) (.= 2))")
+                        .expected_output("false")
+                        .explain("not all the numbers between 0 and 4 are 2.")
                 )
                 .add_example(
                     Example::new()
-                    .add_argument("(map (range 4) (.< 10))")
-                    .expected_output("true")
-                    .explain("all the numbers between 0 and 4 less than 10.")
+                        .add_argument("(map (range 4) (.< 10))")
+                        .expected_output("true")
+                        .explain("all the numbers between 0 and 4 less than 10.")
                 )
                 .add_example(
                     Example::new()
@@ -638,7 +648,9 @@ pub fn get_list_functions() -> FunctionsGroup {
                         .add_argument(".")
                         .add_argument("(map . (+ (len ^^.) .))")
                         .expected_output("[[4, 5, 6, 7], [4, 5, 6], [9, 10]]")
-                        .explain("it will add the length of the input list (i.e. 3) to each item in each list in that list.")
+                        .explain(
+                            "it will add the length of the input list (i.e. 3) to each item in each list in that list."
+                        )
                 )
                 .add_example(Example::new().add_argument("{}").add_argument("true"))
         )
@@ -650,16 +662,16 @@ pub fn get_list_functions() -> FunctionsGroup {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
                         if let Some(JsonValue::Array(list)) = self.0.apply(value, 0) {
                             let list: Vec<_> = list
-                                    .into_iter()
-                                    .enumerate()
-                                    .map(|(i, v)| {
-                                        let mut mp = IndexMap::with_capacity(2);
-                                        mp.insert("value".into(), v.clone());
-                                        mp.insert("index".into(), i.into());
-                                        mp.into()
-                                    })
-                                    .collect();
-                                Some(list.into())
+                                .into_iter()
+                                .enumerate()
+                                .map(|(i, v)| {
+                                    let mut mp = IndexMap::with_capacity(2);
+                                    mp.insert("value".into(), v.clone());
+                                    mp.insert("index".into(), i.into());
+                                    mp.into()
+                                })
+                                .collect();
+                            Some(list.into())
                         } else {
                             None
                         }
@@ -667,22 +679,21 @@ pub fn get_list_functions() -> FunctionsGroup {
                 }
                 Rc::new(Impl(args))
             })
-                .add_description_line("Map a list into a new list where each element in the new list is an object with two elements:")
+                .add_description_line(
+                    "Map a list into a new list where each element in the new list is an object with two elements:"
+                )
                 .add_description_line("* `index` with the index of the element in the list")
                 .add_description_line("* `value` with the element in the original list")
                 .add_description_line("Can be used later for filters or map based on index.")
-                .add_description_line(
-                    "If the first argument is not a list will return nothing."
-                )
+                .add_description_line("If the first argument is not a list will return nothing.")
                 .add_example(
                     Example::new()
                         .add_argument("[false, null, 10, {}]")
-                        .expected_output(r#"[{"value": false, "index": 0}, {"value": null, "index": 1}, {"value": 10, "index": 2}, {"value": {}, "index": 3}]"#)
+                        .expected_output(
+                            r#"[{"value": false, "index": 0}, {"value": null, "index": 1}, {"value": 10, "index": 2}, {"value": {}, "index": 3}]"#
+                        )
                 )
-                .add_example(
-                    Example::new()
-                    .add_argument("{}")
-                )
+                .add_example(Example::new().add_argument("{}"))
         )
 
         .add_function(
@@ -722,7 +733,9 @@ pub fn get_list_functions() -> FunctionsGroup {
                         .add_argument("[\"a,b,c\", \"d,e\", 4, \"g\"]")
                         .add_argument("(split . \",\")")
                         .expected_output("[\"a\", \"b\", \"c\", \"d\", \"e\", \"g\"]")
-                        .explain("it will split each element by the comma, and return a list of all those lists.")
+                        .explain(
+                            "it will split each element by the comma, and return a list of all those lists."
+                        )
                 )
                 .add_example(
                     Example::new()
@@ -787,7 +800,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                             let mut datum = IndexMap::new();
                             for (i, lst) in all_lists.iter().enumerate() {
                                 if let Some(value) = lst.get(index) {
-                                    datum.insert(format!(".{}", i).to_string(), value.clone());
+                                    datum.insert(format!(".{i}").to_string(), value.clone());
                                 }
                             }
                             zipped_list.push(datum.into());
@@ -842,7 +855,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                             }
                         }
                         for (i, lst) in all_lists.iter().enumerate() {
-                            let key = format!(".{}", i);
+                            let key = format!(".{i}");
                             let mut new_joined_list = vec![];
                             for val in lst {
                                 for so_far in &joined_list {
@@ -1025,7 +1038,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                                 } else {
                                     let new_len = lst.len() - 1;
                                     let mut new_list = Vec::with_capacity(new_len);
-                                    for val in lst.iter() {
+                                    for val in &lst {
                                         if new_list.len() < new_len {
                                             new_list.push(val.clone());
                                         }
@@ -1039,7 +1052,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                 }
                 Rc::new(Impl(args))
             })
-            .add_alias("pop_last")
+                .add_alias("pop_last")
                 .add_description_line("Pop the last item from a list.")
                 .add_description_line(
                     "If the argument is a list, will return the list without it's last argument."
@@ -1047,12 +1060,8 @@ pub fn get_list_functions() -> FunctionsGroup {
                 .add_example(
                     Example::new().add_argument("[1, 2, 3, 4]").expected_output("[1, 2, 3]")
                 )
-                .add_example(
-                    Example::new().add_argument("[]").expected_output("[]")
-                )
-                .add_example(
-                    Example::new().add_argument("false")
-                )
+                .add_example(Example::new().add_argument("[]").expected_output("[]"))
+                .add_example(Example::new().add_argument("false"))
         )
 
         .add_function(
@@ -1088,11 +1097,7 @@ pub fn get_list_functions() -> FunctionsGroup {
                 .add_example(
                     Example::new().add_argument("[1, 2, 3, 4]").expected_output("[2, 3, 4]")
                 )
-                .add_example(
-                    Example::new().add_argument("[]").expected_output("[]")
-                )
-                .add_example(
-                    Example::new().add_argument("false")
-                )
+                .add_example(Example::new().add_argument("[]").expected_output("[]"))
+                .add_example(Example::new().add_argument("false"))
         )
 }

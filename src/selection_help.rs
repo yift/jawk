@@ -134,55 +134,43 @@ fn build_help() -> Vec<SelectionHelp> {
                     "[2, 4, 6]"
                 )
             ),
-            SelectionHelp::new(
-                "Input context",
-                vec![
-                    "Use input context to get the context of the input. The available input types are:",
-                    "* `&index` - To get the index of the current value within the current run.",
-                    "* `&index-in-file` - To get the index of the current value within the curent file.",
-                    "* `&started-at-line-number` - To get the line number within the input file in which the input started.",
-                    "* `&started-at-char-number` - To get the char number within the line within the input file in which the input started.",
-                    "* `&ended-at-line-number` - To get the line number within the input file in which the input ended.",
-                    "* `&ended-at-char-number` - To get the char number within the line within the input file in which the input ended.",
-                    "* `&file-name` - To get the name of the input file from which the input was parsed (will be empty for stdin input).",
-                ]
+        SelectionHelp::new(
+            "Input context",
+            vec![
+                "Use input context to get the context of the input. The available input types are:",
+                "* `&index` - To get the index of the current value within the current run.",
+                "* `&index-in-file` - To get the index of the current value within the curent file.",
+                "* `&started-at-line-number` - To get the line number within the input file in which the input started.",
+                "* `&started-at-char-number` - To get the char number within the line within the input file in which the input started.",
+                "* `&ended-at-line-number` - To get the line number within the input file in which the input ended.",
+                "* `&ended-at-char-number` - To get the char number within the line within the input file in which the input ended.",
+                "* `&file-name` - To get the name of the input file from which the input was parsed (will be empty for stdin input)."
+            ]
+        ).with_example(
+            UsageExample::new(
+                r"(- &ended-at-char-number &started-at-char-number)",
+                r#""test""#,
+                "6"
             )
-                .with_example(
-                    UsageExample::new(
-                        r#"(- &ended-at-char-number &started-at-char-number)"#,
-                        r#""test""#,
-                        "6"
-                    )
-                ),
-                SelectionHelp::new(
-                    "Previous selected values",
-                    vec![
-                        "Reuse previoulsy selected value. Use this to reuse a value that had been selected previously. This is not available during filtering, and one can only refere to values that had been selected before.",
-                        "The format is `/<selection-name>/` where the *selection-name* is the name of the selection."
-                    ]
+        ),
+        SelectionHelp::new(
+            "Previous selected values",
+            vec![
+                "Reuse previoulsy selected value. Use this to reuse a value that had been selected previously. This is not available during filtering, and one can only refere to values that had been selected before.",
+                "The format is `/<selection-name>/` where the *selection-name* is the name of the selection."
+            ]
+        )
+            .with_example(
+                UsageExample::new("/name/", "", "\"John\"").with_previous_selection(
+                    "name",
+                    "\"John\""
                 )
-                    .with_example(
-                        UsageExample::new(
-                            "/name/", 
-                            "",
-                             "\"John\""
-                            ).with_previous_selection("name", "\"John\"")
-                        )
-                        .with_example(
-                            UsageExample::new(
-                                "/name/", 
-                                "",
-                                 ""
-                                ).with_previous_selection("name", "")
-                            )
-                            .with_example(
-                                UsageExample::new(
-                                    "/name/", 
-                                    "",
-                                     ""
-                                    ).with_previous_selection("Last Name", "\"Doe\"")
-                                ),
-                    ]
+            )
+            .with_example(UsageExample::new("/name/", "", "").with_previous_selection("name", ""))
+            .with_example(
+                UsageExample::new("/name/", "", "").with_previous_selection("Last Name", "\"Doe\"")
+            )
+    ]
 }
 
 pub fn get_selection_help() -> Vec<String> {
@@ -191,10 +179,10 @@ pub fn get_selection_help() -> Vec<String> {
     help.push("# Selection".into());
     help.push(format!("There are {} types of selectoion:", types.len()));
     for t in types {
-        help.push("".into());
+        help.push(String::new());
         help.push(format!("## {}", t.name));
         for d in t.description {
-            help.push(format!("  {}", d));
+            help.push(format!("  {d}"));
         }
         help.push("### Examples".into());
         for e in t.examples {
@@ -203,9 +191,9 @@ pub fn get_selection_help() -> Vec<String> {
                     .iter()
                     .map(|(key, value)| {
                         if let Some(value) = value {
-                            format!(" and previously selected *{}* as `{}`", key, value)
+                            format!(" and previously selected *{key}* as `{value}`")
                         } else {
-                            format!(" and previously selected *{}* as nothing", key)
+                            format!(" and previously selected *{key}* as nothing")
                         }
                     })
                     .collect()
@@ -213,12 +201,12 @@ pub fn get_selection_help() -> Vec<String> {
                 String::new()
             };
             let input = if let Ok(i) = JsonValue::from_str(e.input.as_str()) {
-                format!("for input: `{}`", i)
+                format!("for input: `{i}`")
             } else {
                 "regardless of the input".into()
             };
             let output = if let Some(o) = e.expected_output {
-                format!("will produce: `{}`", o)
+                format!("will produce: `{o}`")
             } else {
                 "will produce nothing".into()
             };

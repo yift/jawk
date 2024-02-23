@@ -64,7 +64,7 @@ impl Process for SplitterProcess {
 #[cfg(test)]
 mod tests {
     use std::cell::RefCell;
-    use std::ops::Deref;
+
     use std::rc::Rc;
 
     use super::*;
@@ -86,7 +86,7 @@ mod tests {
         let str = "(.len)3";
         let err = Splitter::from_str(str).err().unwrap();
 
-        assert_eq!(matches!(err, SelectionParseError::ExpectingEof(_, _)), true);
+        assert!(matches!(err, SelectionParseError::ExpectingEof(_, _)));
 
         Ok(())
     }
@@ -116,7 +116,7 @@ mod tests {
         splitter.start(titles)?;
 
         let binding = data.borrow();
-        let data = binding.deref();
+        let data = &*binding;
         assert_eq!(data, &true);
 
         Ok(())
@@ -146,7 +146,7 @@ mod tests {
         splitter.complete()?;
 
         let binding = data.borrow();
-        let data = binding.deref();
+        let data = &*binding;
         assert_eq!(data, &true);
 
         Ok(())
@@ -177,7 +177,7 @@ mod tests {
         splitter.process(context)?;
 
         let binding = data.borrow();
-        let data = binding.deref();
+        let data = &*binding;
         assert_eq!(data, &10);
 
         Ok(())

@@ -1,5 +1,6 @@
 use std::env::var;
-use std::ops::Deref;
+
+use base64::prelude::*;
 use std::rc::Rc;
 use std::str::FromStr;
 
@@ -92,7 +93,7 @@ pub fn get_string_functions() -> FunctionsGroup {
                 .add_example(
                     Example::new()
                         .add_argument("\"PATH\"")
-                        .expected_json(var("PATH").map(|f| f.into()).ok())
+                        .expected_json(var("PATH").map(Into::into).ok())
                         .more_or_less()
                 )
         )
@@ -133,17 +134,19 @@ pub fn get_string_functions() -> FunctionsGroup {
                 struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
-                        if let (
-                            Some(JsonValue::String(str)),
-                            Some(JsonValue::Number(index))
-                        ) = (self.0.apply(value, 0), self.0.apply(value, 1)) {
+                        if
+                            let (Some(JsonValue::String(str)), Some(JsonValue::Number(index))) = (
+                                self.0.apply(value, 0),
+                                self.0.apply(value, 1),
+                            )
+                        {
                             if let Ok(index) = TryInto::<usize>::try_into(index) {
                                 if str.len() < index {
                                     Some(str.into())
                                 } else {
                                     let head = str[..index].to_string();
                                     Some(head.into())
-                                    }
+                                }
                             } else {
                                 None
                             }
@@ -155,7 +158,9 @@ pub fn get_string_functions() -> FunctionsGroup {
                 Rc::new(Impl(args))
             })
                 .add_description_line("Extract a string header.")
-                .add_description_line("If the first argument is a string and the second argument is a positive integer, the returned value will be a string with the beggining of the first argument.")
+                .add_description_line(
+                    "If the first argument is a string and the second argument is a positive integer, the returned value will be a string with the beggining of the first argument."
+                )
                 .add_description_line("See also `take`.")
                 .add_example(
                     Example::new()
@@ -169,16 +174,8 @@ pub fn get_string_functions() -> FunctionsGroup {
                         .add_argument("20")
                         .expected_output("\"test-123\"")
                 )
-                .add_example(
-                    Example::new()
-                        .add_argument("20")
-                        .add_argument("20")
-                )
-                .add_example(
-                    Example::new()
-                        .add_argument("\"20\"")
-                        .add_argument("-5")
-                )
+                .add_example(Example::new().add_argument("20").add_argument("20"))
+                .add_example(Example::new().add_argument("\"20\"").add_argument("-5"))
         )
 
         .add_function(
@@ -186,17 +183,19 @@ pub fn get_string_functions() -> FunctionsGroup {
                 struct Impl(Vec<Rc<dyn Get>>);
                 impl Get for Impl {
                     fn get(&self, value: &Context) -> Option<JsonValue> {
-                        if let (
-                            Some(JsonValue::String(str)),
-                            Some(JsonValue::Number(index))
-                        ) = (self.0.apply(value, 0), self.0.apply(value, 1)) {
+                        if
+                            let (Some(JsonValue::String(str)), Some(JsonValue::Number(index))) = (
+                                self.0.apply(value, 0),
+                                self.0.apply(value, 1),
+                            )
+                        {
                             if let Ok(index) = TryInto::<usize>::try_into(index) {
                                 if str.len() < index {
                                     Some(str.into())
                                 } else {
                                     let head = str[index..].to_string();
                                     Some(head.into())
-                                    }
+                                }
                             } else {
                                 None
                             }
@@ -208,7 +207,9 @@ pub fn get_string_functions() -> FunctionsGroup {
                 Rc::new(Impl(args))
             })
                 .add_description_line("Extract a string tail.")
-                .add_description_line("If the first argument is a string and the second argument is a positive integer, the returned value will be a string with the end of the first argument.")
+                .add_description_line(
+                    "If the first argument is a string and the second argument is a positive integer, the returned value will be a string with the end of the first argument."
+                )
                 .add_description_line("See also `take_last`.")
                 .add_example(
                     Example::new()
@@ -222,16 +223,8 @@ pub fn get_string_functions() -> FunctionsGroup {
                         .add_argument("20")
                         .expected_output("\"test-123\"")
                 )
-                .add_example(
-                    Example::new()
-                        .add_argument("20")
-                        .add_argument("20")
-                )
-                .add_example(
-                    Example::new()
-                        .add_argument("\"20\"")
-                        .add_argument("-5")
-                )
+                .add_example(Example::new().add_argument("20").add_argument("20"))
+                .add_example(Example::new().add_argument("\"20\"").add_argument("-5"))
         )
 
         .add_function(
@@ -283,7 +276,7 @@ pub fn get_string_functions() -> FunctionsGroup {
                                 self.0.apply(value, 1),
                             )
                         {
-                            if let Ok(regex) = value.compile_regex(&regex).deref() {
+                            if let Ok(regex) = &*value.compile_regex(&regex) {
                                 Some(regex.is_match(&str).into())
                             } else {
                                 None
@@ -338,7 +331,7 @@ pub fn get_string_functions() -> FunctionsGroup {
                         {
                             if
                                 let (Ok(regex), Ok(index)) = (
-                                    value.compile_regex(&regex).deref(),
+                                    &*value.compile_regex(&regex),
                                     TryInto::<usize>::try_into(index),
                                 )
                             {
@@ -361,9 +354,15 @@ pub fn get_string_functions() -> FunctionsGroup {
                 Rc::new(Impl(args))
             })
                 .add_description_line("Return the capture group within the string.")
-                .add_description_line("The first argument is expected to be the string to apply the expression on.")
-                .add_description_line("The second argument is expected to be the string with the regular expression.")
-                .add_description_line("The third argument is expected to be the group index with in the regular epression (the first group index is one).")
+                .add_description_line(
+                    "The first argument is expected to be the string to apply the expression on."
+                )
+                .add_description_line(
+                    "The second argument is expected to be the string with the regular expression."
+                )
+                .add_description_line(
+                    "The third argument is expected to be the group index with in the regular epression (the first group index is one)."
+                )
                 .add_description_line(
                     "For regular expression syntax, see [https://docs.rs/regex/latest/regex/#syntax]."
                 )
@@ -376,7 +375,9 @@ pub fn get_string_functions() -> FunctionsGroup {
                         .add_argument("\"[a-z ]+([0-9]+)[a-z ]+\"")
                         .add_argument("1")
                         .expected_output("\"200\"")
-                        .explain("the regular expression is letters and spaces, group with numbers, and more letter and spaces, so the group is the string `\"200\"`.")
+                        .explain(
+                            "the regular expression is letters and spaces, group with numbers, and more letter and spaces, so the group is the string `\"200\"`."
+                        )
                 )
                 .add_example(
                     Example::new()
@@ -396,6 +397,50 @@ pub fn get_string_functions() -> FunctionsGroup {
                         .add_argument("\"test\"")
                         .add_argument("\"[0-9\"")
                         .add_argument("10")
+                )
+        )
+
+        .add_function(
+            FunctionDefinitions::new("base63_decode", 1, 1, |args| {
+                struct Impl(Vec<Rc<dyn Get>>);
+                impl Get for Impl {
+                    fn get(&self, value: &Context) -> Option<JsonValue> {
+                        let Some(JsonValue::String(str)) = self.0.apply(value, 0) else {
+                            return None;
+                        };
+                        let Ok(data) = BASE64_STANDARD.decode(str) else {
+                            return None;
+                        };
+                        if let Ok(str) = String::from_utf8(data) {
+                            Some(str.into())
+                        } else {
+                            None
+                        }
+                    }
+                }
+                Rc::new(Impl(args))
+            })
+            .add_alias("base64")
+                .add_description_line("Decode a BASE64 string and try to convert to a string using UTF8.")
+                .add_description_line(
+                    "Retunr nothing if the first and only argument is not a valid UTF8 string encoded using BASE64."
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("\"dGVzdA==\"")
+                        .expected_output("\"test\"")
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("\"test\"")
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("\"wyg=\"")
+                )
+                .add_example(
+                    Example::new()
+                        .add_argument("100")
                 )
         )
 }

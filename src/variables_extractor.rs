@@ -59,7 +59,7 @@ pub fn parse_get_variable<R: Read>(reader: &mut Reader<R>) -> Result<Rc<dyn Get>
 
 #[cfg(test)]
 mod tests {
-    use std::{cell::RefCell, ops::Deref, str::FromStr};
+    use std::{cell::RefCell, str::FromStr};
 
     use super::*;
     use crate::{json_value::JsonValue, reader::from_string, selection::SelectionParseError};
@@ -70,13 +70,10 @@ mod tests {
         let mut reader = from_string(&text);
         let error = parse_get_variable(&mut reader).err().unwrap();
 
-        assert_eq!(
-            matches!(
-                error,
-                SelectionParseError::JsonError(JsonParserError::UnexpectedEof(_))
-            ),
-            true
-        );
+        assert!(matches!(
+            error,
+            SelectionParseError::JsonError(JsonParserError::UnexpectedEof(_))
+        ));
 
         Ok(())
     }
@@ -87,13 +84,10 @@ mod tests {
         let mut reader = from_string(&text);
         let error = parse_get_variable(&mut reader).err().unwrap();
 
-        assert_eq!(
-            matches!(
-                error,
-                SelectionParseError::JsonError(JsonParserError::UnexpectedCharacter(_, _, _))
-            ),
-            true
-        );
+        assert!(matches!(
+            error,
+            SelectionParseError::JsonError(JsonParserError::UnexpectedCharacter(_, _, _))
+        ));
 
         Ok(())
     }
@@ -104,13 +98,10 @@ mod tests {
         let mut reader = from_string(&text);
         let error = parse_get_variable(&mut reader).err().unwrap();
 
-        assert_eq!(
-            matches!(
-                error,
-                SelectionParseError::JsonError(JsonParserError::UnexpectedEof(_))
-            ),
-            true
-        );
+        assert!(matches!(
+            error,
+            SelectionParseError::JsonError(JsonParserError::UnexpectedEof(_))
+        ));
 
         Ok(())
     }
@@ -137,7 +128,7 @@ mod tests {
         {
             assert_eq!(value, JsonValue::from_str("12").ok());
             let binding = data.borrow();
-            let data = binding.deref();
+            let data = &*binding;
             assert_eq!(data, &1);
         }
 
@@ -145,7 +136,7 @@ mod tests {
             let value = getter.get(&context);
             assert_eq!(value, JsonValue::from_str("12").ok());
             let binding = data.borrow();
-            let data = binding.deref();
+            let data = &*binding;
             assert_eq!(data, &2);
         }
 
@@ -158,7 +149,7 @@ mod tests {
         let mut reader = from_string(&text);
         let getter = parse_get_variable(&mut reader)?;
 
-        let context = Context::new_empty().with_variable("name".to_string(), 22.into());
+        let context = Context::new_empty().with_variable("name".to_string(), (22).into());
 
         let value = getter.get(&context);
 

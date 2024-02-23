@@ -4,6 +4,7 @@ use std::rc::Rc;
 
 use crate::functions::basic_functions::get_basic_functions;
 use crate::functions::boolean_functions::get_boolean_functions;
+use crate::functions::exec::get_exec_functions;
 use crate::functions::list_functions::get_list_functions;
 use crate::functions::number_functions::get_number_functions;
 use crate::functions::object_functions::get_object_functions;
@@ -77,7 +78,7 @@ impl Example {
         self
     }
     pub fn expected_json(mut self, output: Option<JsonValue>) -> Self {
-        self.output = output.map(|v| ValidOutputForTest::String(format!("{}", v).into()));
+        self.output = output.map(|v| ValidOutputForTest::String(format!("{v}").into()));
         self
     }
     pub fn explain(mut self, explain: &'static str) -> Self {
@@ -201,6 +202,7 @@ lazy_static! {
     static ref BOOLEAN_FUNCTIONS: FunctionsGroup = get_boolean_functions();
     static ref TIME_FUNCTIONS: FunctionsGroup = get_time_functions();
     static ref VARIABLE_FUNCTIONS: FunctionsGroup = get_variable_functions();
+    static ref EXEC_FUNCTIONS: FunctionsGroup = get_exec_functions();
     static ref ALL_FUNCTIONS: Vec<&'static FunctionsGroup> = vec![
         &BASIC_FUNCTIONS,
         &TYPES_FUNCTIONS,
@@ -211,6 +213,7 @@ lazy_static! {
         &BOOLEAN_FUNCTIONS,
         &TIME_FUNCTIONS,
         &VARIABLE_FUNCTIONS,
+        &EXEC_FUNCTIONS,
     ];
     static ref NAME_TO_FUNCTION: HashMap<&'static str, &'static FunctionDefinitions> =
         ALL_FUNCTIONS
@@ -251,7 +254,9 @@ pub fn get_fn_help(help_type: &str) -> Vec<String> {
     if help_type == "functions" {
         let mut help = Vec::new();
         help.push("# Functions".into());
-        help.push("Functions allow one to manipulate the input. The functions format is `(<function-name> <arg0> <arg1> ..)` where `<argN>` are functions or other types of selection.".into());
+        help.push(
+            "Functions allow one to manipulate the input. The functions format is `(<function-name> <arg0> <arg1> ..)` where `<argN>` are functions or other types of selection.".into()
+        );
         help.push("See additional help for selection for more details.".into());
         help.push(format!(
             "There are {} functions group available:",
@@ -261,7 +266,9 @@ pub fn get_fn_help(help_type: &str) -> Vec<String> {
             help.push(format!("* *{}* functions.", group.name));
         }
         help.push(String::new());
-        help.push("See additional help with the group name to see the list of available functions in that group.".into());
+        help.push(
+            "See additional help with the group name to see the list of available functions in that group.".into()
+        );
         help
     } else {
         for &group in ALL_FUNCTIONS.iter() {
@@ -273,7 +280,7 @@ pub fn get_fn_help(help_type: &str) -> Vec<String> {
         if let Some(&function) = function {
             get_function_help(function)
         } else {
-            panic!("Can not find function {}", help_type)
+            panic!("Can not find function {help_type}")
         }
     }
 }
@@ -291,7 +298,7 @@ pub fn get_groups_and_funs() -> Vec<(String, Vec<String>)> {
 
 fn get_group_help(group: &FunctionsGroup) -> Vec<String> {
     let mut help = Vec::new();
-    help.push(format!("# Function group {}", group.name,));
+    help.push(format!("# Function group {}", group.name));
     help.push(format!(
         "Function group {} has {} functions:",
         group.name,
@@ -313,12 +320,12 @@ fn get_group_help(group: &FunctionsGroup) -> Vec<String> {
 fn get_function_help(func: &FunctionDefinitions) -> Vec<String> {
     let mut help = Vec::new();
     let name = func.name;
-    help.push(format!("# `{}` function:", name));
+    help.push(format!("# `{name}` function:"));
     for alias in &func.aliases {
-        help.push(format!("* Can also be called as `{}`\n", alias));
+        help.push(format!("* Can also be called as `{alias}`\n"));
     }
     for description in &func.description {
-        help.push(description.to_string());
+        help.push((*description).to_string());
     }
     help.push(String::new());
     help.push("## Examples:".into());
@@ -330,25 +337,25 @@ fn get_function_help(func: &FunctionDefinitions) -> Vec<String> {
             let input = format!(" for input: ```{}```", &json);
             (json, input)
         } else {
-            (JsonValue::Null, "".to_string())
+            (JsonValue::Null, String::new())
         };
         let args = example.arguments.join(", ");
-        let run = format!("({} {})", name, args);
-        help.push(format!("* running: `{}`{}", run, input));
+        let run = format!("({name} {args})");
+        help.push(format!("* running: `{run}`{input}"));
         let selection = Selection::from_str(&run).unwrap();
         match selection.get(&Context::new_with_no_context(json)) {
             None => help.push("  will return nothing".into()),
             Some(result) => {
                 if example.acurate {
-                    help.push(format!("  will give: `{}`", result))
+                    help.push(format!("  will give: `{result}`"));
                 } else {
-                    help.push(format!("  can give something like: `{}`", result))
+                    help.push(format!("  can give something like: `{result}`"));
                 }
             }
-        };
+        }
         match &example.explain {
             None => {}
-            Some(explain) => help.push(format!("  Because {}", explain)),
+            Some(explain) => help.push(format!("  Because {explain}")),
         }
         help.push("----".into());
         help.push(String::new());
@@ -368,7 +375,7 @@ mod tests {
     fn test_functions() -> selection::Result<()> {
         for group in ALL_FUNCTIONS.iter() {
             println!("Running group: {}", group.name);
-            for func in group.functions.iter() {
+            for func in &group.functions {
                 println!("\tRunning function: {}", func.name);
                 for example in &func.examples {
                     let json = if let Some(input) = example.input {
@@ -380,12 +387,12 @@ mod tests {
                         JsonValue::Null
                     };
                     let args = example.arguments.join(", ");
-                    println!("\t\tRunning example: {}...", args);
+                    println!("\t\tRunning example: {args}...");
                     let run = format!("({} {})", func.name, args);
                     let selection = Selection::from_str(&run)?;
                     let result = selection.get(&Context::new_with_no_context(json));
                     match &result {
-                        Some(result) => println!("\t\t\tgot: {}", result),
+                        Some(result) => println!("\t\t\tgot: {result}"),
                         None => println!("\t\t\tgot nothing"),
                     }
                     match &example.output {
@@ -396,10 +403,10 @@ mod tests {
                             let input = str.to_string();
                             let mut reader = from_string(&input);
                             let json = reader.next_json_value().unwrap().unwrap();
-                            assert_eq!(result, Some(json))
+                            assert_eq!(result, Some(json));
                         }
                         Some(ValidOutputForTest::Function(fun)) => {
-                            assert_eq!(fun(&result), true);
+                            assert!(fun(&result));
                         }
                     }
                     println!("\t\tPassed");
@@ -415,12 +422,12 @@ mod tests {
         let mut names = HashSet::new();
         for group in ALL_FUNCTIONS.iter() {
             println!("Looking at group: {}", group.name);
-            for func in group.functions.iter() {
+            for func in &group.functions {
                 println!("\t looking at function: {}", func.name);
-                assert_eq!(names.insert(func.name.to_string()), true);
+                assert!(names.insert(func.name.to_string()));
                 for alias in &func.aliases {
-                    println!("\t\t looking at alias: {}", alias);
-                    assert_eq!(names.insert(alias.to_string()), true);
+                    println!("\t\t looking at alias: {alias}");
+                    assert!(names.insert((*alias).to_string()));
                 }
             }
         }
@@ -432,10 +439,10 @@ mod tests {
         let func = find_function("?")?;
         let error = func.create(Vec::new()).err().unwrap();
 
-        assert_eq!(
-            matches!(error, FunctionDefinitionsError::MissingArgument(_, _, _)),
-            true
-        );
+        assert!(matches!(
+            error,
+            FunctionDefinitionsError::MissingArgument(_, _, _)
+        ));
         Ok(())
     }
 
@@ -454,10 +461,10 @@ mod tests {
             .err()
             .unwrap();
 
-        assert_eq!(
-            matches!(error, FunctionDefinitionsError::TooManyArgument(_, _, _)),
-            true
-        );
+        assert!(matches!(
+            error,
+            FunctionDefinitionsError::TooManyArgument(_, _, _)
+        ));
         Ok(())
     }
 
@@ -465,7 +472,7 @@ mod tests {
     fn name_return_the_function_name() -> selection::Result<()> {
         let func = find_function("if")?;
 
-        assert_eq!(func.name(), "?".to_string(),);
+        assert_eq!(func.name(), "?".to_string());
         Ok(())
     }
 }

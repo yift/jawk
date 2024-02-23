@@ -50,7 +50,7 @@ struct GrouperProcess {
 impl Process for GrouperProcess {
     fn complete(&mut self) -> ProcessResult<()> {
         let mut data = IndexMap::new();
-        for (key, value) in self.data.iter() {
+        for (key, value) in &self.data {
             let value = value.clone().into();
             data.insert(key.clone(), value);
         }
@@ -109,7 +109,7 @@ mod tests {
         let str = "(.len)3";
         let err = Grouper::from_str(str).err().unwrap();
 
-        assert_eq!(matches!(err, SelectionParseError::ExpectingEof(_, _)), true);
+        assert!(matches!(err, SelectionParseError::ExpectingEof(_, _)));
 
         Ok(())
     }
@@ -144,7 +144,7 @@ mod tests {
         }
 
         let binding = data.borrow();
-        let data = binding.deref();
+        let data = &*binding;
         assert_eq!(data, &true);
 
         Ok(())
@@ -162,7 +162,7 @@ mod tests {
             }
             fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
                 let input = context.input().deref().clone();
-                assert_eq!(self.data.borrow().is_none(), true);
+                assert!(self.data.borrow().is_none());
                 *self.data.borrow_mut() = Some(input);
                 Ok(ProcessDesision::Continue)
             }
@@ -193,7 +193,7 @@ mod tests {
                 .with_result(&one, Some((3).into()))
                 .with_result(&two, Some((4).into()));
             grouper.process(context)?;
-            let context = Context::new_with_no_context(1.into())
+            let context = Context::new_with_no_context((1).into())
                 .with_result(&one, Some((10).into()))
                 .with_result(&two, Some((20).into()));
             grouper.process(context)?;
@@ -207,7 +207,7 @@ mod tests {
 
         let binding = data.borrow();
         let data = binding.deref().clone().unwrap();
-        let data = format!("{}", data);
+        let data = format!("{data}");
         assert_eq!(
             data,
             r#"{"one": [{"one": 1, "two": 2}, {"one": 4, "two": 6}, {"one": 10, "two": 20}], "three": [{"one": 3, "two": 4}]}"#

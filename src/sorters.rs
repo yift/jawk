@@ -104,7 +104,7 @@ impl Process for SortProcess {
                 if space_left == 0 {
                     self.remove_last_item();
                 } else {
-                    self.space_left = Some(space_left - 1)
+                    self.space_left = Some(space_left - 1);
                 }
             }
         }
@@ -196,7 +196,7 @@ mod tests {
     fn sort_will_fail_with_wrong_direction() -> ProcessResult<()> {
         let error = Sorter::from_str(" 1 bla").err().unwrap();
 
-        assert_eq!(matches!(error, SorterParserError::UnknownOrder(_)), true);
+        assert!(matches!(error, SorterParserError::UnknownOrder(_)));
 
         Ok(())
     }
@@ -231,11 +231,11 @@ mod tests {
         sorter.process(context)?;
         let context = Context::new_with_no_context("e".into());
         sorter.process(context)?;
-        let context = Context::new_with_no_context(20.into());
+        let context = Context::new_with_no_context((20).into());
         sorter.process(context)?;
-        let context = Context::new_with_no_context(2.into());
+        let context = Context::new_with_no_context((2).into());
         sorter.process(context)?;
-        let context = Context::new_with_no_context(3.4.into());
+        let context = Context::new_with_no_context((3.4).into());
         sorter.process(context)?;
         let context = Context::new_with_no_context(false.into());
         sorter.process(context)?;
@@ -255,9 +255,9 @@ mod tests {
                 "a".into(),
                 "e".into(),
                 "z".into(),
-                2.into(),
-                3.4.into(),
-                20.into(),
+                (2).into(),
+                (3.4).into(),
+                (20).into()
             ]
         );
 
@@ -294,11 +294,11 @@ mod tests {
         sorter.process(context)?;
         let context = Context::new_with_no_context("e".into());
         sorter.process(context)?;
-        let context = Context::new_with_no_context(20.into());
+        let context = Context::new_with_no_context((20).into());
         sorter.process(context)?;
-        let context = Context::new_with_no_context(2.into());
+        let context = Context::new_with_no_context((2).into());
         sorter.process(context)?;
-        let context = Context::new_with_no_context(3.4.into());
+        let context = Context::new_with_no_context((3.4).into());
         sorter.process(context)?;
         let context = Context::new_with_no_context(false.into());
         sorter.process(context)?;
@@ -312,15 +312,15 @@ mod tests {
         assert_eq!(
             *data.deref().borrow(),
             vec![
-                20.into(),
-                3.4.into(),
-                2.into(),
+                (20).into(),
+                (3.4).into(),
+                (2).into(),
                 "z".into(),
                 "e".into(),
                 "a".into(),
                 "a".into(),
                 false.into(),
-                JsonValue::Null,
+                JsonValue::Null
             ]
         );
 
@@ -357,11 +357,11 @@ mod tests {
         sorter.process(context)?;
         let context = Context::new_with_no_context("e".into());
         sorter.process(context)?;
-        let context = Context::new_with_no_context(20.into());
+        let context = Context::new_with_no_context((20).into());
         sorter.process(context)?;
-        let context = Context::new_with_no_context(2.into());
+        let context = Context::new_with_no_context((2).into());
         sorter.process(context)?;
-        let context = Context::new_with_no_context(3.4.into());
+        let context = Context::new_with_no_context((3.4).into());
         sorter.process(context)?;
         let context = Context::new_with_no_context(false.into());
         sorter.process(context)?;
@@ -374,7 +374,7 @@ mod tests {
 
         assert_eq!(
             *data.deref().borrow(),
-            vec![JsonValue::Null, false.into(), "a".into(), "a".into(),]
+            vec![JsonValue::Null, false.into(), "a".into(), "a".into()]
         );
 
         Ok(())
@@ -410,11 +410,11 @@ mod tests {
         sorter.process(context)?;
         let context = Context::new_with_no_context("e".into());
         sorter.process(context)?;
-        let context = Context::new_with_no_context(20.into());
+        let context = Context::new_with_no_context((20).into());
         sorter.process(context)?;
-        let context = Context::new_with_no_context(2.into());
+        let context = Context::new_with_no_context((2).into());
         sorter.process(context)?;
-        let context = Context::new_with_no_context(3.4.into());
+        let context = Context::new_with_no_context((3.4).into());
         sorter.process(context)?;
         let context = Context::new_with_no_context(false.into());
         sorter.process(context)?;
@@ -427,7 +427,7 @@ mod tests {
 
         assert_eq!(
             *data.deref().borrow(),
-            vec![20.into(), 3.4.into(), 2.into(), "z".into(),]
+            vec![(20).into(), (3.4).into(), (2).into(), "z".into()]
         );
 
         Ok(())

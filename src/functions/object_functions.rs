@@ -85,11 +85,15 @@ pub fn get_object_functions() -> FunctionsGroup {
                 Rc::new(Impl(args))
             })
                 .add_alias("to_list")
-                .add_description_line("Get the list of all the entries of an obejct. Each item of the list will be an object with `key` and `value` entries")
+                .add_description_line(
+                    "Get the list of all the entries of an obejct. Each item of the list will be an object with `key` and `value` entries"
+                )
                 .add_example(
                     Example::new()
                         .add_argument(r#"{"key-1": 1, "key-2": false}"#)
-                        .expected_output(r#"[{"key": "key-1", "value": 1}, {"key": "key-2", "value": false}]"#)
+                        .expected_output(
+                            r#"[{"key": "key-1", "value": 1}, {"key": "key-2", "value": false}]"#
+                        )
                 )
                 .add_example(Example::new().add_argument("[1, 2, 4]"))
         )
@@ -307,7 +311,7 @@ pub fn get_object_functions() -> FunctionsGroup {
                 )
                 .add_example(
                     Example::new()
-                    .input("3")
+                        .input("3")
                         .add_argument("{\"a\": 1, \"aa\": 2, \"aaa\": 3, \"aaaa\": 4}")
                         .add_argument("(+ . ^.)")
                         .expected_output("{\"a\": 4, \"aa\": 5, \"aaa\": 6, \"aaaa\": 7}")
@@ -354,10 +358,12 @@ pub fn get_object_functions() -> FunctionsGroup {
                 )
                 .add_example(
                     Example::new()
-                    .input("\"prefix-\"")
+                        .input("\"prefix-\"")
                         .add_argument("{\"a\": 1, \"aa\": 2, \"aaa\": 3, \"aaaa\": 4}")
                         .add_argument("(concat ^. .)")
-                        .expected_output("{\"prefix-a\": 1, \"prefix-aa\": 2, \"prefix-aaa\": 3, \"prefix-aaaa\": 4}")
+                        .expected_output(
+                            "{\"prefix-a\": 1, \"prefix-aa\": 2, \"prefix-aaa\": 3, \"prefix-aaaa\": 4}"
+                        )
                 )
                 .add_example(
                     Example::new()
@@ -448,7 +454,7 @@ pub fn get_object_functions() -> FunctionsGroup {
                                 let mut new_map = map.clone();
                                 new_map.insert(key, val);
                                 Some(new_map.into())
-                            }else {
+                            } else {
                                 Some(map.into())
                             }
                         } else {
@@ -513,7 +519,7 @@ pub fn get_object_functions() -> FunctionsGroup {
                                 let mut new_map = map.clone();
                                 new_map.insert(key, val);
                                 Some(new_map.into())
-                            }else {
+                            } else {
                                 Some(map.into())
                             }
                         } else {
@@ -530,7 +536,9 @@ pub fn get_object_functions() -> FunctionsGroup {
                 .add_description_line("The first argument should be an object.")
                 .add_description_line("The second argument should be a key.")
                 .add_description_line("The third argument should be a value.")
-                .add_description_line("If the object dosen't has that key, it will not be replaced.")
+                .add_description_line(
+                    "If the object dosen't has that key, it will not be replaced."
+                )
                 .add_example(
                     Example::new()
                         .add_argument("{}")

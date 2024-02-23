@@ -4,16 +4,7 @@ use thiserror::Error;
 use clap::builder::{PossibleValue, PossibleValuesParser};
 
 #[cfg(all(not(target_os = "windows"), feature = "termimad-help"))]
-use termimad::{
-    crossterm::{
-        cursor::{Hide, Show},
-        event::{self, Event, KeyCode, KeyEvent},
-        queue,
-        style::Color,
-        terminal::{self, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen},
-    },
-    Alignment, Area, Error as TermimadError, MadSkin, MadView,
-};
+use termimad::{crossterm::style::Color, Alignment, Error as TermimadError, MadSkin};
 
 #[cfg(feature = "create-docs")]
 use crate::build_docs::build_docs;
@@ -33,15 +24,9 @@ pub fn create_possible_values() -> PossibleValuesParser {
     );
     #[cfg(feature = "create-docs")]
     {
-        values.push(PossibleValue::new("book").help("Create a book").hide(true))
+        values.push(PossibleValue::new("book").help("Create a book").hide(true));
     }
     values.into()
-}
-#[cfg(all(not(target_os = "windows"), feature = "termimad-help"))]
-fn view_area() -> Area {
-    let mut area = Area::full_screen();
-    area.pad_for_max_width(200);
-    area
 }
 #[cfg(all(not(target_os = "windows"), feature = "termimad-help"))]
 fn make_skin() -> MadSkin {
@@ -50,7 +35,6 @@ fn make_skin() -> MadSkin {
     skin.set_headers_fg(Color::DarkBlue);
     skin.bold.set_fg(Color::Red);
     skin.italic.set_fg(Color::DarkGreen);
-    skin.scrollbar.thumb.set_fg(Color::Green);
     skin.code_block.align = Alignment::Left;
     skin.code_block.set_bg(Color::Blue);
     skin.code_block.set_fg(Color::Yellow);
@@ -60,33 +44,10 @@ fn make_skin() -> MadSkin {
 }
 
 #[cfg(all(not(target_os = "windows"), feature = "termimad-help"))]
-fn display_help(w: &mut Stdout, help: &String) -> Result<(), HelpError> {
-    queue!(w, EnterAlternateScreen)?;
-    terminal::enable_raw_mode()?;
-    queue!(w, Hide)?;
+fn display_help(w: &mut Stdout, help: &str) -> Result<(), HelpError> {
     let skin = make_skin();
-    let mut view = MadView::from(help.to_owned(), view_area(), skin);
-    loop {
-        view.write_on(w)?;
-        w.flush()?;
-        match event::read() {
-            Ok(Event::Key(KeyEvent { code, .. })) => match code {
-                KeyCode::Up => view.try_scroll_lines(-1),
-                KeyCode::Down => view.try_scroll_lines(1),
-                KeyCode::PageUp => view.try_scroll_pages(-1),
-                KeyCode::PageDown => view.try_scroll_pages(1),
-                _ => break,
-            },
-            Ok(Event::Resize(..)) => {
-                queue!(w, Clear(ClearType::All))?;
-                view.resize(&view_area());
-            }
-            _ => {}
-        }
-    }
-    terminal::disable_raw_mode()?;
-    queue!(w, Show)?;
-    queue!(w, LeaveAlternateScreen)?;
+    let help = skin.term_text(help);
+    writeln!(w, "{help}")?;
     Ok(())
 }
 #[cfg(any(target_os = "windows", not(feature = "termimad-help")))]
@@ -95,7 +56,7 @@ fn display_help(w: &mut Stdout, help: &String) -> Result<(), HelpError> {
     Ok(())
 }
 fn printout_help(w: &mut Stdout, help: &String) -> Result<(), HelpError> {
-    writeln!(w, "{}", help)?;
+    writeln!(w, "{help}")?;
     Ok(())
 }
 pub fn display_additional_help(help_type: &str) -> Result<(), HelpError> {
