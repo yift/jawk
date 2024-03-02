@@ -186,7 +186,9 @@ pub fn get_selection_help() -> Vec<String> {
         }
         help.push("### Examples".into());
         for e in t.examples {
-            let previous_selection = if !e.previous_selection.is_empty() {
+            let previous_selection = if e.previous_selection.is_empty() {
+                String::new()
+            } else {
                 e.previous_selection
                     .iter()
                     .map(|(key, value)| {
@@ -197,8 +199,6 @@ pub fn get_selection_help() -> Vec<String> {
                         }
                     })
                     .collect()
-            } else {
-                String::new()
             };
             let input = if let Ok(i) = JsonValue::from_str(e.input.as_str()) {
                 format!("for input: `{i}`")
@@ -246,15 +246,12 @@ mod tests {
                 let started = context_reader.where_am_i();
                 let input = context_reader.next_json_value()?;
                 let ended = context_reader.where_am_i();
-                let mut context = match input {
-                    Some(i) => {
-                        println!("\tAnd input: {}", &i);
-                        Context::new_with_input(i, started, ended, 0, 0, &RegexCache::new(0))
-                    }
-                    None => {
-                        println!("\tAnd no input");
-                        Context::new_empty()
-                    }
+                let mut context = if let Some(i) = input {
+                    println!("\tAnd input: {}", &i);
+                    Context::new_with_input(i, started, ended, 0, 0, &RegexCache::new(0))
+                } else {
+                    println!("\tAnd no input");
+                    Context::new_empty()
                 };
                 for (key, value) in example.previous_selection {
                     context = context.with_result(&Rc::new(key), value);

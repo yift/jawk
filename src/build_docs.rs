@@ -127,7 +127,7 @@ fn create_single_example(source: &Path, target: &PathBuf) -> Result<Option<Strin
         let md_file_name = title.replace(' ', "_");
         let example_file = target.join(format!("{md_file_name}.md"));
         let input = fs::read_to_string(source.join("input.txt"))?;
-        let args: String = bash_args(fs::read_to_string(source.join("args.txt"))?);
+        let args: String = bash_args(&fs::read_to_string(source.join("args.txt"))?);
         let output = fs::read_to_string(source.join("output.txt"))?;
 
         let md = format!(
@@ -158,7 +158,7 @@ To produce:
     }
 }
 
-fn bash_args(args: String) -> String {
+fn bash_args(args: &str) -> String {
     args.lines()
         .enumerate()
         .map(|(index, line)| {

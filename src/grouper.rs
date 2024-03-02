@@ -63,9 +63,8 @@ impl Process for GrouperProcess {
     }
     fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
         if let Some(key) = self.name(&context) {
-            if let Some(value) = context.build() {
-                self.data.entry(key).or_default().push(value);
-            }
+            let value = context.build();
+            self.data.entry(key).or_default().push(value);
         }
         Ok(ProcessDesision::Continue)
     }
@@ -94,24 +93,20 @@ mod tests {
     use crate::processor::{Context, Titles};
 
     #[test]
-    fn parse_parse_correctly() -> ProcessResult<()> {
+    fn parse_parse_correctly() {
         let str = "(.len)";
         let grouper = Grouper::from_str(str).unwrap();
 
         let input = Context::new_with_no_context("test".into());
 
         assert_eq!(grouper.group_by.get(&input), Some((4).into()));
-
-        Ok(())
     }
     #[test]
-    fn parse_fail_if_too_long() -> ProcessResult<()> {
+    fn parse_fail_if_too_long() {
         let str = "(.len)3";
         let err = Grouper::from_str(str).err().unwrap();
 
         assert!(matches!(err, SelectionParseError::ExpectingEof(_, _)));
-
-        Ok(())
     }
 
     #[test]

@@ -82,21 +82,21 @@ impl ExtractFromInput {
                 Some(b'.') => {
                     let key = Self::read_extract_key(reader)?;
                     if key.is_empty() {
-                        if ext.is_empty() {
-                            return Ok(ExtractFromInput::Root);
+                        return if ext.is_empty() {
+                            Ok(ExtractFromInput::Root)
                         } else {
-                            return Err(SelectionParseError::MissingKey(reader.where_am_i()));
-                        }
+                            Err(SelectionParseError::MissingKey(reader.where_am_i()))
+                        };
                     }
                     let es = SingleExtract::ByKey(key);
                     ext.push(es);
                 }
                 Some(b'#') => match Self::read_extract_index(reader)? {
                     None => {
-                        if ext.is_empty() {
-                            return Ok(ExtractFromInput::Root);
+                        return if ext.is_empty() {
+                            Ok(ExtractFromInput::Root)
                         } else {
-                            return Err(SelectionParseError::MissingKey(reader.where_am_i()));
+                            Err(SelectionParseError::MissingKey(reader.where_am_i()))
                         }
                     }
                     Some(index) => {
@@ -133,9 +133,8 @@ impl ExtractFromInput {
                         || ch == b'#'
                     {
                         break;
-                    } else {
-                        buf.push(ch);
                     }
+                    buf.push(ch);
                 }
             }
         }

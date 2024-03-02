@@ -418,7 +418,7 @@ mod tests {
     }
 
     #[test]
-    fn test_no_dulicates() -> selection::Result<()> {
+    fn test_no_dulicates() {
         let mut names = HashSet::new();
         for group in ALL_FUNCTIONS.iter() {
             println!("Looking at group: {}", group.name);
@@ -431,7 +431,6 @@ mod tests {
                 }
             }
         }
-        Ok(())
     }
 
     #[test]

@@ -168,11 +168,8 @@ pub fn get_list_functions() -> FunctionsGroup {
                                 let mut groups = IndexMap::new();
                                 for item in list {
                                     let value = value.with_inupt(item.clone());
-                                    let key = match self.0.apply(&value, 1) {
-                                        Some(JsonValue::String(str)) => str,
-                                        _ => {
-                                            return None;
-                                        }
+                                    let Some(JsonValue::String(key)) = self.0.apply(&value, 1) else {
+                                        return None;
                                     };
                                     let values = groups.entry(key).or_insert_with(Vec::new);
                                     values.push(item);

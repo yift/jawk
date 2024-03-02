@@ -133,10 +133,10 @@ pub fn get_number_functions() -> FunctionsGroup {
                         {
                             let num1: f64 = num1.into();
                             let num2: f64 = num2.into();
-                            if num2 != 0.0 {
-                                Some((num1 / num2).into())
-                            } else {
+                            if num2 == 0.0 {
                                 None
+                            } else {
+                                Some((num1 / num2).into())
                             }
                         } else {
                             None
@@ -172,10 +172,10 @@ pub fn get_number_functions() -> FunctionsGroup {
                         {
                             let num1: f64 = num1.into();
                             let num2: f64 = num2.into();
-                            if num2 != 0.0 {
-                                Some((num1 % num2).into())
-                            } else {
+                            if num2 == 0.0 {
                                 None
+                            } else {
+                                Some((num1 % num2).into())
                             }
                         } else {
                             None

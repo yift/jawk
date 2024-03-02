@@ -87,10 +87,6 @@ impl<R: Read> Reader<R> {
     pub fn eat_whitespace(&mut self) -> Result<()> {
         loop {
             match self.peek()? {
-                None => {
-                    return Ok(());
-                }
-
                 Some(b' ' | b'\n' | b'\t' | b'\r') => {
                     self.next()?;
                 }

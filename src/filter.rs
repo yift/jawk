@@ -70,25 +70,21 @@ mod tests {
     use crate::processor::{Context, Titles};
 
     #[test]
-    fn parse_parse_correctly() -> ProcessResult<()> {
+    fn parse_parse_correctly() {
         let str = "(> . 0)     ";
         let filter = Filter::from_str(str).unwrap();
 
         let input = Context::new_with_no_context((5).into());
 
         assert_eq!(filter.filter.get(&input), Some(true.into()));
-
-        Ok(())
     }
 
     #[test]
-    fn parse_fail_if_too_long() -> ProcessResult<()> {
+    fn parse_fail_if_too_long() {
         let str = "(> . 0)   3";
         let err = Filter::from_str(str).err().unwrap();
 
         assert!(matches!(err, SelectionParseError::ExpectingEof(_, _)));
-
-        Ok(())
     }
 
     #[test]

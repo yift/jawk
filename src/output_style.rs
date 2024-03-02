@@ -140,18 +140,18 @@ pub trait Print<W: Write> {
     }
     fn print_number(&self, f: &mut W, value: &NumberValue) -> FmtResult {
         match value {
-            NumberValue::Float(value) => self.print_f64(f, value),
-            NumberValue::Negative(value) => self.print_i64(f, value),
-            NumberValue::Positive(value) => self.print_u64(f, value),
+            NumberValue::Float(value) => self.print_f64(f, *value),
+            NumberValue::Negative(value) => self.print_i64(f, *value),
+            NumberValue::Positive(value) => self.print_u64(f, *value),
         }
     }
     fn print_null(&self, f: &mut W) -> FmtResult;
     fn print_true(&self, f: &mut W) -> FmtResult;
     fn print_false(&self, f: &mut W) -> FmtResult;
     fn print_string(&self, f: &mut W, value: &str) -> FmtResult;
-    fn print_f64(&self, f: &mut W, value: &f64) -> FmtResult;
-    fn print_i64(&self, f: &mut W, value: &i64) -> FmtResult;
-    fn print_u64(&self, f: &mut W, value: &u64) -> FmtResult;
+    fn print_f64(&self, f: &mut W, value: f64) -> FmtResult;
+    fn print_i64(&self, f: &mut W, value: i64) -> FmtResult;
+    fn print_u64(&self, f: &mut W, value: u64) -> FmtResult;
     fn print_array(&self, f: &mut W, value: &[JsonValue]) -> FmtResult;
     fn print_object(&self, f: &mut W, value: &IndexMap<String, JsonValue>) -> FmtResult;
 }
@@ -275,13 +275,13 @@ impl<W: Write> Print<W> for TextPrinter {
     fn print_false(&self, f: &mut W) -> FmtResult {
         write!(f, "{}", self.options.false_keyword)
     }
-    fn print_f64(&self, f: &mut W, value: &f64) -> FmtResult {
+    fn print_f64(&self, f: &mut W, value: f64) -> FmtResult {
         write!(f, "{value}")
     }
-    fn print_u64(&self, f: &mut W, value: &u64) -> FmtResult {
+    fn print_u64(&self, f: &mut W, value: u64) -> FmtResult {
         write!(f, "{value}")
     }
-    fn print_i64(&self, f: &mut W, value: &i64) -> FmtResult {
+    fn print_i64(&self, f: &mut W, value: i64) -> FmtResult {
         write!(f, "{value}")
     }
     fn print_string(&self, f: &mut W, value: &str) -> FmtResult {
@@ -328,13 +328,13 @@ impl<W: Write> Print<W> for JsonOutputOptions {
     fn print_false(&self, f: &mut W) -> FmtResult {
         write!(f, "false")
     }
-    fn print_f64(&self, f: &mut W, value: &f64) -> FmtResult {
+    fn print_f64(&self, f: &mut W, value: f64) -> FmtResult {
         write!(f, "{value}")
     }
-    fn print_u64(&self, f: &mut W, value: &u64) -> FmtResult {
+    fn print_u64(&self, f: &mut W, value: u64) -> FmtResult {
         write!(f, "{value}")
     }
-    fn print_i64(&self, f: &mut W, value: &i64) -> FmtResult {
+    fn print_i64(&self, f: &mut W, value: i64) -> FmtResult {
         write!(f, "{value}")
     }
     fn print_string(&self, f: &mut W, value: &str) -> FmtResult {
@@ -465,7 +465,7 @@ impl TextProcess {
             printer: options.into(),
         }
     }
-    fn print_list(&mut self, list: Vec<Option<JsonValue>>) -> ProcessResult<ProcessDesision> {
+    fn print_list(&mut self, list: &[Option<JsonValue>]) -> ProcessResult<ProcessDesision> {
         for (index, value) in list.iter().enumerate() {
             let mut str = String::new();
             self.printer.print(&mut str, value)?;
@@ -491,7 +491,7 @@ impl Process for TextProcess {
         self.length = titles_so_far.len();
         if self.printer.options.headers {
             if self.length > 0 {
-                self.print_list(titles_so_far.to_list())?;
+                self.print_list(&titles_so_far.to_list())?;
             } else {
                 return Err(ProcessError::InvalidInputError(
                     "Missing headers. This output style must have selection and can no group by",
@@ -503,7 +503,7 @@ impl Process for TextProcess {
     }
     fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
         if self.length != 0 {
-            self.print_list(context.to_list())
+            self.print_list(&context.to_list())
         } else {
             let mut str = String::new();
             self.printer.print_something(&mut str, context.input())?;
@@ -527,11 +527,10 @@ impl Process for JsonProcess {
         Ok(())
     }
     fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
-        if let Some(value) = context.build() {
-            let mut str = String::new();
-            self.printer.print_something(&mut str, &value)?;
-            write!(self.writer.borrow_mut(), "{}{}", str, self.line_seperator)?;
-        }
+        let value = context.build();
+        let mut str = String::new();
+        self.printer.print_something(&mut str, &value)?;
+        write!(self.writer.borrow_mut(), "{}{}", str, self.line_seperator)?;
         Ok(ProcessDesision::Continue)
     }
 }
@@ -543,7 +542,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn get_processor_will_fail_when_csv_has_json_options() -> ProcessResult<()> {
+    fn get_processor_will_fail_when_csv_has_json_options() {
         let options = OutputOptions {
             output_style: OutputStyle::Csv,
             row_seperator: String::new(),
@@ -556,12 +555,10 @@ mod tests {
         let error = options.get_processor(writer);
 
         assert!(error.is_err());
-
-        Ok(())
     }
 
     #[test]
-    fn get_processor_will_fail_when_csv_has_text_options() -> ProcessResult<()> {
+    fn get_processor_will_fail_when_csv_has_text_options() {
         let options = OutputOptions {
             output_style: OutputStyle::Csv,
             row_seperator: String::new(),
@@ -574,12 +571,10 @@ mod tests {
         let error = options.get_processor(writer);
 
         assert!(error.is_err());
-
-        Ok(())
     }
 
     #[test]
-    fn get_processor_will_pass_when_csv_has_no_options() -> ProcessResult<()> {
+    fn get_processor_will_pass_when_csv_has_no_options() {
         let options = OutputOptions {
             output_style: OutputStyle::Csv,
             row_seperator: String::new(),
@@ -592,12 +587,10 @@ mod tests {
         let result = options.get_processor(writer);
 
         assert!(result.is_ok());
-
-        Ok(())
     }
 
     #[test]
-    fn get_processor_will_fail_when_text_has_json_options() -> ProcessResult<()> {
+    fn get_processor_will_fail_when_text_has_json_options() {
         let options = OutputOptions {
             output_style: OutputStyle::Text,
             row_seperator: String::new(),
@@ -610,12 +603,10 @@ mod tests {
         let error = options.get_processor(writer);
 
         assert!(error.is_err());
-
-        Ok(())
     }
 
     #[test]
-    fn get_processor_will_pass_when_text_has_no_options() -> ProcessResult<()> {
+    fn get_processor_will_pass_when_text_has_no_options() {
         let options = OutputOptions {
             output_style: OutputStyle::Text,
             row_seperator: String::new(),
@@ -628,12 +619,10 @@ mod tests {
         let result = options.get_processor(writer);
 
         assert!(result.is_ok());
-
-        Ok(())
     }
 
     #[test]
-    fn get_processor_will_pass_when_text_has_text_options() -> ProcessResult<()> {
+    fn get_processor_will_pass_when_text_has_text_options() {
         let options = OutputOptions {
             output_style: OutputStyle::Text,
             row_seperator: String::new(),
@@ -646,12 +635,10 @@ mod tests {
         let result = options.get_processor(writer);
 
         assert!(result.is_ok());
-
-        Ok(())
     }
 
     #[test]
-    fn get_processor_will_fail_when_json_has_text_options() -> ProcessResult<()> {
+    fn get_processor_will_fail_when_json_has_text_options() {
         let options = OutputOptions {
             output_style: OutputStyle::Json,
             row_seperator: String::new(),
@@ -664,12 +651,10 @@ mod tests {
         let error = options.get_processor(writer);
 
         assert!(error.is_err());
-
-        Ok(())
     }
 
     #[test]
-    fn get_processor_will_pass_when_json_has_no_options() -> ProcessResult<()> {
+    fn get_processor_will_pass_when_json_has_no_options() {
         let options = OutputOptions {
             output_style: OutputStyle::Json,
             row_seperator: String::new(),
@@ -682,12 +667,10 @@ mod tests {
         let result = options.get_processor(writer);
 
         assert!(result.is_ok());
-
-        Ok(())
     }
 
     #[test]
-    fn get_processor_will_pass_when_json_has_json_options() -> ProcessResult<()> {
+    fn get_processor_will_pass_when_json_has_json_options() {
         let options = OutputOptions {
             output_style: OutputStyle::Json,
             row_seperator: String::new(),
@@ -700,12 +683,10 @@ mod tests {
         let result = options.get_processor(writer);
 
         assert!(result.is_ok());
-
-        Ok(())
     }
 
     #[test]
-    fn text_printer_will_not_print_missing_values_by_default() -> ProcessResult<()> {
+    fn text_printer_will_not_print_missing_values_by_default() {
         let options = TextOutputOptions {
             missing_value_keyword: None,
             ..TextOutputOptions::default()
@@ -716,12 +697,10 @@ mod tests {
         printer.print(&mut text, &None).unwrap();
 
         assert_eq!(text.as_str(), "");
-
-        Ok(())
     }
 
     #[test]
-    fn text_printer_will_print_missing_values() -> ProcessResult<()> {
+    fn text_printer_will_print_missing_values() {
         let options = TextOutputOptions {
             missing_value_keyword: Some("val".into()),
             ..TextOutputOptions::default()
@@ -732,12 +711,10 @@ mod tests {
         printer.print(&mut text, &None).unwrap();
 
         assert_eq!(text.as_str(), "val");
-
-        Ok(())
     }
 
     #[test]
-    fn text_printer_will_print_null() -> ProcessResult<()> {
+    fn text_printer_will_print_null() {
         let options = TextOutputOptions {
             null_keyword: "NULL".into(),
             ..TextOutputOptions::default()
@@ -748,12 +725,10 @@ mod tests {
         printer.print(&mut text, &Some(JsonValue::Null)).unwrap();
 
         assert_eq!(text.as_str(), "NULL");
-
-        Ok(())
     }
 
     #[test]
-    fn text_printer_will_print_true() -> ProcessResult<()> {
+    fn text_printer_will_print_true() {
         let options = TextOutputOptions {
             true_keyword: "YES".into(),
             ..TextOutputOptions::default()
@@ -766,12 +741,10 @@ mod tests {
             .unwrap();
 
         assert_eq!(text.as_str(), "YES");
-
-        Ok(())
     }
 
     #[test]
-    fn text_printer_will_print_false() -> ProcessResult<()> {
+    fn text_printer_will_print_false() {
         let options = TextOutputOptions {
             false_keyword: "NO".into(),
             ..TextOutputOptions::default()
@@ -784,12 +757,10 @@ mod tests {
             .unwrap();
 
         assert_eq!(text.as_str(), "NO");
-
-        Ok(())
     }
 
     #[test]
-    fn text_printer_will_print_float() -> ProcessResult<()> {
+    fn text_printer_will_print_float() {
         let options = TextOutputOptions::default();
         let mut text = String::new();
 
@@ -799,12 +770,10 @@ mod tests {
             .unwrap();
 
         assert_eq!(text.as_str(), "1.5");
-
-        Ok(())
     }
 
     #[test]
-    fn text_printer_will_print_int() -> ProcessResult<()> {
+    fn text_printer_will_print_int() {
         let options = TextOutputOptions::default();
         let mut text = String::new();
 
@@ -817,12 +786,10 @@ mod tests {
             .unwrap();
 
         assert_eq!(text.as_str(), "-10");
-
-        Ok(())
     }
 
     #[test]
-    fn text_printer_will_print_uint() -> ProcessResult<()> {
+    fn text_printer_will_print_uint() {
         let options = TextOutputOptions::default();
         let mut text = String::new();
 
@@ -835,12 +802,10 @@ mod tests {
             .unwrap();
 
         assert_eq!(text.as_str(), "12");
-
-        Ok(())
     }
 
     #[test]
-    fn text_printer_will_print_string() -> ProcessResult<()> {
+    fn text_printer_will_print_string() {
         let options = TextOutputOptions {
             string_prefix: "<".into(),
             string_postfix: ">".into(),
@@ -855,12 +820,10 @@ mod tests {
             .unwrap();
 
         assert_eq!(text.as_str(), "<test&lt;&gt;this>");
-
-        Ok(())
     }
 
     #[test]
-    fn text_printer_will_print_object() -> ProcessResult<()> {
+    fn text_printer_will_print_object() {
         let options = TextOutputOptions::default();
         let mut text = String::new();
 
@@ -870,12 +833,10 @@ mod tests {
             .unwrap();
 
         assert_eq!(text.as_str(), "{\"key\":100}");
-
-        Ok(())
     }
 
     #[test]
-    fn text_printer_will_print_array() -> ProcessResult<()> {
+    fn text_printer_will_print_array() {
         let options = TextOutputOptions::default();
         let mut text = String::new();
 
@@ -885,24 +846,20 @@ mod tests {
             .unwrap();
 
         assert_eq!(text.as_str(), "[1,2,3]");
-
-        Ok(())
     }
 
     #[test]
-    fn json_printer_will_not_print_missing_values() -> ProcessResult<()> {
+    fn json_printer_will_not_print_missing_values() {
         let printer = JsonOutputOptions::default();
         let mut text = String::new();
 
         printer.print(&mut text, &None).unwrap();
 
         assert_eq!(text.as_str(), "");
-
-        Ok(())
     }
 
     #[test]
-    fn json_printer_will_print_null_value() -> ProcessResult<()> {
+    fn json_printer_will_print_null_value() {
         let printer = JsonOutputOptions::default();
         let mut text = String::new();
 
@@ -911,11 +868,9 @@ mod tests {
             .unwrap();
 
         assert_eq!(text.as_str(), "null");
-
-        Ok(())
     }
     #[test]
-    fn json_printer_will_print_true_value() -> ProcessResult<()> {
+    fn json_printer_will_print_true_value() {
         let printer = JsonOutputOptions::default();
         let mut text = String::new();
 
@@ -924,11 +879,9 @@ mod tests {
             .unwrap();
 
         assert_eq!(text.as_str(), "true");
-
-        Ok(())
     }
     #[test]
-    fn json_printer_will_print_false_value() -> ProcessResult<()> {
+    fn json_printer_will_print_false_value() {
         let printer = JsonOutputOptions::default();
         let mut text = String::new();
 
@@ -937,11 +890,10 @@ mod tests {
             .unwrap();
 
         assert_eq!(text.as_str(), "false");
-
-        Ok(())
     }
+
     #[test]
-    fn json_printer_will_print_float_value() -> ProcessResult<()> {
+    fn json_printer_will_print_float_value() {
         let printer = JsonOutputOptions::default();
         let mut text = String::new();
 
@@ -950,11 +902,9 @@ mod tests {
             .unwrap();
 
         assert_eq!(text.as_str(), "1.5");
-
-        Ok(())
     }
     #[test]
-    fn json_printer_will_print_uint_value() -> ProcessResult<()> {
+    fn json_printer_will_print_uint_value() {
         let printer = JsonOutputOptions::default();
         let mut text = String::new();
 
@@ -963,11 +913,9 @@ mod tests {
             .unwrap();
 
         assert_eq!(text.as_str(), "15");
-
-        Ok(())
     }
     #[test]
-    fn json_printer_will_print_int_value() -> ProcessResult<()> {
+    fn json_printer_will_print_int_value() {
         let printer = JsonOutputOptions::default();
         let mut text = String::new();
 
@@ -976,12 +924,10 @@ mod tests {
             .unwrap();
 
         assert_eq!(text.as_str(), "-15");
-
-        Ok(())
     }
 
     #[test]
-    fn json_printer_will_print_string_value_ascii() -> ProcessResult<()> {
+    fn json_printer_will_print_string_value_ascii() {
         let printer = JsonOutputOptions {
             utf8_strings: false,
             style: JsonStyle::OneLine,
@@ -998,12 +944,10 @@ mod tests {
             .unwrap();
 
         assert_eq!(text.as_str(), "\"test\\n\\\"\\\\\\/\\b\\f\\r\\t\\u1f603\"");
-
-        Ok(())
     }
 
     #[test]
-    fn json_printer_will_print_string_value_utf() -> ProcessResult<()> {
+    fn json_printer_will_print_string_value_utf() {
         let printer = JsonOutputOptions {
             utf8_strings: true,
             style: JsonStyle::OneLine,
@@ -1020,12 +964,10 @@ mod tests {
             .unwrap();
 
         assert_eq!(text.as_str(), "\"test\\n\\\"\\\\\\/\\b\\f\\r\\t\u{1f603}\"");
-
-        Ok(())
     }
 
     #[test]
-    fn json_printer_will_print_consise_object() -> ProcessResult<()> {
+    fn json_printer_will_print_consise_object() {
         let printer = JsonOutputOptions {
             utf8_strings: true,
             style: JsonStyle::Consise,
@@ -1040,12 +982,10 @@ mod tests {
             .unwrap();
 
         assert_eq!(text.as_str(), "{\"a\":[1,2,3,4,5,[]]}");
-
-        Ok(())
     }
 
     #[test]
-    fn json_printer_will_print_one_line_object() -> ProcessResult<()> {
+    fn json_printer_will_print_one_line_object() {
         let printer = JsonOutputOptions {
             utf8_strings: true,
             style: JsonStyle::OneLine,
@@ -1060,12 +1000,10 @@ mod tests {
             .unwrap();
 
         assert_eq!(text.as_str(), "{\"a\": [1, 2, 3, 4, 5, []]}");
-
-        Ok(())
     }
 
     #[test]
-    fn json_printer_will_print_pretty_object() -> ProcessResult<()> {
+    fn json_printer_will_print_pretty_object() {
         let printer = JsonOutputOptions {
             utf8_strings: true,
             style: JsonStyle::Pretty,
@@ -1083,12 +1021,10 @@ mod tests {
             text.as_str(),
             "{\n  \"a\": [\n    1,\n    2,\n    3,\n    4,\n    5,\n    []\n  ]\n}"
         );
-
-        Ok(())
     }
 
     #[test]
-    fn json_printer_will_print_consise_array() -> ProcessResult<()> {
+    fn json_printer_will_print_consise_array() {
         let printer = JsonOutputOptions {
             utf8_strings: true,
             style: JsonStyle::Consise,
@@ -1103,12 +1039,10 @@ mod tests {
             .unwrap();
 
         assert_eq!(text.as_str(), "[1,2,3,4,5,{\"a\":12},{}]");
-
-        Ok(())
     }
 
     #[test]
-    fn json_printer_will_print_one_line_array() -> ProcessResult<()> {
+    fn json_printer_will_print_one_line_array() {
         let printer = JsonOutputOptions {
             utf8_strings: true,
             style: JsonStyle::OneLine,
@@ -1123,12 +1057,10 @@ mod tests {
             .unwrap();
 
         assert_eq!(text.as_str(), "[1, 2, 3, 4, 5, {\"a\": 12}, {}]");
-
-        Ok(())
     }
 
     #[test]
-    fn json_printer_will_print_pretty_array() -> ProcessResult<()> {
+    fn json_printer_will_print_pretty_array() {
         let printer = JsonOutputOptions {
             utf8_strings: true,
             style: JsonStyle::Pretty,
@@ -1146,7 +1078,5 @@ mod tests {
             text.as_str(),
             "[\n  1,\n  2,\n  3,\n  4,\n  5,\n  {\n    \"a\": 12\n  },\n  {}\n]"
         );
-
-        Ok(())
     }
 }

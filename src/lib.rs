@@ -209,6 +209,10 @@ enum OnError {
 /// * `stdout` - A reference to the output stream to write the output.
 /// * `stderr` - A reference to the error stream to write the errors (if needed).
 /// * `stdin` - A reference to the input stream to read the inputs (if needed).
+///
+/// # Errors
+///
+/// Will return `MainError` in case of an error.
 pub fn go<R: Read>(
     cli: Cli,
     stdout: Rc<RefCell<dyn std::io::Write + Send>>,

@@ -179,9 +179,8 @@ fn read_function_name<R: Read>(reader: &mut Reader<R>) -> Result<String> {
                     || ch.is_ascii_control()
                 {
                     break;
-                } else {
-                    buf.push(ch);
                 }
+                buf.push(ch);
             }
         }
     }

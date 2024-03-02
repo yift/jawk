@@ -76,11 +76,8 @@ impl<R: Read> JsonParserUtils for Reader<R> {
         }
         let mut array = Vec::new();
         loop {
-            let value = match self.next_json_value()? {
-                Some(value) => value,
-                None => {
-                    return Err(JsonParserError::UnexpectedEof(self.where_am_i()));
-                }
+            let Some(value) = self.next_json_value()? else {
+                return Err(JsonParserError::UnexpectedEof(self.where_am_i()));
             };
             array.push(value);
             self.eat_whitespace()?;

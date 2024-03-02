@@ -349,12 +349,10 @@ impl FromStr for JsonValue {
 mod tests {
     use std::{collections::hash_map::RandomState, hash::BuildHasher};
 
-    use crate::selection;
-
     use super::*;
 
     #[test]
-    fn test_type_name() -> selection::Result<()> {
+    fn test_type_name() {
         assert_eq!(JsonValue::Null.type_name(), "null");
         assert_eq!(JsonValue::Boolean(true).type_name(), "boolean");
         assert_eq!(JsonValue::String(String::new()).type_name(), "string");
@@ -364,33 +362,29 @@ mod tests {
         );
         assert_eq!(JsonValue::Object(IndexMap::new()).type_name(), "object");
         assert_eq!(JsonValue::Array(Vec::new()).type_name(), "array");
-
-        Ok(())
     }
 
     #[test]
-    fn test_hash() -> selection::Result<()> {
-        test_hash_value_is_same("null")?;
-        test_hash_value_is_same("true")?;
-        test_hash_value_is_same("false")?;
-        test_hash_value_is_same("\"\"")?;
-        test_hash_value_is_same("\"hello\"")?;
-        test_hash_value_is_same("\"hello2\"")?;
-        test_hash_value_is_same("5.12")?;
-        test_hash_value_is_same("5.13")?;
-        test_hash_value_is_same("500")?;
-        test_hash_value_is_same("501")?;
-        test_hash_value_is_same("-500")?;
-        test_hash_value_is_same("-501")?;
-        test_hash_value_is_same("{}")?;
-        test_hash_value_is_same("{\"key\": 1, \"key-2\": 200, \"key-3\": []}")?;
-        test_hash_value_is_same("[1, 2, \"three\", {}]")?;
-        test_hash_value_is_same("[]")?;
-
-        Ok(())
+    fn test_hash() {
+        test_hash_value_is_same("null");
+        test_hash_value_is_same("true");
+        test_hash_value_is_same("false");
+        test_hash_value_is_same("\"\"");
+        test_hash_value_is_same("\"hello\"");
+        test_hash_value_is_same("\"hello2\"");
+        test_hash_value_is_same("5.12");
+        test_hash_value_is_same("5.13");
+        test_hash_value_is_same("500");
+        test_hash_value_is_same("501");
+        test_hash_value_is_same("-500");
+        test_hash_value_is_same("-501");
+        test_hash_value_is_same("{}");
+        test_hash_value_is_same("{\"key\": 1, \"key-2\": 200, \"key-3\": []}");
+        test_hash_value_is_same("[1, 2, \"three\", {}]");
+        test_hash_value_is_same("[]");
     }
 
-    fn test_hash_value_is_same(json: &str) -> selection::Result<()> {
+    fn test_hash_value_is_same(json: &str) {
         let state = RandomState::new();
 
         let val1 = to_json(json);
@@ -402,11 +396,10 @@ mod tests {
         let val2 = state.hash_one(&val2);
 
         assert_eq!(val1, val2);
-        Ok(())
     }
 
     #[test]
-    fn test_order() -> selection::Result<()> {
+    fn test_order() {
         let mut to_sort = vec![
             to_json("null"),
             to_json("[]"),
@@ -469,8 +462,6 @@ mod tests {
                 to_json("[1, 2, 3, {}]")
             ]
         );
-
-        Ok(())
     }
 
     fn to_json(json: &str) -> JsonValue {

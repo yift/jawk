@@ -450,12 +450,12 @@ pub fn get_object_functions() -> FunctionsGroup {
                                 self.0.apply(value, 2),
                             )
                         {
-                            if !map.contains_key(&key) {
+                            if map.contains_key(&key) {
+                                Some(map.into())
+                            } else {
                                 let mut new_map = map.clone();
                                 new_map.insert(key, val);
                                 Some(new_map.into())
-                            } else {
-                                Some(map.into())
                             }
                         } else {
                             None

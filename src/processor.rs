@@ -203,9 +203,9 @@ impl Context {
             regex_cache: self.regex_cache.clone(),
         }
     }
-    pub fn build(&self) -> Option<JsonValue> {
+    pub fn build(&self) -> JsonValue {
         if self.results.is_empty() {
-            Some(self.input().deref().clone())
+            self.input().deref().clone()
         } else {
             let mut mp = IndexMap::new();
             for (title, value) in &self.results {
@@ -216,7 +216,7 @@ impl Context {
                     None => {}
                 }
             }
-            Some(JsonValue::Object(mp))
+            JsonValue::Object(mp)
         }
     }
     pub fn to_list(&self) -> Vec<Option<JsonValue>> {

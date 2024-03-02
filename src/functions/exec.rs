@@ -42,7 +42,7 @@ pub fn get_exec_functions() -> FunctionsGroup {
                         let mut value = IndexMap::with_capacity(6);
                         value.insert("success".into(), result.status.success().into());
                         if let Some(code) = result.status.code() {
-                            let code = code as f64;
+                            let code = f64::from(code);
                             value.insert("exit_code".into(), code.into());
                         }
                         value.insert(
@@ -137,7 +137,7 @@ pub fn get_exec_functions() -> FunctionsGroup {
                         let Ok(child) = command.spawn() else {
                             return None;
                         };
-                        Some((child.id() as f64).into())
+                        Some(f64::from(child.id()).into())
                     }
                 }
                 Rc::new(Impl(vec))
