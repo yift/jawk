@@ -32,5 +32,5 @@ echo '{"a": 1}{"a": 10}{"a": 32}' | docker run -i --rm yiftach/jawk --select '.a
 Some operating system binaries are available in:
 * [Linux GNU](jawk-x86_64-unknown-linux-gnu/jawk)
 * [Windows](jawk-x86_64-pc-windows-msvc/jawk.exe)
-* [Linux musl](jawk-x86_64-unknown-linux-musl/kawk)
+* [Linux musl](jawk-x86_64-unknown-linux-musl/jawk)
 * [Mac OS](jawk-x86_64-apple-darwin/jawk)
