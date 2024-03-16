@@ -2,16 +2,16 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use crate::functions::basic_functions::get_basic_functions;
-use crate::functions::boolean_functions::get_boolean_functions;
-use crate::functions::exec::get_exec_functions;
-use crate::functions::list_functions::get_list_functions;
-use crate::functions::number_functions::get_number_functions;
-use crate::functions::object_functions::get_object_functions;
-use crate::functions::string_functions::get_string_functions;
-use crate::functions::time_functions::get_time_functions;
-use crate::functions::type_functions::get_type_functions;
-use crate::functions::variables::get_variable_functions;
+use crate::functions::basic::group as get_basic_functions;
+use crate::functions::boolean::group as get_boolean_functions;
+use crate::functions::list::group as get_list_functions;
+use crate::functions::number::group as get_number_functions;
+use crate::functions::object::group as get_object_functions;
+use crate::functions::proccess::group as get_exec_functions;
+use crate::functions::string::group as get_string_functions;
+use crate::functions::time::group as get_time_functions;
+use crate::functions::type_group::group as get_type_functions;
+use crate::functions::variables::group as get_variable_functions;
 use crate::json_parser::JsonParser;
 use crate::processor::Context;
 use crate::{
