@@ -1,5 +1,5 @@
 use std::io::Error as IoError;
-use std::num::{ParseFloatError, ParseIntError};
+use std::num::{IntErrorKind, ParseFloatError, ParseIntError};
 use std::{io::Read, string::FromUtf8Error};
 
 use indexmap::IndexMap;
@@ -23,6 +23,7 @@ trait JsonParserUtils {
     fn read_object(&mut self) -> Result<JsonValue>;
     fn read_number(&mut self) -> Result<JsonValue>;
     fn read_string(&mut self) -> Result<JsonValue>;
+    fn parse_to_double(&self, str: &str) -> Result<JsonValue>;
 }
 
 impl<R: Read> JsonParserUtils for Reader<R> {
@@ -202,19 +203,29 @@ impl<R: Read> JsonParserUtils for Reader<R> {
         };
 
         if double {
-            match str.parse::<f64>() {
-                Ok(f) => Ok(f.into()),
-                Err(e) => Err(JsonParserError::NumberParseFloatError(self.where_am_i(), e)),
-            }
+            self.parse_to_double(&str)
         } else if negative {
             match str.parse::<i64>() {
                 Ok(i) => Ok(JsonValue::Number(NumberValue::Negative(i))),
-                Err(e) => Err(JsonParserError::NumberParseIntError(self.where_am_i(), e)),
+                Err(e) => {
+                    let kind = e.kind();
+                    if kind == &IntErrorKind::PosOverflow || kind == &IntErrorKind::NegOverflow {
+                        self.parse_to_double(&str)
+                    } else {
+                        Err(JsonParserError::NumberParseIntError(self.where_am_i(), e))
+                    }
+                }
             }
         } else {
             match str.parse::<u64>() {
                 Ok(u) => Ok(JsonValue::Number(NumberValue::Positive(u))),
-                Err(e) => Err(JsonParserError::NumberParseIntError(self.where_am_i(), e)),
+                Err(e) => {
+                    if e.kind() == &IntErrorKind::PosOverflow {
+                        self.parse_to_double(&str)
+                    } else {
+                        Err(JsonParserError::NumberParseIntError(self.where_am_i(), e))
+                    }
+                }
             }
         }
     }
@@ -307,6 +318,23 @@ impl<R: Read> JsonParserUtils for Reader<R> {
             }
         }
     }
+
+    #[inline]
+    fn parse_to_double(&self, str: &str) -> Result<JsonValue> {
+        match str.parse::<f64>() {
+            Ok(f) => {
+                if f.is_finite() {
+                    Ok(f.into())
+                } else {
+                    Err(JsonParserError::NumberParseInfiniteNumber(
+                        self.where_am_i(),
+                        str.to_string(),
+                    ))
+                }
+            }
+            Err(e) => Err(JsonParserError::NumberParseFloatError(self.where_am_i(), e)),
+        }
+    }
 }
 
 impl<R: Read> JsonParser for Reader<R> {
@@ -360,6 +388,8 @@ pub enum JsonParserError {
     NumberParseIntError(Location, ParseIntError),
     #[error("{0}: {1}")]
     NumberParseFloatError(Location, ParseFloatError),
+    #[error("{0}: Unsupported number: {1}")]
+    NumberParseInfiniteNumber(Location, String),
     #[error(
         "{0}: Reserved word '{1}' started but was not completed, got '{2}', should have been '{3}'"
     )]
@@ -720,24 +750,61 @@ mod tests {
     }
 
     #[test]
-    fn invalid_number() {
+    fn invalid_number_that_can_be_double() -> Result<()> {
         let str = "111111111111111111111111111111119999999999999999999999".to_string();
+        let mut reader = from_string(&str);
+
+        assert_eq!(
+            reader.next_json_value()?,
+            Some(JsonValue::Number(NumberValue::Float(1.111111111111111e53)))
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn invalid_number_that_can_not_be_double() {
+        let str = "1e11111111111111111111111111111119999999999999999999999".to_string();
         let mut reader = from_string(&str);
 
         assert!(matches!(
             reader.next_json_value(),
-            Err(JsonParserError::NumberParseIntError(_, _))
+            Err(JsonParserError::NumberParseInfiniteNumber(_, _)),
         ));
     }
 
     #[test]
-    fn invalid_negative_number() {
+    fn invalid_negative_number_that_can_be_double() -> Result<()> {
         let str = "-111111111111111111111111111111119999999999999999999999".to_string();
+        let mut reader = from_string(&str);
+
+        assert_eq!(
+            reader.next_json_value()?,
+            Some(JsonValue::Number(NumberValue::Float(-1.111111111111111e53)))
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn invalid_negative_number_that_can_not_be_double() {
+        let str = "-1e11111111111111111111111111111119999999999999999999999".to_string();
         let mut reader = from_string(&str);
 
         assert!(matches!(
             reader.next_json_value(),
-            Err(JsonParserError::NumberParseIntError(_, _))
+            Err(JsonParserError::NumberParseInfiniteNumber(_, _)),
+        ));
+    }
+
+    #[test]
+    fn invalid_double_number() {
+        let str = "-1.4e11111111111111111111111111111119999999999999999999999".to_string();
+        let mut reader = from_string(&str);
+
+        assert!(matches!(
+            reader.next_json_value(),
+            Err(JsonParserError::NumberParseInfiniteNumber(_, _)),
         ));
     }
 
