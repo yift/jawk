@@ -76,11 +76,8 @@ impl<R: Read> JsonParserUtils for Reader<R> {
         }
         let mut array = Vec::new();
         loop {
-            let value = match self.next_json_value()? {
-                Some(value) => value,
-                None => {
-                    return Err(JsonParserError::UnexpectedEof(self.where_am_i()));
-                }
+            let Some(value) = self.next_json_value()? else {
+                return Err(JsonParserError::UnexpectedEof(self.where_am_i()));
             };
             array.push(value);
             self.eat_whitespace()?;
@@ -411,6 +408,7 @@ mod tests {
 
         Ok(())
     }
+
     #[test]
     fn parse_true() -> Result<()> {
         let str = "true".to_string();
@@ -440,7 +438,7 @@ mod tests {
             reader.next_json_value()?,
             Some(JsonValue::Array(vec![
                 JsonValue::Boolean(false),
-                JsonValue::Number(NumberValue::Positive(1))
+                JsonValue::Number(NumberValue::Positive(1)),
             ]))
         );
 
@@ -484,6 +482,7 @@ mod tests {
 
         Ok(())
     }
+
     #[test]
     fn parse_exp_float() -> Result<()> {
         let str = "1e-4".to_string();
@@ -496,6 +495,7 @@ mod tests {
 
         Ok(())
     }
+
     #[test]
     fn parse_positive_exp_float() -> Result<()> {
         let str = "1e+2".to_string();
@@ -508,6 +508,7 @@ mod tests {
 
         Ok(())
     }
+
     #[test]
     fn parse_negative_exp_float() -> Result<()> {
         let str = "-1e4".to_string();
@@ -520,6 +521,7 @@ mod tests {
 
         Ok(())
     }
+
     #[test]
     fn parse_int() -> Result<()> {
         let str = "100".to_string();
@@ -532,6 +534,7 @@ mod tests {
 
         Ok(())
     }
+
     #[test]
     fn parse_zero() -> Result<()> {
         let str = "0".to_string();
@@ -544,6 +547,7 @@ mod tests {
 
         Ok(())
     }
+
     #[test]
     fn parse_negative_int() -> Result<()> {
         let str = "-100".to_string();
@@ -556,6 +560,7 @@ mod tests {
 
         Ok(())
     }
+
     #[test]
     fn valid_escpaes() -> Result<()> {
         let str = "\"\\\"\\\\\\/\\b\\f\\n\\r\\t\\u263a\\u263A\"".to_string();
@@ -592,6 +597,7 @@ mod tests {
             Err(JsonParserError::UnexpectedEof(_))
         ));
     }
+
     #[test]
     fn never_ended_array() {
         let str = "[1, 2".to_string();
@@ -602,6 +608,7 @@ mod tests {
             Err(JsonParserError::UnexpectedEof(_))
         ));
     }
+
     #[test]
     fn never_ended_array_with_comma() {
         let str = "[1, 2, ".to_string();
@@ -612,6 +619,7 @@ mod tests {
             Err(JsonParserError::UnexpectedEof(_))
         ));
     }
+
     #[test]
     fn array_with_no_comma() {
         let str = "[1 2]".to_string();
@@ -622,6 +630,7 @@ mod tests {
             Err(JsonParserError::UnexpectedCharacter(_, _, _))
         ));
     }
+
     #[test]
     fn missing_colon_after_key() {
         let str = "{\"key\" 1}".to_string();
@@ -632,6 +641,7 @@ mod tests {
             Err(JsonParserError::UnexpectedCharacter(_, _, _))
         ));
     }
+
     #[test]
     fn noting_after_key() {
         let str = "{\"key\"".to_string();
@@ -642,6 +652,7 @@ mod tests {
             Err(JsonParserError::UnexpectedEof(_))
         ));
     }
+
     #[test]
     fn noting_after_colon() {
         let str = "{\"key\" :".to_string();
@@ -652,6 +663,7 @@ mod tests {
             Err(JsonParserError::UnexpectedEof(_))
         ));
     }
+
     #[test]
     fn not_a_string_key() {
         let str = "{1 : 2}".to_string();
@@ -662,6 +674,7 @@ mod tests {
             Err(JsonParserError::StringKeyMissing(_, _))
         ));
     }
+
     #[test]
     fn missing_next_key() {
         let str = "{\"1\" : 2, ".to_string();
@@ -672,6 +685,7 @@ mod tests {
             Err(JsonParserError::UnexpectedEof(_))
         ));
     }
+
     #[test]
     fn eof_after_value() {
         let str = "{\"1\" : 2".to_string();
@@ -682,6 +696,7 @@ mod tests {
             Err(JsonParserError::UnexpectedEof(_))
         ));
     }
+
     #[test]
     fn unexpected_char_after_value() {
         let str = "{\"1\" : 2 44".to_string();
@@ -692,6 +707,7 @@ mod tests {
             Err(JsonParserError::UnexpectedCharacter(_, _, _))
         ));
     }
+
     #[test]
     fn eof_after_minus() {
         let str = "-".to_string();
@@ -702,6 +718,7 @@ mod tests {
             Err(JsonParserError::UnexpectedEof(_))
         ));
     }
+
     #[test]
     fn invalid_number() {
         let str = "111111111111111111111111111111119999999999999999999999".to_string();
@@ -712,6 +729,7 @@ mod tests {
             Err(JsonParserError::NumberParseIntError(_, _))
         ));
     }
+
     #[test]
     fn invalid_negative_number() {
         let str = "-111111111111111111111111111111119999999999999999999999".to_string();
@@ -722,6 +740,7 @@ mod tests {
             Err(JsonParserError::NumberParseIntError(_, _))
         ));
     }
+
     #[test]
     fn never_ending_string() {
         let str = "\"test".to_string();
@@ -732,6 +751,7 @@ mod tests {
             Err(JsonParserError::UnexpectedEof(_))
         ));
     }
+
     #[test]
     fn never_ending_escape() {
         let str = "\"\\".to_string();
@@ -742,6 +762,7 @@ mod tests {
             Err(JsonParserError::UnexpectedEof(_))
         ));
     }
+
     #[test]
     fn invalid_hex() {
         let str = "\"\\u263P\"".to_string();
@@ -752,6 +773,7 @@ mod tests {
             Err(JsonParserError::UnexpectedCharacter(_, _, _))
         ));
     }
+
     #[test]
     fn incomplete_hex() {
         let str = "\"\\u263".to_string();
@@ -762,6 +784,7 @@ mod tests {
             Err(JsonParserError::UnexpectedEof(_))
         ));
     }
+
     #[test]
     fn incomplete_uncide() {
         let str = "\"\\uD807\"".to_string();
@@ -772,6 +795,7 @@ mod tests {
             Err(JsonParserError::InvalidChacterHex(_, _))
         ));
     }
+
     #[test]
     fn unknonw_escape() {
         let str = "\"\\q\"".to_string();
@@ -782,6 +806,7 @@ mod tests {
             Err(JsonParserError::UnexpectedCharacter(_, _, _))
         ));
     }
+
     #[test]
     fn unknonw_char() {
         let str = "hello".to_string();

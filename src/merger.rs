@@ -34,9 +34,8 @@ impl Process for Merger {
         Ok(())
     }
     fn process(&mut self, context: Context) -> Result<ProcessDesision> {
-        if let Some(value) = context.build() {
-            self.data.push(value);
-        }
+        let value = context.build();
+        self.data.push(value);
         Ok(ProcessDesision::Continue)
     }
     fn start(&mut self, titles_so_far: Titles) -> Result<()> {

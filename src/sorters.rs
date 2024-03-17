@@ -44,8 +44,7 @@ impl FromStr for Sorter {
         let sort_by = read_getter(&mut reader)?;
         let direction = read_to_eof(&mut reader)?.to_uppercase();
         let direction = match direction.as_str() {
-            "" => Direction::Asc,
-            "ASC" => Direction::Asc,
+            "" | "ASC" => Direction::Asc,
             "DESC" => Direction::Desc,
             dir => {
                 return Err(SorterParserError::UnknownOrder(dir.to_string()));
@@ -59,15 +58,15 @@ impl FromStr for Sorter {
 fn read_to_eof<R: Read>(r: &mut Reader<R>) -> Result<String, SelectionParseError> {
     let mut chars = Vec::new();
     loop {
-        match r.next()? {
-            Some(ch) => chars.push(ch),
-            None => {
-                let str = String::from_utf8(chars)?;
-                return Ok(str.trim().to_string());
-            }
+        if let Some(ch) = r.next()? {
+            chars.push(ch)
+        } else {
+            let str = String::from_utf8(chars)?;
+            return Ok(str.trim().to_string());
         }
     }
 }
+
 impl Sorter {
     pub fn create_processor(
         &self,
@@ -83,6 +82,7 @@ impl Sorter {
         })
     }
 }
+
 type OrderedData = BTreeMap<JsonValue, VecDeque<Context>>;
 
 struct SortProcess {
@@ -131,6 +131,7 @@ impl Process for SortProcess {
         self.next.complete()
     }
 }
+
 impl SortProcess {
     fn remove_last_item(&mut self) {
         match self.direction {
@@ -166,39 +167,31 @@ mod tests {
     use crate::json_value::JsonValue;
 
     #[test]
-    fn sort_will_read_asc_correctly() -> ProcessResult<()> {
+    fn sort_will_read_asc_correctly() {
         let sorter = Sorter::from_str("1 AsC").unwrap();
 
         assert_eq!(sorter.direction, Direction::Asc);
-
-        Ok(())
     }
 
     #[test]
-    fn sort_will_read_desc_correctly() -> ProcessResult<()> {
+    fn sort_will_read_desc_correctly() {
         let sorter = Sorter::from_str("1 DeSc").unwrap();
 
         assert_eq!(sorter.direction, Direction::Desc);
-
-        Ok(())
     }
 
     #[test]
-    fn sort_will_default_to_asc() -> ProcessResult<()> {
+    fn sort_will_default_to_asc() {
         let sorter = Sorter::from_str(" 1 ").unwrap();
 
         assert_eq!(sorter.direction, Direction::Asc);
-
-        Ok(())
     }
 
     #[test]
-    fn sort_will_fail_with_wrong_direction() -> ProcessResult<()> {
+    fn sort_will_fail_with_wrong_direction() {
         let error = Sorter::from_str(" 1 bla").err().unwrap();
 
         assert!(matches!(error, SorterParserError::UnknownOrder(_)));
-
-        Ok(())
     }
 
     #[test]
@@ -257,7 +250,7 @@ mod tests {
                 "z".into(),
                 (2).into(),
                 (3.4).into(),
-                (20).into()
+                (20).into(),
             ]
         );
 
@@ -320,7 +313,7 @@ mod tests {
                 "a".into(),
                 "a".into(),
                 false.into(),
-                JsonValue::Null
+                JsonValue::Null,
             ]
         );
 

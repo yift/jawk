@@ -45,7 +45,7 @@ mod tests {
     use crate::{reader::from_string, selection::SelectionParseError};
 
     #[test]
-    fn parse_return_error_for_nothing() -> Result<()> {
+    fn parse_return_error_for_nothing() {
         let text = String::new();
         let mut reader = from_string(&text);
         let error = parse_get_selection(&mut reader).err().unwrap();
@@ -54,12 +54,10 @@ mod tests {
             error,
             SelectionParseError::JsonError(JsonParserError::UnexpectedEof(_))
         ));
-
-        Ok(())
     }
 
     #[test]
-    fn parse_return_error_for_unexpected_char() -> Result<()> {
+    fn parse_return_error_for_unexpected_char() {
         let text = "hi".to_string();
         let mut reader = from_string(&text);
         let error = parse_get_selection(&mut reader).err().unwrap();
@@ -68,12 +66,10 @@ mod tests {
             error,
             SelectionParseError::JsonError(JsonParserError::UnexpectedEof(_))
         ));
-
-        Ok(())
     }
 
     #[test]
-    fn parse_return_error_for_empty_name() -> Result<()> {
+    fn parse_return_error_for_empty_name() {
         let text = "//".to_string();
         let mut reader = from_string(&text);
         let error = parse_get_selection(&mut reader).err().unwrap();
@@ -82,12 +78,10 @@ mod tests {
             error,
             SelectionParseError::JsonError(JsonParserError::UnexpectedEof(_))
         ));
-
-        Ok(())
     }
 
     #[test]
-    fn get_return_the_correct_selection() -> Result<()> {
+    fn get_return_the_correct_selection() {
         let text = "/test/".to_string();
         let mut reader = from_string(&text);
         let selection = parse_get_selection(&mut reader).unwrap();
@@ -98,12 +92,10 @@ mod tests {
         let value = selection.get(&input);
 
         assert_eq!(result, value);
-
-        Ok(())
     }
 
     #[test]
-    fn get_return_the_correct_selection_when_not_found() -> Result<()> {
+    fn get_return_the_correct_selection_when_not_found() {
         let text = "/test-1/".to_string();
         let mut reader = from_string(&text);
         let selection = parse_get_selection(&mut reader).unwrap();
@@ -115,7 +107,5 @@ mod tests {
         let value = selection.get(&input);
 
         assert_eq!(None, value);
-
-        Ok(())
     }
 }

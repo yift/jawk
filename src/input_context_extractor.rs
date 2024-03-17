@@ -24,6 +24,7 @@ enum Type {
     StartedAtCharNumber,
     EndAtCharNumber,
 }
+
 struct InputContextExtractor {
     extration: Type,
 }
@@ -45,6 +46,7 @@ impl InputContextExtractor {
         Ok(Self { extration })
     }
 }
+
 impl Get for InputContextExtractor {
     fn get(&self, value: &Context) -> Option<JsonValue> {
         if let Some(context) = value.input_context() {
@@ -98,54 +100,52 @@ mod tests {
 
     #[test]
     fn from_name_return_the_correct_name_index() -> SelectionResult<()> {
-        from_name_return_the_correct_name("index", Type::Index)
+        from_name_return_the_correct_name("index", &Type::Index)
     }
 
     #[test]
     fn from_name_return_the_correct_name_index_in_file() -> SelectionResult<()> {
-        from_name_return_the_correct_name("index-in-file", Type::IndexInFile)
+        from_name_return_the_correct_name("index-in-file", &Type::IndexInFile)
     }
 
     #[test]
     fn from_name_return_the_correct_name_started_line() -> SelectionResult<()> {
-        from_name_return_the_correct_name("started-at-line-number", Type::StartedAtLineNumber)
+        from_name_return_the_correct_name("started-at-line-number", &Type::StartedAtLineNumber)
     }
 
     #[test]
     fn from_name_return_the_correct_name_ended_line() -> SelectionResult<()> {
-        from_name_return_the_correct_name("ended-at-line-number", Type::EndsAtLineNumber)
+        from_name_return_the_correct_name("ended-at-line-number", &Type::EndsAtLineNumber)
     }
 
     #[test]
     fn from_name_return_the_correct_name_started_char() -> SelectionResult<()> {
-        from_name_return_the_correct_name("started-at-char-number", Type::StartedAtCharNumber)
+        from_name_return_the_correct_name("started-at-char-number", &Type::StartedAtCharNumber)
     }
 
     #[test]
     fn from_name_return_the_correct_name_ended_char() -> SelectionResult<()> {
-        from_name_return_the_correct_name("ended-at-char-number", Type::EndAtCharNumber)
+        from_name_return_the_correct_name("ended-at-char-number", &Type::EndAtCharNumber)
     }
 
     #[test]
     fn from_name_return_the_correct_name_file_name() -> SelectionResult<()> {
-        from_name_return_the_correct_name("file-name", Type::FileName)
+        from_name_return_the_correct_name("file-name", &Type::FileName)
     }
 
-    fn from_name_return_the_correct_name(name: &str, expected: Type) -> SelectionResult<()> {
+    fn from_name_return_the_correct_name(name: &str, expected: &Type) -> SelectionResult<()> {
         let got = InputContextExtractor::from_name(name.to_string())?.extration;
 
-        assert_eq!(got, expected);
+        assert_eq!(&got, expected);
 
         Ok(())
     }
 
     #[test]
-    fn from_name_return_error_for_unknown_name() -> SelectionResult<()> {
+    fn from_name_return_error_for_unknown_name() {
         let err = InputContextExtractor::from_name("nop".to_string()).err();
 
         assert!(err.is_some());
-
-        Ok(())
     }
 
     #[test]
@@ -387,14 +387,12 @@ mod tests {
     }
 
     #[test]
-    fn parse_will_create_exception_for_unknwon_name() -> SelectionResult<()> {
+    fn parse_will_create_exception_for_unknwon_name() {
         let text = "test".into();
         let mut reader = from_string(&text);
 
         let err = parse_input_context(&mut reader).err();
 
         assert!(err.is_some());
-
-        Ok(())
     }
 }

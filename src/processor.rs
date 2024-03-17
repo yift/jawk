@@ -30,6 +30,7 @@ pub enum ProcessError {
 pub struct Titles {
     titles: Vec<Rc<String>>,
 }
+
 impl Titles {
     pub fn with_title(&self, title: &Rc<String>) -> Self {
         let mut titles = self.titles.clone();
@@ -50,6 +51,7 @@ impl Titles {
         lst
     }
 }
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ContextKey {
     Value(JsonValue),
@@ -63,6 +65,7 @@ pub struct InputContext {
     pub file_index: u64,
     pub index: u64,
 }
+
 pub struct Context {
     input: Rc<JsonValue>,
     results: Vec<(Rc<String>, Option<JsonValue>)>,
@@ -72,6 +75,7 @@ pub struct Context {
     input_context: Option<Rc<InputContext>>,
     regex_cache: RegexCache,
 }
+
 impl Context {
     pub fn new_empty() -> Self {
         Context {
@@ -203,9 +207,9 @@ impl Context {
             regex_cache: self.regex_cache.clone(),
         }
     }
-    pub fn build(&self) -> Option<JsonValue> {
+    pub fn build(&self) -> JsonValue {
         if self.results.is_empty() {
-            Some(self.input().deref().clone())
+            self.input().deref().clone()
         } else {
             let mut mp = IndexMap::new();
             for (title, value) in &self.results {
@@ -216,7 +220,7 @@ impl Context {
                     None => {}
                 }
             }
-            Some(JsonValue::Object(mp))
+            JsonValue::Object(mp)
         }
     }
     pub fn to_list(&self) -> Vec<Option<JsonValue>> {
@@ -278,6 +282,7 @@ pub enum ProcessDesision {
     Continue,
     Break,
 }
+
 pub type Result<T> = std::result::Result<T, ProcessError>;
 
 pub trait Process {

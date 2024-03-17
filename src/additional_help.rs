@@ -16,6 +16,7 @@ use crate::{
 pub trait AdditionalHelpFactory {
     fn get() -> Vec<String>;
 }
+
 pub fn create_possible_values() -> PossibleValuesParser {
     let mut values = create_possible_fn_help_types();
     values.insert(
@@ -28,6 +29,7 @@ pub fn create_possible_values() -> PossibleValuesParser {
     }
     values.into()
 }
+
 #[cfg(all(not(target_os = "windows"), feature = "termimad-help"))]
 fn make_skin() -> MadSkin {
     let mut skin = MadSkin::default();
@@ -50,15 +52,18 @@ fn display_help(w: &mut Stdout, help: &str) -> Result<(), HelpError> {
     writeln!(w, "{help}")?;
     Ok(())
 }
+
 #[cfg(any(target_os = "windows", not(feature = "termimad-help")))]
 fn display_help(w: &mut Stdout, help: &String) -> Result<(), HelpError> {
     printout_help(w, help)?;
     Ok(())
 }
+
 fn printout_help(w: &mut Stdout, help: &String) -> Result<(), HelpError> {
     writeln!(w, "{help}")?;
     Ok(())
 }
+
 pub fn display_additional_help(help_type: &str) -> Result<(), HelpError> {
     #[cfg(feature = "create-docs")]
     {
@@ -83,6 +88,7 @@ pub fn display_additional_help(help_type: &str) -> Result<(), HelpError> {
 
     Ok(())
 }
+
 #[derive(Debug, Error)]
 pub enum HelpError {
     #[error("{0}")]

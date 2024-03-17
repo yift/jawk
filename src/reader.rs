@@ -11,12 +11,14 @@ pub struct Location {
     pub line_number: usize,
     pub char_number: usize,
 }
+
 pub struct Reader<R: Read> {
     bytes: Bytes<R>,
     current_byte: Option<u8>,
     location: Location,
     eof: bool,
 }
+
 pub fn from_file(file_name: &PathBuf) -> Result<Reader<BufReader<File>>> {
     let file = File::open(file_name)?;
     let reader = BufReader::new(file);
@@ -25,9 +27,11 @@ pub fn from_file(file_name: &PathBuf) -> Result<Reader<BufReader<File>>> {
         file_name.to_str().map(ToString::to_string),
     ))
 }
+
 pub fn from_std_in<R: Read>(stdin: R) -> Reader<R> {
     Reader::new(stdin, None)
 }
+
 pub fn from_string(source: &String) -> Reader<&[u8]> {
     let reader = source.as_bytes();
     let mut name = source.clone();
@@ -87,10 +91,6 @@ impl<R: Read> Reader<R> {
     pub fn eat_whitespace(&mut self) -> Result<()> {
         loop {
             match self.peek()? {
-                None => {
-                    return Ok(());
-                }
-
                 Some(b' ' | b'\n' | b'\t' | b'\r') => {
                     self.next()?;
                 }

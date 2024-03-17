@@ -14,11 +14,13 @@ enum Value {
     Macro(Rc<dyn Get>),
     Calculated(JsonValue),
 }
+
 #[derive(Clone)]
 pub struct PreSet {
     key: String,
     value: Value,
 }
+
 #[derive(Debug, Error)]
 pub enum PreSetParserError {
     #[error("{0}")]
@@ -178,7 +180,7 @@ mod tests {
     }
 
     #[test]
-    fn no_equal_return_error() -> ProcessResult<()> {
+    fn no_equal_return_error() {
         let list = vec!["name".to_string()];
         struct Next;
         impl Process for Next {
@@ -197,12 +199,10 @@ mod tests {
         let error = list.create_process(next).err().unwrap();
 
         assert!(matches!(error, PreSetParserError::NoEqualsError(_)));
-
-        Ok(())
     }
 
     #[test]
-    fn no_name_variable_return_error() -> ProcessResult<()> {
+    fn no_name_variable_return_error() {
         let list = vec!["=1".to_string()];
         struct Next;
         impl Process for Next {
@@ -221,12 +221,10 @@ mod tests {
         let error = list.create_process(next).err().unwrap();
 
         assert!(matches!(error, PreSetParserError::EmptyName(_)));
-
-        Ok(())
     }
 
     #[test]
-    fn no_name_def_return_error() -> ProcessResult<()> {
+    fn no_name_def_return_error() {
         let list = vec!["@=1".to_string()];
         struct Next;
         impl Process for Next {
@@ -245,11 +243,10 @@ mod tests {
         let error = list.create_process(next).err().unwrap();
 
         assert!(matches!(error, PreSetParserError::EmptyName(_)));
-
-        Ok(())
     }
+
     #[test]
-    fn duplicate_name_return_error() -> ProcessResult<()> {
+    fn duplicate_name_return_error() {
         let list = vec!["name=1".to_string(), "name=2".to_string()];
         struct Next;
         impl Process for Next {
@@ -268,11 +265,10 @@ mod tests {
         let error = list.create_process(next).err().unwrap();
 
         assert!(matches!(error, PreSetParserError::DuplicateKeys(_)));
-
-        Ok(())
     }
+
     #[test]
-    fn duplicate_def_name_return_error() -> ProcessResult<()> {
+    fn duplicate_def_name_return_error() {
         let list = vec!["@name=1".to_string(), "@name=2".to_string()];
         struct Next;
         impl Process for Next {
@@ -291,7 +287,5 @@ mod tests {
         let error = list.create_process(next).err().unwrap();
 
         assert!(matches!(error, PreSetParserError::DuplicateKeys(_)));
-
-        Ok(())
     }
 }

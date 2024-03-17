@@ -8,6 +8,7 @@ struct UsageExample {
     expected_output: Option<JsonValue>,
     previous_selection: HashMap<String, Option<JsonValue>>,
 }
+
 impl UsageExample {
     fn new(selection: &str, input: &str, expected_output: &str) -> Self {
         let expected_output = JsonValue::from_str(expected_output).ok();
@@ -32,11 +33,13 @@ impl UsageExample {
         }
     }
 }
+
 struct SelectionHelp {
     name: &'static str,
     description: Vec<&'static str>,
     examples: Vec<UsageExample>,
 }
+
 impl SelectionHelp {
     fn new(name: &'static str, description: Vec<&'static str>) -> Self {
         SelectionHelp {
@@ -51,6 +54,7 @@ impl SelectionHelp {
         self
     }
 }
+
 fn build_help() -> Vec<SelectionHelp> {
     vec![
         SelectionHelp::new(
@@ -61,8 +65,8 @@ fn build_help() -> Vec<SelectionHelp> {
                 "* Use `.<name>` to access a key within an object. If the name has spaces, use the `get` function instead.",
                 "* Use `#<index>` to access an element in an array.",
                 "* Use `^` to access the \"parent\" input. That is, while in a functional function - like `filter` or `map` - use `^` to access the original input and `^^` to access the input of that input and so on.",
-                "* One can use a combination of all of the aboove, i.e. `^.key-1.key-2#3.key-4`."
-            ]
+                "* One can use a combination of all of the aboove, i.e. `^.key-1.key-2#3.key-4`.",
+            ],
         )
             .with_example(UsageExample::new(".", r#"{"key": 12}"#, r#"{"key": 12}"#))
             .with_example(UsageExample::new(".key-1.key-2", r#"{"key-1": {"key-2": 300}}"#, "300"))
@@ -74,12 +78,12 @@ fn build_help() -> Vec<SelectionHelp> {
                 UsageExample::new(
                     "(.map (.map (.+ (size ^.) (size ^^.))))",
                     "[[1, 2, 3], [4, 5], [6]]",
-                    "[[7, 8, 9], [9, 10], [10]]"
+                    "[[7, 8, 9], [9, 10], [10]]",
                 )
             ),
         SelectionHelp::new(
             "Literal value",
-            vec!["Used to select constant value. Use a simple JSON format. The input is ignored."]
+            vec!["Used to select constant value. Use a simple JSON format. The input is ignored."],
         )
             .with_example(UsageExample::new("4001.1", "", "4001.1"))
             .with_example(UsageExample::new("null", "", "null"))
@@ -91,8 +95,8 @@ fn build_help() -> Vec<SelectionHelp> {
                 "Invoke a function. Has a format of `(<function-name> <arg0> <arg1> ..)` where `<argN>` are other selection.",
                 "Alternative format is `(.<function-name> <arg1>...)` - in that case, the first argument will be the input (i.e. `.`).",
                 "The argument can be seperated by comma or whitespace.",
-                "See list of available functions in functions additional help."
-            ]
+                "See list of available functions in functions additional help.",
+            ],
         )
             .with_example(UsageExample::new("(len .)", "[1, 4, {}, 100]", "4"))
             .with_example(UsageExample::new("(.len)", "[1, 4, {}, 100]", "4"))
@@ -101,37 +105,37 @@ fn build_help() -> Vec<SelectionHelp> {
                 UsageExample::new(
                     "(map (range 10) (+ . 5))",
                     "",
-                    "[5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+                    "[5, 6, 7, 8, 9, 10, 11, 12, 13, 14]",
                 )
             ),
         SelectionHelp::new(
             "Variables",
             vec![
                 "Use a variable (either one the was predefined by the `set` command line argument or one that was defined by the `set` function).",
-                "The format to use varaibles is `:<variable-name>`. Note that the variable is defiend once."
-            ]
+                "The format to use varaibles is `:<variable-name>`. Note that the variable is defiend once.",
+            ],
         )
             .with_example(UsageExample::new(":nothing", "", ""))
             .with_example(
                 UsageExample::new(
                     r#"(set "length" (.len) (.map (.+ :length)))"#,
                     "[1, 2, 3]",
-                    "[4, 5, 6]"
+                    "[4, 5, 6]",
                 )
             ),
         SelectionHelp::new(
             "Macros",
             vec![
                 "Use a macro (either one the was predefined by the `set` command line argument or one that was defined by the `define` function).",
-                "The format to use a macro is `@<variable-name>`. Note that the macro is evelated on each call."
-            ]
+                "The format to use a macro is `@<variable-name>`. Note that the macro is evelated on each call.",
+            ],
         )
             .with_example(UsageExample::new(":nothing", "", ""))
             .with_example(
                 UsageExample::new(
                     r#"(define "even" (= 0 (.% 2)) (.filter @even))"#,
                     "[1, 2, 3, 4, 5, 6, 7]",
-                    "[2, 4, 6]"
+                    "[2, 4, 6]",
                 )
             ),
         SelectionHelp::new(
@@ -144,32 +148,32 @@ fn build_help() -> Vec<SelectionHelp> {
                 "* `&started-at-char-number` - To get the char number within the line within the input file in which the input started.",
                 "* `&ended-at-line-number` - To get the line number within the input file in which the input ended.",
                 "* `&ended-at-char-number` - To get the char number within the line within the input file in which the input ended.",
-                "* `&file-name` - To get the name of the input file from which the input was parsed (will be empty for stdin input)."
-            ]
+                "* `&file-name` - To get the name of the input file from which the input was parsed (will be empty for stdin input).",
+            ],
         ).with_example(
             UsageExample::new(
                 r"(- &ended-at-char-number &started-at-char-number)",
                 r#""test""#,
-                "6"
+                "6",
             )
         ),
         SelectionHelp::new(
             "Previous selected values",
             vec![
                 "Reuse previoulsy selected value. Use this to reuse a value that had been selected previously. This is not available during filtering, and one can only refere to values that had been selected before.",
-                "The format is `/<selection-name>/` where the *selection-name* is the name of the selection."
-            ]
+                "The format is `/<selection-name>/` where the *selection-name* is the name of the selection.",
+            ],
         )
             .with_example(
                 UsageExample::new("/name/", "", "\"John\"").with_previous_selection(
                     "name",
-                    "\"John\""
+                    "\"John\"",
                 )
             )
             .with_example(UsageExample::new("/name/", "", "").with_previous_selection("name", ""))
             .with_example(
                 UsageExample::new("/name/", "", "").with_previous_selection("Last Name", "\"Doe\"")
-            )
+            ),
     ]
 }
 
@@ -186,7 +190,9 @@ pub fn get_selection_help() -> Vec<String> {
         }
         help.push("### Examples".into());
         for e in t.examples {
-            let previous_selection = if !e.previous_selection.is_empty() {
+            let previous_selection = if e.previous_selection.is_empty() {
+                String::new()
+            } else {
                 e.previous_selection
                     .iter()
                     .map(|(key, value)| {
@@ -197,8 +203,6 @@ pub fn get_selection_help() -> Vec<String> {
                         }
                     })
                     .collect()
-            } else {
-                String::new()
             };
             let input = if let Ok(i) = JsonValue::from_str(e.input.as_str()) {
                 format!("for input: `{i}`")
@@ -219,6 +223,7 @@ pub fn get_selection_help() -> Vec<String> {
     }
     help
 }
+
 #[cfg(test)]
 mod tests {
     use std::rc::Rc;
@@ -246,15 +251,12 @@ mod tests {
                 let started = context_reader.where_am_i();
                 let input = context_reader.next_json_value()?;
                 let ended = context_reader.where_am_i();
-                let mut context = match input {
-                    Some(i) => {
-                        println!("\tAnd input: {}", &i);
-                        Context::new_with_input(i, started, ended, 0, 0, &RegexCache::new(0))
-                    }
-                    None => {
-                        println!("\tAnd no input");
-                        Context::new_empty()
-                    }
+                let mut context = if let Some(i) = input {
+                    println!("\tAnd input: {}", &i);
+                    Context::new_with_input(i, started, ended, 0, 0, &RegexCache::new(0))
+                } else {
+                    println!("\tAnd no input");
+                    Context::new_empty()
                 };
                 for (key, value) in example.previous_selection {
                     context = context.with_result(&Rc::new(key), value);
