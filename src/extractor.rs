@@ -11,14 +11,17 @@ enum SingleExtract {
     ByKey(String),
     ByIndex(usize),
 }
+
 enum ExtractFromInput {
     Root,
     Element(Vec<SingleExtract>),
 }
+
 struct Extract {
     number_of_parents: usize,
     extract_from_input: ExtractFromInput,
 }
+
 impl ExtractFromInput {
     fn extract(&self, input: &JsonValue) -> Option<JsonValue> {
         match self {
@@ -40,12 +43,14 @@ impl ExtractFromInput {
         }
     }
 }
+
 impl Get for Extract {
     fn get(&self, value: &Context) -> Option<JsonValue> {
         let input = value.parent_input(self.number_of_parents);
         self.extract_from_input.extract(input)
     }
 }
+
 pub fn parse_extractor<R: Read>(reader: &mut Reader<R>) -> Result<Rc<dyn Get>> {
     let number_of_parents = read_number_of_parents(reader)?;
     let extract_from_input = ExtractFromInput::parse(reader)?;
@@ -54,6 +59,7 @@ pub fn parse_extractor<R: Read>(reader: &mut Reader<R>) -> Result<Rc<dyn Get>> {
         extract_from_input,
     }))
 }
+
 fn read_number_of_parents<R: Read>(reader: &mut Reader<R>) -> Result<usize> {
     let mut size = 0;
     loop {
@@ -68,12 +74,14 @@ fn read_number_of_parents<R: Read>(reader: &mut Reader<R>) -> Result<usize> {
         }
     }
 }
+
 pub fn root() -> Rc<dyn Get> {
     Rc::new(Extract {
         extract_from_input: ExtractFromInput::Root,
         number_of_parents: 0,
     })
 }
+
 impl ExtractFromInput {
     fn parse<R: Read>(reader: &mut Reader<R>) -> Result<Self> {
         let mut ext = vec![];
@@ -97,7 +105,7 @@ impl ExtractFromInput {
                             Ok(ExtractFromInput::Root)
                         } else {
                             Err(SelectionParseError::MissingKey(reader.where_am_i()))
-                        }
+                        };
                     }
                     Some(index) => {
                         let es = SingleExtract::ByIndex(index);
@@ -153,6 +161,7 @@ impl ExtractFromInput {
         Ok(Some(number))
     }
 }
+
 impl SingleExtract {
     fn extract(&self, value: &JsonValue) -> Option<JsonValue> {
         match value {

@@ -14,6 +14,7 @@ impl Uniquness {
         })
     }
 }
+
 impl Process for Uniquness {
     fn complete(&mut self) -> Result<()> {
         self.knwon_lines.clear();

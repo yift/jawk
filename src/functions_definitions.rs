@@ -40,6 +40,7 @@ enum ValidOutputForTest {
     String(Cow<'static, str>),
     Function(fn(&Option<JsonValue>) -> bool),
 }
+
 pub struct Example {
     input: Option<&'static str>,
     pub arguments: Vec<&'static str>,
@@ -182,6 +183,7 @@ impl FunctionsGroup {
 pub trait Arguments {
     fn apply(&self, value: &Context, index: usize) -> Option<JsonValue>;
 }
+
 impl Arguments for Vec<Rc<dyn Get>> {
     fn apply(&self, context: &Context, index: usize) -> Option<JsonValue> {
         if let Some(arg) = self.get(index) {
@@ -250,6 +252,7 @@ pub fn create_possible_fn_help_types() -> Vec<PossibleValue> {
 
     values
 }
+
 pub fn get_fn_help(help_type: &str) -> Vec<String> {
     if help_type == "functions" {
         let mut help = Vec::new();

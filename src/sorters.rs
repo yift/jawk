@@ -66,6 +66,7 @@ fn read_to_eof<R: Read>(r: &mut Reader<R>) -> Result<String, SelectionParseError
         }
     }
 }
+
 impl Sorter {
     pub fn create_processor(
         &self,
@@ -81,6 +82,7 @@ impl Sorter {
         })
     }
 }
+
 type OrderedData = BTreeMap<JsonValue, VecDeque<Context>>;
 
 struct SortProcess {
@@ -129,6 +131,7 @@ impl Process for SortProcess {
         self.next.complete()
     }
 }
+
 impl SortProcess {
     fn remove_last_item(&mut self) {
         match self.direction {
@@ -247,7 +250,7 @@ mod tests {
                 "z".into(),
                 (2).into(),
                 (3.4).into(),
-                (20).into()
+                (20).into(),
             ]
         );
 
@@ -310,7 +313,7 @@ mod tests {
                 "a".into(),
                 "a".into(),
                 false.into(),
-                JsonValue::Null
+                JsonValue::Null,
             ]
         );
 

@@ -7,13 +7,16 @@ use cached::SizedCache;
 use regex::{Error, Regex};
 
 type OptionalCache = Option<Rc<RefCell<SizedCache<String, Rc<Result<Regex, Error>>>>>>;
+
 #[derive(Clone)]
 pub struct RegexCache {
     cache: OptionalCache,
 }
+
 pub trait RegexCompile {
     fn compile_regex(&self, regex: &str) -> Rc<Result<Regex, Error>>;
 }
+
 impl RegexCompile for RegexCache {
     fn compile_regex(&self, regex: &str) -> Rc<Result<Regex, Error>> {
         match &self.cache {
@@ -26,6 +29,7 @@ impl RegexCompile for RegexCache {
         }
     }
 }
+
 impl RegexCache {
     pub fn new(size: usize) -> Self {
         let cache = if size > 0 {

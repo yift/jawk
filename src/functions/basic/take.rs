@@ -8,6 +8,7 @@ use crate::{
 };
 
 use indexmap::IndexMap;
+
 pub fn get() -> FunctionDefinitions {
     FunctionDefinitions::new("take", 2, 2, |args| {
         struct Impl(Vec<Rc<dyn Get>>);

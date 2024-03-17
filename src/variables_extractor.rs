@@ -8,6 +8,7 @@ enum Type {
     Variable,
     Macro,
 }
+
 struct VariableExtructor {
     name: String,
     variable_type: Type,

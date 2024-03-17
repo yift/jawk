@@ -42,6 +42,7 @@ impl JsonValue {
         }
     }
 }
+
 impl Display for JsonValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let printer = JsonOutputOptions::default();
@@ -106,21 +107,25 @@ impl NumberValue {
         }
     }
 }
+
 impl From<String> for JsonValue {
     fn from(str: String) -> Self {
         JsonValue::String(str)
     }
 }
+
 impl From<bool> for JsonValue {
     fn from(b: bool) -> Self {
         JsonValue::Boolean(b)
     }
 }
+
 impl From<usize> for JsonValue {
     fn from(u: usize) -> Self {
         JsonValue::Number(u.into())
     }
 }
+
 impl From<usize> for NumberValue {
     fn from(value: usize) -> Self {
         NumberValue::Positive(value as u64)
@@ -147,6 +152,7 @@ impl TryFrom<NumberValue> for usize {
         }
     }
 }
+
 impl TryFrom<JsonValue> for f64 {
     type Error = CastError;
     fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
@@ -168,26 +174,31 @@ impl TryFrom<JsonValue> for String {
         }
     }
 }
+
 impl From<IndexMap<String, JsonValue>> for JsonValue {
     fn from(value: IndexMap<String, JsonValue>) -> Self {
         JsonValue::Object(value)
     }
 }
+
 impl From<&String> for JsonValue {
     fn from(value: &String) -> Self {
         JsonValue::String(value.clone())
     }
 }
+
 impl From<&str> for JsonValue {
     fn from(value: &str) -> Self {
         JsonValue::String(value.to_string())
     }
 }
+
 impl From<Vec<JsonValue>> for JsonValue {
     fn from(value: Vec<JsonValue>) -> Self {
         JsonValue::Array(value)
     }
 }
+
 impl From<&NumberValue> for f64 {
     fn from(value: &NumberValue) -> Self {
         match *value {
@@ -197,6 +208,7 @@ impl From<&NumberValue> for f64 {
         }
     }
 }
+
 impl From<NumberValue> for f64 {
     fn from(value: NumberValue) -> Self {
         match value {
@@ -206,6 +218,7 @@ impl From<NumberValue> for f64 {
         }
     }
 }
+
 impl From<f64> for JsonValue {
     fn from(value: f64) -> Self {
         if value.fract() == 0.0 {
@@ -251,7 +264,9 @@ impl PartialEq for NumberValue {
         }
     }
 }
+
 impl Eq for NumberValue {}
+
 impl PartialOrd for NumberValue {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
@@ -265,6 +280,7 @@ impl Ord for NumberValue {
         me.total_cmp(&other)
     }
 }
+
 impl PartialOrd for JsonValue {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
@@ -459,7 +475,7 @@ mod tests {
                 to_json("[1, 2, 3]"),
                 to_json("[1, 2, 3, 4]"),
                 to_json("[1, 2, 3, 5]"),
-                to_json("[1, 2, 3, {}]")
+                to_json("[1, 2, 3, {}]"),
             ]
         );
     }

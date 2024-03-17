@@ -14,11 +14,13 @@ enum Value {
     Macro(Rc<dyn Get>),
     Calculated(JsonValue),
 }
+
 #[derive(Clone)]
 pub struct PreSet {
     key: String,
     value: Value,
 }
+
 #[derive(Debug, Error)]
 pub enum PreSetParserError {
     #[error("{0}")]
@@ -242,6 +244,7 @@ mod tests {
 
         assert!(matches!(error, PreSetParserError::EmptyName(_)));
     }
+
     #[test]
     fn duplicate_name_return_error() {
         let list = vec!["name=1".to_string(), "name=2".to_string()];
@@ -263,6 +266,7 @@ mod tests {
 
         assert!(matches!(error, PreSetParserError::DuplicateKeys(_)));
     }
+
     #[test]
     fn duplicate_def_name_return_error() {
         let list = vec!["@name=1".to_string(), "@name=2".to_string()];

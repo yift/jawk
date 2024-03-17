@@ -37,6 +37,7 @@ pub struct Selection {
 }
 
 pub type Result<T> = std::result::Result<T, SelectionParseError>;
+
 #[derive(Debug, Error)]
 pub enum SelectionParseError {
     #[error("{0}")]
@@ -99,6 +100,7 @@ struct SelectionProcess {
     getter: Rc<dyn Get>,
     next: Box<dyn Process>,
 }
+
 impl Process for SelectionProcess {
     fn start(&mut self, titles_so_far: Titles) -> ProcessResult<()> {
         let next_titles = titles_so_far.with_title(&self.name);
@@ -198,6 +200,7 @@ impl Selection {
         Box::new(process)
     }
 }
+
 impl Get for Selection {
     fn get(&self, context: &Context) -> Option<JsonValue> {
         self.getter.get(context)

@@ -145,11 +145,11 @@ pub struct Cli {
     ///
     /// Display additional help. Use the function name to get additional help on a specific function.
     #[arg(
-        long,
-        short,
-        default_value = None,
-        value_parser = create_possible_values(),
-        ignore_case = true
+    long,
+    short,
+    default_value = None,
+    value_parser = create_possible_values(),
+    ignore_case = true
     )]
     additional_help: Option<String>,
 
@@ -222,6 +222,7 @@ pub fn go<R: Read>(
     let master = Master::new(cli, stdout, stderr, stdin);
     master.go()
 }
+
 struct Master<R: Read> {
     cli: Cli,
     stdout: Rc<RefCell<dyn std::io::Write + Send>>,
@@ -229,6 +230,7 @@ struct Master<R: Read> {
     stdin: Box<dyn Fn() -> R>,
     regular_expression_cache: RegexCache,
 }
+
 impl<S: Read> Master<S> {
     pub fn new(
         cli: Cli,

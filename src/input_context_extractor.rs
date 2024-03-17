@@ -24,6 +24,7 @@ enum Type {
     StartedAtCharNumber,
     EndAtCharNumber,
 }
+
 struct InputContextExtractor {
     extration: Type,
 }
@@ -45,6 +46,7 @@ impl InputContextExtractor {
         Ok(Self { extration })
     }
 }
+
 impl Get for InputContextExtractor {
     fn get(&self, value: &Context) -> Option<JsonValue> {
         if let Some(context) = value.input_context() {

@@ -208,6 +208,7 @@ struct TextPrinter {
     options: TextOutputOptions,
     escape_sequandes: HashMap<char, String>,
 }
+
 impl From<TextOutputOptions> for TextPrinter {
     fn from(options: TextOutputOptions) -> Self {
         let mut escape_sequandes = HashMap::with_capacity(options.escape_sequance.capacity());
@@ -222,12 +223,14 @@ impl From<TextOutputOptions> for TextPrinter {
         }
     }
 }
+
 struct TextProcess {
     writer: Rc<RefCell<dyn std::io::Write + Send>>,
     length: usize,
     line_seperator: String,
     printer: TextPrinter,
 }
+
 impl Default for TextOutputOptions {
     fn default() -> Self {
         Self {
@@ -243,6 +246,7 @@ impl Default for TextOutputOptions {
         }
     }
 }
+
 impl TextOutputOptions {
     fn csv() -> Self {
         Self {
@@ -258,6 +262,7 @@ impl TextOutputOptions {
         }
     }
 }
+
 impl<W: Write> Print<W> for TextPrinter {
     fn print_nothing(&self, f: &mut W) -> FmtResult {
         if let Some(missing_value_keyword) = &self.options.missing_value_keyword {
@@ -367,6 +372,7 @@ impl<W: Write> Print<W> for JsonOutputOptions {
         self.print_array_with_indent(f, value, 0)
     }
 }
+
 impl Default for JsonOutputOptions {
     fn default() -> Self {
         Self {
@@ -375,6 +381,7 @@ impl Default for JsonOutputOptions {
         }
     }
 }
+
 impl JsonOutputOptions {
     fn insert_indent<W: Write>(&self, f: &mut W, indent: usize) -> FmtResult {
         match self.style {
@@ -452,6 +459,7 @@ impl JsonOutputOptions {
         write!(f, "]")
     }
 }
+
 impl TextProcess {
     fn new(
         writer: Rc<RefCell<dyn std::io::Write + Send>>,
@@ -869,6 +877,7 @@ mod tests {
 
         assert_eq!(text.as_str(), "null");
     }
+
     #[test]
     fn json_printer_will_print_true_value() {
         let printer = JsonOutputOptions::default();
@@ -880,6 +889,7 @@ mod tests {
 
         assert_eq!(text.as_str(), "true");
     }
+
     #[test]
     fn json_printer_will_print_false_value() {
         let printer = JsonOutputOptions::default();
@@ -903,6 +913,7 @@ mod tests {
 
         assert_eq!(text.as_str(), "1.5");
     }
+
     #[test]
     fn json_printer_will_print_uint_value() {
         let printer = JsonOutputOptions::default();
@@ -914,6 +925,7 @@ mod tests {
 
         assert_eq!(text.as_str(), "15");
     }
+
     #[test]
     fn json_printer_will_print_int_value() {
         let printer = JsonOutputOptions::default();

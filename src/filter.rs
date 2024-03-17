@@ -38,6 +38,7 @@ impl Filter {
         })
     }
 }
+
 struct ActiveFilter {
     filter: Rc<dyn Get>,
     next: Box<dyn Process>,

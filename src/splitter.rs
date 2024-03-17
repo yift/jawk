@@ -43,6 +43,7 @@ struct SplitterProcess {
     next: Box<dyn Process>,
     split_by: Rc<dyn Get>,
 }
+
 impl Process for SplitterProcess {
     fn complete(&mut self) -> ProcessResult<()> {
         self.next.complete()
@@ -79,6 +80,7 @@ mod tests {
 
         assert_eq!(splitter.split_by.get(&input), Some((4).into()));
     }
+
     #[test]
     fn parse_fail_if_too_long() {
         let str = "(.len)3";

@@ -10,6 +10,7 @@ use std::io::Read;
 pub struct ConstGetters {
     value: JsonValue,
 }
+
 impl Get for ConstGetters {
     fn get(&self, _: &Context) -> Option<JsonValue> {
         let val = self.value.clone();

@@ -25,6 +25,7 @@ fn copy_dir(source: &PathBuf, target: &PathBuf) -> Result<()> {
     }
     Ok(())
 }
+
 fn copy_source() -> Result<PathBuf> {
     let source = PathBuf::from("book");
     let target = PathBuf::from("target/docs/book");
@@ -89,15 +90,18 @@ pub fn build_docs() -> Result<()> {
 
     Ok(())
 }
+
 fn add_links(code: &str) -> String {
     let replacer = Regex::new(r"\[(?<link>https://[a-z0-9./_#]+)\]").unwrap();
     replacer.replace_all(code, "[$link]($link)").to_string()
 }
+
 fn create_examples(target: &PathBuf) -> Result<String> {
     let source = PathBuf::from("tests").join("integration").join("examples");
 
     create_example_dir(&source, target)
 }
+
 fn create_example_dir(source: &PathBuf, target: &PathBuf) -> Result<String> {
     if let Some(summary) = create_single_example(source, target)? {
         Ok(summary)
@@ -118,6 +122,7 @@ fn create_example_dir(source: &PathBuf, target: &PathBuf) -> Result<String> {
         Ok(dirs)
     }
 }
+
 fn create_single_example(source: &Path, target: &PathBuf) -> Result<Option<String>> {
     let title = source.join("title.txt");
     if title.exists() {
