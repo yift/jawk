@@ -19,7 +19,7 @@ use take_away::get as get_take_away;
 use times::get as get_times;
 
 pub fn group() -> FunctionsGroup {
-    FunctionsGroup::new("number_as_string")
+    FunctionsGroup::new("number as string (nas)")
         .add_function(get_normelize())
         .add_function(get_add())
         .add_function(get_take_away())

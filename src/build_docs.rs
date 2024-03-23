@@ -48,6 +48,8 @@ pub fn build_docs() -> Result<()> {
         (">", "__gt__"),
         ("<", "__st__"),
         ("%", "__pc__"),
+        ("\"", "__qt__"),
+        ("|", "__pp__"),
     ];
     let functions = get_groups_and_funs();
     let mut summary = String::new();
