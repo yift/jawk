@@ -10,6 +10,7 @@ mod neq;
 mod normelize;
 mod reminder;
 mod round;
+mod sort_by;
 mod take_away;
 mod times;
 mod to_big_decimal;
@@ -27,6 +28,7 @@ use neq::get as get_neq;
 use normelize::get as get_normelize;
 use reminder::get as get_reminder;
 use round::get as get_round;
+use sort_by::get as get_sort_by;
 use take_away::get as get_take_away;
 use times::get as get_times;
 
@@ -48,4 +50,5 @@ pub fn group() -> FunctionsGroup {
         .add_function(get_lte())
         .add_function(get_abs())
         .add_function(get_round())
+        .add_function(get_sort_by())
 }
