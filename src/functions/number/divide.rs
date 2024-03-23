@@ -42,6 +42,9 @@ pub fn get() -> FunctionDefinitions {
         .add_example(
             Example::new().add_argument("7").add_argument("2").expected_output("3.5")
         )
+        .add_example(
+            Example::new().add_argument("7").add_argument("0")
+        )
         .add_example(Example::new().add_argument("7").add_argument("[]"))
         .add_example(Example::new().add_argument("{}").add_argument("5"))
 }

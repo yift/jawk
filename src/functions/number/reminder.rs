@@ -34,6 +34,7 @@ pub fn get() -> FunctionDefinitions {
     })
         .add_alias("mod")
         .add_alias("modulu")
+        .add_alias("reminder")
         .add_description_line(
             "Find the reminder of the division of the firs argument by the second argument. If the second argument is 0 will return nothing"
         )

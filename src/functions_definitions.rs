@@ -6,6 +6,7 @@ use crate::functions::basic::group as get_basic_functions;
 use crate::functions::boolean::group as get_boolean_functions;
 use crate::functions::list::group as get_list_functions;
 use crate::functions::number::group as get_number_functions;
+use crate::functions::number_as_string::group as get_nas_functions;
 use crate::functions::object::group as get_object_functions;
 use crate::functions::proccess::group as get_exec_functions;
 use crate::functions::string::group as get_string_functions;
@@ -36,6 +37,7 @@ pub enum FunctionDefinitionsError {
     TooManyArgument(String, usize, usize),
 }
 
+#[allow(dead_code)]
 enum ValidOutputForTest {
     String(Cow<'static, str>),
     Function(fn(&Option<JsonValue>) -> bool),
@@ -205,6 +207,7 @@ lazy_static! {
     static ref TIME_FUNCTIONS: FunctionsGroup = get_time_functions();
     static ref VARIABLE_FUNCTIONS: FunctionsGroup = get_variable_functions();
     static ref EXEC_FUNCTIONS: FunctionsGroup = get_exec_functions();
+    static ref NAS_FUNCTIONS: FunctionsGroup = get_nas_functions();
     static ref ALL_FUNCTIONS: Vec<&'static FunctionsGroup> = vec![
         &BASIC_FUNCTIONS,
         &TYPES_FUNCTIONS,
@@ -216,6 +219,7 @@ lazy_static! {
         &TIME_FUNCTIONS,
         &VARIABLE_FUNCTIONS,
         &EXEC_FUNCTIONS,
+        &NAS_FUNCTIONS,
     ];
     static ref NAME_TO_FUNCTION: HashMap<&'static str, &'static FunctionDefinitions> =
         ALL_FUNCTIONS
@@ -229,7 +233,7 @@ pub fn find_function(name: &str) -> Result<&'static FunctionDefinitions, Functio
     NAME_TO_FUNCTION
         .get(name)
         .ok_or(FunctionDefinitionsError::UnknownFunction(name.to_string()))
-        .map(|f| *f)
+        .copied()
 }
 
 pub fn create_possible_fn_help_types() -> Vec<PossibleValue> {

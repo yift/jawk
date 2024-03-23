@@ -2,6 +2,7 @@ pub mod basic;
 pub mod boolean;
 pub mod list;
 pub mod number;
+pub mod number_as_string;
 pub mod object;
 pub mod proccess;
 pub mod string;
