@@ -166,6 +166,7 @@ impl FunctionDefinitions {
 
 pub struct FunctionsGroup {
     name: &'static str,
+    description: Vec<&'static str>,
     functions: Vec<FunctionDefinitions>,
 }
 
@@ -173,11 +174,16 @@ impl FunctionsGroup {
     pub fn new(name: &'static str) -> Self {
         FunctionsGroup {
             name,
+            description: vec![],
             functions: vec![],
         }
     }
     pub fn add_function(mut self, function: FunctionDefinitions) -> Self {
         self.functions.push(function);
+        self
+    }
+    pub fn add_description_line(mut self, line: &'static str) -> Self {
+        self.description.push(line);
         self
     }
 }
@@ -306,6 +312,9 @@ pub fn get_groups_and_funs() -> Vec<(String, Vec<String>)> {
 fn get_group_help(group: &FunctionsGroup) -> Vec<String> {
     let mut help = Vec::new();
     help.push(format!("# Function group {}", group.name));
+    for line in &group.description {
+        help.push((*line).to_string());
+    }
     help.push(format!(
         "Function group {} has {} functions:",
         group.name,
