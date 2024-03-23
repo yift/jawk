@@ -19,7 +19,9 @@ use take_away::get as get_take_away;
 use times::get as get_times;
 
 pub fn group() -> FunctionsGroup {
-    FunctionsGroup::new("number as string (nas)")
+    FunctionsGroup::new("nas")
+        .add_description_line("NAS - Number As String, i.e. number that represent as string, like \"12\" instead of 12.")
+        .add_description_line("Can be used for big numbers and acurate calculates.")
         .add_function(get_normelize())
         .add_function(get_add())
         .add_function(get_take_away())
