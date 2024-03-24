@@ -1,0 +1,93 @@
+name: Prepare-release
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-musl-and-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: install musl
+        run:  rustup target add x86_64-unknown-linux-musl
+      - name: build
+        run: cargo build --release --target=x86_64-unknown-linux-musl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jawk-x86_64-unknown-linux-musl
+          path: ./target/x86_64-unknown-linux-musl/release/jawk
+          retention-days: 1
+      - name: Copy binary
+        run: |
+          rm -rf ./docker/target
+          mkdir -p ./docker/target
+          cp ./target/x86_64-unknown-linux-musl/release/jawk ./docker/target/jawk
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: docker
+          push: true
+          tags: yiftach/jawk:dev
+
+  produce-book-and-publish:
+    needs:
+      - build-musl-and-docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: build
+        run: cargo build --features=create-docs
+      - name: create book
+        run: target/debug/jawk -a book
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: jawk-*
+          path: target/docs/book/book/
+      - uses: Dylan700/sftp-upload-action@latest
+        with:
+          server: ${{ secrets.DEV_FTP_SERVER }}
+          username: ${{ secrets.DEV_FTP_USERNAME }}
+          password: ${{ secrets.DEV_FTP_PASSSWORD }}
+          port: 22
+          delete: true
+          uploads: |
+            target/docs/book/book/ => ./${{ github.head_ref }}
+
+  cargo-publish-dry-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - uses: katyo/publish-crates@v2
+        with:
+          dry-run: true
+
+  comment:
+    needs:
+      - produce-book-and-publish
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Book available in [here](https://jawk-dev.ykaplan.me/${{ github.head_ref }}/)'
+            })

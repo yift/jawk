@@ -32,7 +32,7 @@ pub fn get() -> FunctionDefinitions {
         Rc::new(Impl(args))
     })
         .add_alias("order_by")
-        .add_description_line("Filter a list.")
+        .add_description_line("Sort a list.")
         .add_description_line(
             "If the first argument is a list, return list sorted by the second argument."
         )
