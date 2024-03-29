@@ -1,0 +1,65 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "tmp-main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+# 1. tag, merge to dev, increase dev version,  create pull request
+jobs:
+  PostRelease:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout dev
+        uses: actions/checkout@master
+        with:
+          ref: tmp-main
+          fetch-depth: 0
+      - name: Install JAWK
+        run: |
+          cargo install jawk
+      - name: Get current version
+        id: current-version
+        run: |
+          echo "VERSION=$(cargo metadata --no-deps --format-version=1 | jawk --split-by .packages | jawk -c .version -o text)" >> "$GITHUB_OUTPUT"
+      - name: Tag main
+        env:
+          VERSION: ${{ steps.current-version.outputs.VERSION }}
+        run: |
+          git tag "v$VERSION"
+      - name: Merge to dev
+        run: |
+          git checkout tmp-dev
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "Jawk post release bot"
+          git merge origin/tmp-main
+      - name: Bump version
+        run: |
+          cargo install cargo-bump
+          cargo bump
+      - name: Get new version
+        id: new-version
+        run: |
+          echo "VERSION=$(cargo metadata --no-deps --format-version=1 | jawk --split-by .packages | jawk -c .version -o text)" >> "$GITHUB_OUTPUT"
+      - name: Commit
+        env:
+          NEW_VERSION: ${{ steps.new-version.outputs.VERSION }}
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "Jawk post release bot"
+          git add Cargo.toml
+          git commit -m "$NEW_VERSION"
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: tmp-dev
+          tags: true
+      - name: Create Pull request
+        uses: peter-evans/create-pull-request@v6.0.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: tmp-main
+          title: "${{ steps.new-version.outputs.VERSION }}"
+          branch: tmp-dev
