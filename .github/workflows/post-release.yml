@@ -2,7 +2,7 @@ name: Rust
 
 on:
   push:
-    branches: [ "tmp-main" ]
+    branches: [ "main" ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout dev
         uses: actions/checkout@master
         with:
-          ref: tmp-main
+          ref: main
           fetch-depth: 0
       - name: Install JAWK
         run: |
@@ -29,10 +29,10 @@ jobs:
           git tag "v$VERSION"
       - name: Merge to dev
         run: |
-          git checkout tmp-dev
+          git checkout dev
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "Jawk post release bot"
-          git merge origin/tmp-main
+          git merge origin/main
       - name: Bump version
         run: |
           cargo install cargo-bump
@@ -53,12 +53,12 @@ jobs:
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: tmp-dev
+          branch: dev
           tags: true
       - name: Create Pull request
         uses: peter-evans/create-pull-request@v6.0.2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          base: tmp-main
+          base: main
           title: "${{ steps.new-version.outputs.VERSION }}"
-          branch: tmp-dev
+          branch: dev
