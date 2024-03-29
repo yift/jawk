@@ -6,7 +6,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-# 1. tag, merge to dev, increase dev version,  create pull request
 jobs:
   PostRelease:
     runs-on: ubuntu-latest
