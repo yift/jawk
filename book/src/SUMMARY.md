@@ -9,7 +9,6 @@
 # More Detailed View
 - [Command-Line Help for `jawk`](help.md)
 - [Selection](./selection.md)
-- [Functions](functions.md)
 <function_groups>
 - [Example](examples.md)
 <examples>
