@@ -319,6 +319,7 @@ fn get_group_help(group: &FunctionsGroup) -> Vec<String> {
     help.push("Function group has those functions and groups:".into());
     help.extend(create_group_detailed_help(group, "*".into()));
 
+    help.push("".into());
     help.push(
         "Use additional help with a function name to see more details about the function.".into(),
     );
@@ -430,6 +431,7 @@ mod tests {
         let mut names = HashSet::new();
         for group in ALL_GROUPS.all_sub_group_iter() {
             println!("Looking at group: {}", group.group_name);
+            assert!(names.insert(group.group_name.to_string()));
             for func in &group.group_functions {
                 println!("\t looking at function: {}", func.name);
                 assert!(names.insert(func.name.to_string()));
