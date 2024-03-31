@@ -1,18 +1,9 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
+use std::iter;
 use std::rc::Rc;
 
-use crate::functions::basic::group as get_basic_functions;
-use crate::functions::boolean::group as get_boolean_functions;
-use crate::functions::list::group as get_list_functions;
-use crate::functions::number::group as get_number_functions;
-use crate::functions::number_as_string::group as get_nas_functions;
-use crate::functions::object::group as get_object_functions;
-use crate::functions::proccess::group as get_exec_functions;
-use crate::functions::string::group as get_string_functions;
-use crate::functions::time::group as get_time_functions;
-use crate::functions::type_group::group as get_type_functions;
-use crate::functions::variables::group as get_variable_functions;
+use crate::functions::all::group;
 use crate::json_parser::JsonParser;
 use crate::processor::Context;
 use crate::{
@@ -165,26 +156,60 @@ impl FunctionDefinitions {
 }
 
 pub struct FunctionsGroup {
-    name: &'static str,
+    pub group_name: &'static str,
     description: Vec<&'static str>,
-    functions: Vec<FunctionDefinitions>,
+    sub_groups: Vec<FunctionsGroup>,
+    group_functions: Vec<FunctionDefinitions>,
+    root: bool,
 }
 
 impl FunctionsGroup {
-    pub fn new(name: &'static str) -> Self {
+    pub fn new(group_name: &'static str) -> Self {
         FunctionsGroup {
-            name,
+            group_name,
             description: vec![],
-            functions: vec![],
+            sub_groups: vec![],
+            group_functions: vec![],
+            root: false,
         }
     }
     pub fn add_function(mut self, function: FunctionDefinitions) -> Self {
-        self.functions.push(function);
+        self.group_functions.push(function);
         self
     }
     pub fn add_description_line(mut self, line: &'static str) -> Self {
         self.description.push(line);
         self
+    }
+    pub fn add_sub_group(mut self, sub_group: FunctionsGroup) -> Self {
+        self.sub_groups.push(sub_group);
+        self
+    }
+    pub fn root(mut self) -> Self {
+        self.root = true;
+        self
+    }
+
+    fn all_sub_group_iter(&'static self) -> Box<dyn Iterator<Item = &'static FunctionsGroup>> {
+        Box::new(
+            iter::once(self).chain(self.sub_groups.iter().flat_map(|f| f.all_sub_group_iter())),
+        )
+    }
+
+    fn all_functions_iter(&'static self) -> impl Iterator<Item = &FunctionDefinitions> {
+        self.all_sub_group_iter()
+            .flat_map(|f| f.group_functions.iter())
+    }
+
+    #[cfg(feature = "create-docs")]
+    pub fn functions_name(&self) -> impl Iterator<Item = &str> {
+        self.group_functions.iter().map(|f| f.name)
+    }
+    pub fn is_root(&self) -> bool {
+        self.root
+    }
+    pub fn subgroups(&self) -> impl Iterator<Item = &FunctionsGroup> {
+        self.sub_groups.iter()
     }
 }
 
@@ -203,36 +228,11 @@ impl Arguments for Vec<Rc<dyn Get>> {
 }
 
 lazy_static! {
-    static ref BASIC_FUNCTIONS: FunctionsGroup = get_basic_functions();
-    static ref TYPES_FUNCTIONS: FunctionsGroup = get_type_functions();
-    static ref NUMBER_FUNCTIONS: FunctionsGroup = get_number_functions();
-    static ref OBJECT_FUNCTIONS: FunctionsGroup = get_object_functions();
-    static ref LIST_FUNCTIONS: FunctionsGroup = get_list_functions();
-    static ref STRING_FUNCTIONS: FunctionsGroup = get_string_functions();
-    static ref BOOLEAN_FUNCTIONS: FunctionsGroup = get_boolean_functions();
-    static ref TIME_FUNCTIONS: FunctionsGroup = get_time_functions();
-    static ref VARIABLE_FUNCTIONS: FunctionsGroup = get_variable_functions();
-    static ref EXEC_FUNCTIONS: FunctionsGroup = get_exec_functions();
-    static ref NAS_FUNCTIONS: FunctionsGroup = get_nas_functions();
-    static ref ALL_FUNCTIONS: Vec<&'static FunctionsGroup> = vec![
-        &BASIC_FUNCTIONS,
-        &TYPES_FUNCTIONS,
-        &LIST_FUNCTIONS,
-        &OBJECT_FUNCTIONS,
-        &NUMBER_FUNCTIONS,
-        &STRING_FUNCTIONS,
-        &BOOLEAN_FUNCTIONS,
-        &TIME_FUNCTIONS,
-        &VARIABLE_FUNCTIONS,
-        &EXEC_FUNCTIONS,
-        &NAS_FUNCTIONS,
-    ];
-    static ref NAME_TO_FUNCTION: HashMap<&'static str, &'static FunctionDefinitions> =
-        ALL_FUNCTIONS
-            .iter()
-            .flat_map(|l| l.functions.iter())
-            .flat_map(|f| f.names().iter().map(move |n| (*n, f)).collect::<Vec<_>>())
-            .collect();
+    static ref ALL_GROUPS: FunctionsGroup = group();
+    static ref NAME_TO_FUNCTION: HashMap<&'static str, &'static FunctionDefinitions> = ALL_GROUPS
+        .all_functions_iter()
+        .flat_map(|f| f.names().iter().map(move |n| (*n, f)).collect::<Vec<_>>())
+        .collect();
 }
 
 pub fn find_function(name: &str) -> Result<&'static FunctionDefinitions, FunctionDefinitionsError> {
@@ -248,12 +248,12 @@ pub fn create_possible_fn_help_types() -> Vec<PossibleValue> {
         PossibleValue::new("functions").help("Additional help about the available functions"),
     );
 
-    for &group in ALL_FUNCTIONS.iter() {
-        values.push(PossibleValue::new(group.name).help(format!(
+    for group in ALL_GROUPS.all_sub_group_iter() {
+        values.push(PossibleValue::new(group.group_name).help(format!(
             "Additional help about the {} functions group",
-            group.name
+            group.group_name
         )));
-        for function in &group.functions {
+        for function in &group.group_functions {
             for alias in function.names() {
                 values.push(PossibleValue::new(alias).hide(true));
             }
@@ -264,69 +264,61 @@ pub fn create_possible_fn_help_types() -> Vec<PossibleValue> {
 }
 
 pub fn get_fn_help(help_type: &str) -> Vec<String> {
-    if help_type == "functions" {
-        let mut help = Vec::new();
-        help.push("# Functions".into());
-        help.push(
-            "Functions allow one to manipulate the input. The functions format is `(<function-name> <arg0> <arg1> ..)` where `<argN>` are functions or other types of selection.".into()
-        );
-        help.push("See additional help for selection for more details.".into());
-        help.push(format!(
-            "There are {} functions group available:",
-            ALL_FUNCTIONS.len()
-        ));
-        for &group in ALL_FUNCTIONS.iter() {
-            help.push(format!("* *{}* functions.", group.name));
+    for group in ALL_GROUPS.all_sub_group_iter() {
+        if group.group_name == help_type {
+            return get_group_help(group);
         }
-        help.push(String::new());
-        help.push(
-            "See additional help with the group name to see the list of available functions in that group.".into()
-        );
-        help
+    }
+    let function = NAME_TO_FUNCTION.get(help_type);
+    if let Some(&function) = function {
+        get_function_help(function)
     } else {
-        for &group in ALL_FUNCTIONS.iter() {
-            if group.name == help_type {
-                return get_group_help(group);
-            }
-        }
-        let function = NAME_TO_FUNCTION.get(help_type);
-        if let Some(&function) = function {
-            get_function_help(function)
-        } else {
-            panic!("Can not find function {help_type}")
-        }
+        panic!("Can not find function {help_type}")
     }
 }
 
 #[cfg(feature = "create-docs")]
-pub fn get_groups_and_funs() -> Vec<(String, Vec<String>)> {
-    ALL_FUNCTIONS
-        .iter()
-        .map(|g| {
-            let funcs = g.functions.iter().map(|f| f.name.to_string()).collect();
-            (g.name.to_string(), funcs)
-        })
-        .collect()
+pub fn get_groups() -> &'static FunctionsGroup {
+    &ALL_GROUPS
 }
-
-fn get_group_help(group: &FunctionsGroup) -> Vec<String> {
+fn create_group_detailed_help(group: &FunctionsGroup, indentation: String) -> Vec<String> {
     let mut help = Vec::new();
-    help.push(format!("# Function group {}", group.name));
-    for line in &group.description {
-        help.push((*line).to_string());
-    }
-    help.push(format!(
-        "Function group {} has {} functions:",
-        group.name,
-        group.functions.len()
-    ));
-    for f in &group.functions {
+    for f in &group.group_functions {
         help.push(format!(
-            "* `{}` - {}",
+            "{} Function `{}` - {}",
+            indentation,
             f.name,
             f.description.first().unwrap_or(&"")
         ));
     }
+    for g in group.subgroups() {
+        help.push(format!(
+            "{} Group `{}` - {}",
+            indentation,
+            g.group_name,
+            g.description.first().unwrap_or(&"")
+        ));
+
+        let group_items = create_group_detailed_help(g, format!("  {}", indentation));
+
+        help.extend(group_items);
+    }
+    help
+}
+fn get_group_help(group: &FunctionsGroup) -> Vec<String> {
+    let mut help = Vec::new();
+    if group.is_root() {
+        help.push("# Functions".to_string());
+    } else {
+        help.push(format!("# Function group {}", group.group_name));
+    }
+    for line in &group.description {
+        help.push((*line).to_string());
+    }
+
+    help.push("Function group has those functions and groups:".into());
+    help.extend(create_group_detailed_help(group, "*".into()));
+
     help.push(
         "Use additional help with a function name to see more details about the function.".into(),
     );
@@ -389,9 +381,9 @@ mod tests {
 
     #[test]
     fn test_functions() -> selection::Result<()> {
-        for group in ALL_FUNCTIONS.iter() {
-            println!("Running group: {}", group.name);
-            for func in &group.functions {
+        for group in ALL_GROUPS.all_sub_group_iter() {
+            println!("Running group: {}", group.group_name);
+            for func in &group.group_functions {
                 println!("\tRunning function: {}", func.name);
                 for example in &func.examples {
                     let json = if let Some(input) = example.input {
@@ -436,9 +428,9 @@ mod tests {
     #[test]
     fn test_no_dulicates() {
         let mut names = HashSet::new();
-        for group in ALL_FUNCTIONS.iter() {
-            println!("Looking at group: {}", group.name);
-            for func in &group.functions {
+        for group in ALL_GROUPS.all_sub_group_iter() {
+            println!("Looking at group: {}", group.group_name);
+            for func in &group.group_functions {
                 println!("\t looking at function: {}", func.name);
                 assert!(names.insert(func.name.to_string()));
                 for alias in &func.aliases {
