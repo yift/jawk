@@ -64,6 +64,7 @@ use crate::reader::{from_file, from_std_in, Reader};
 /// An AWK like toold for JSON input.
 ///
 /// This tool should allow one to manipulate an input file that contains JSON values into CSV or JSON output.
+/// See more details in https://jawk.ykaplan.me/
 #[derive(Parser)]
 #[command(author, version, about)]
 pub struct Cli {
