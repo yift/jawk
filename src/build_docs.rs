@@ -37,7 +37,6 @@ fn build_group_docs(
     group: &FunctionsGroup,
     target: &PathBuf,
     indentation: &String,
-    replacer: &Vec<(&str, &str)>,
 ) -> Result<String> {
     let mut summary = String::new();
     let group_name = group.group_name;
@@ -50,21 +49,19 @@ fn build_group_docs(
         summary += format!("\n{indentation}- [{group_name} functions]({group_name}.md)").as_str();
     }
 
-    for function_name in group.functions_name() {
+    for function in group.functions() {
+        let function_name = function.name();
         println!("Creating {function_name}");
-        let mut function_file_name = function_name.to_string();
-        for (replace, by) in replacer {
-            function_file_name = function_file_name.replace(replace, by);
-        }
+        let function_file_name = function.file_name();
         let function_file = target.join(format!("{function_file_name}.md"));
-        let code = get_fn_help(function_name).join("\n");
+        let code = get_fn_help(&function_name).join("\n");
         let code = add_links(&code);
         fs::write(function_file, code)?;
         summary +=
             format!("\n {indentation} - [{function_name}]({function_file_name}.md)").as_str();
     }
     for g in group.subgroups() {
-        summary += build_group_docs(g, target, &format!("{indentation}  "), replacer)?.as_str();
+        summary += build_group_docs(g, target, &format!("{indentation}  "))?.as_str();
     }
 
     Ok(summary)
@@ -76,16 +73,7 @@ pub fn build_docs() -> Result<()> {
     let code = get_selection_help().join("\n");
     fs::write(selection, code)?;
 
-    let replacer = vec![
-        ("?", "__qm__"),
-        ("/", "__sl__"),
-        (">", "__gt__"),
-        ("<", "__st__"),
-        ("%", "__pc__"),
-        ("\"", "__qt__"),
-        ("|", "__pp__"),
-    ];
-    let summary = build_group_docs(get_groups(), &target, &"".to_string(), &replacer)?;
+    let summary = build_group_docs(get_groups(), &target, &"".to_string())?;
     let summary_file = target.join("SUMMARY.md");
     let old_summary = fs::read_to_string(&summary_file)?;
     let new_summary = old_summary.replace("<function_groups>", summary.as_str());
