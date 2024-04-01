@@ -49,7 +49,7 @@ jobs:
       - name: build
         run: cargo build --features=create-docs
       - name: create book
-        run: target/debug/jawk -a book
+        run: target/debug/jawk -a mk-book
       - uses: actions/download-artifact@v4
         with:
           pattern: jawk-*

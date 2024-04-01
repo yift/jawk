@@ -274,7 +274,7 @@ pub fn create_possible_fn_help_types() -> Vec<PossibleValue> {
                 "Additional help about the {} functions group",
                 group.group_name
             )));
-            }
+        }
         for function in &group.group_functions {
             for alias in function.names() {
                 values.push(PossibleValue::new(alias).hide(true));
