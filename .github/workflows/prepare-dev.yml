@@ -10,6 +10,8 @@ env:
 jobs:
   build-musl-and-docker:
     runs-on: ubuntu-latest
+    env:
+      JAWK_BOOK_ROOT: https://jawk-dev.ykaplan.me/dev/
     steps:
       - uses: actions/checkout@master
       - name: install musl

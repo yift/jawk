@@ -36,7 +36,8 @@ pub fn display_additional_help(help_type: &str) {
     } else {
         get_fn_help_name(&help_type)
     };
-    let url = format!("https://jawk.ykaplan.me/{help}.html");
+    let root = option_env!("JAWK_BOOK_ROOT").unwrap_or("https://jawk.ykaplan.me/");
+    let url = format!("{root}{help}.html");
     if open::that(&url).is_err() {
         println!("See additional help in {url}");
     }
