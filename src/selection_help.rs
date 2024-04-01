@@ -95,7 +95,7 @@ fn build_help() -> Vec<SelectionHelp> {
                 "Invoke a function. Has a format of `(<function-name> <arg0> <arg1> ..)` where `<argN>` are other selection.",
                 "Alternative format is `(.<function-name> <arg1>...)` - in that case, the first argument will be the input (i.e. `.`).",
                 "The argument can be seperated by comma or whitespace.",
-                "See list of available functions in functions additional help.",
+                "See list of available functions in [functions additional help](functions.md).",
             ],
         )
             .with_example(UsageExample::new("(len .)", "[1, 4, {}, 100]", "4"))

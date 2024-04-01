@@ -322,17 +322,19 @@ fn create_group_detailed_help(group: &FunctionsGroup, indentation: String) -> Ve
     let mut help = Vec::new();
     for f in &group.group_functions {
         help.push(format!(
-            "{} Function `{}` - {}",
+            "{} Function [`{}`]({}.md) - {}",
             indentation,
             f.name,
+            f.file_name(),
             f.description.first().unwrap_or(&"")
         ));
     }
     #[cfg(feature = "create-docs")]
     for g in group.subgroups() {
         help.push(format!(
-            "{} Group `{}` - {}",
+            "{} Group [`{}`]({}.md) - {}",
             indentation,
+            g.group_name,
             g.group_name,
             g.description.first().unwrap_or(&"")
         ));
