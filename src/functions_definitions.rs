@@ -223,7 +223,7 @@ impl FunctionsGroup {
     pub fn functions(&self) -> impl Iterator<Item = &FunctionDefinitions> {
         self.group_functions.iter()
     }
-    #[cfg(feature = "create-docs")]
+
     pub fn is_root(&self) -> bool {
         self.root
     }
@@ -269,10 +269,12 @@ pub fn create_possible_fn_help_types() -> Vec<PossibleValue> {
     );
 
     for group in ALL_GROUPS.all_sub_group_iter() {
-        values.push(PossibleValue::new(group.group_name).help(format!(
-            "Additional help about the {} functions group",
-            group.group_name
-        )));
+        if !group.is_root() {
+            values.push(PossibleValue::new(group.group_name).help(format!(
+                "Additional help about the {} functions group",
+                group.group_name
+            )));
+            }
         for function in &group.group_functions {
             for alias in function.names() {
                 values.push(PossibleValue::new(alias).hide(true));
