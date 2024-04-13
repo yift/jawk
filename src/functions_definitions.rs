@@ -4,15 +4,16 @@ use std::iter;
 use std::rc::Rc;
 
 use crate::functions::all::group;
+#[cfg(feature = "create-docs")]
 use crate::json_parser::JsonParser;
 use crate::processor::Context;
-use crate::{
-    json_value::JsonValue,
-    reader::from_string,
-    selection::{Get, Selection},
-};
+#[cfg(feature = "create-docs")]
+use crate::{reader::from_string, selection::Selection};
+
+use crate::{json_value::JsonValue, selection::Get};
 use clap::builder::PossibleValue;
 use lazy_static::lazy_static;
+#[cfg(feature = "create-docs")]
 use std::str::FromStr;
 use thiserror::Error;
 
@@ -153,6 +154,23 @@ impl FunctionDefinitions {
         }
         Ok((self.build_extractor)(args))
     }
+
+    pub fn file_name(&self) -> String {
+        let replacer = vec![
+            ("?", "__qm__"),
+            ("/", "__sl__"),
+            (">", "__gt__"),
+            ("<", "__st__"),
+            ("%", "__pc__"),
+            ("\"", "__qt__"),
+            ("|", "__pp__"),
+        ];
+        let mut function_file_name = self.name();
+        for (replace, by) in replacer {
+            function_file_name = function_file_name.replace(replace, by);
+        }
+        function_file_name
+    }
 }
 
 pub struct FunctionsGroup {
@@ -202,12 +220,14 @@ impl FunctionsGroup {
     }
 
     #[cfg(feature = "create-docs")]
-    pub fn functions_name(&self) -> impl Iterator<Item = &str> {
-        self.group_functions.iter().map(|f| f.name)
+    pub fn functions(&self) -> impl Iterator<Item = &FunctionDefinitions> {
+        self.group_functions.iter()
     }
+
     pub fn is_root(&self) -> bool {
         self.root
     }
+    #[cfg(feature = "create-docs")]
     pub fn subgroups(&self) -> impl Iterator<Item = &FunctionsGroup> {
         self.sub_groups.iter()
     }
@@ -249,10 +269,12 @@ pub fn create_possible_fn_help_types() -> Vec<PossibleValue> {
     );
 
     for group in ALL_GROUPS.all_sub_group_iter() {
-        values.push(PossibleValue::new(group.group_name).help(format!(
-            "Additional help about the {} functions group",
-            group.group_name
-        )));
+        if !group.is_root() {
+            values.push(PossibleValue::new(group.group_name).help(format!(
+                "Additional help about the {} functions group",
+                group.group_name
+            )));
+        }
         for function in &group.group_functions {
             for alias in function.names() {
                 values.push(PossibleValue::new(alias).hide(true));
@@ -262,7 +284,7 @@ pub fn create_possible_fn_help_types() -> Vec<PossibleValue> {
 
     values
 }
-
+#[cfg(feature = "create-docs")]
 pub fn get_fn_help(help_type: &str) -> Vec<String> {
     for group in ALL_GROUPS.all_sub_group_iter() {
         if group.group_name == help_type {
@@ -277,24 +299,42 @@ pub fn get_fn_help(help_type: &str) -> Vec<String> {
     }
 }
 
+pub fn get_fn_help_name(help_type: &str) -> String {
+    for group in ALL_GROUPS.all_sub_group_iter() {
+        if group.group_name == help_type {
+            return help_type.into();
+        }
+    }
+    let function = NAME_TO_FUNCTION.get(help_type);
+    if let Some(&function) = function {
+        function.file_name()
+    } else {
+        panic!("Can not find function {help_type}")
+    }
+}
+
 #[cfg(feature = "create-docs")]
 pub fn get_groups() -> &'static FunctionsGroup {
     &ALL_GROUPS
 }
+#[cfg(feature = "create-docs")]
 fn create_group_detailed_help(group: &FunctionsGroup, indentation: String) -> Vec<String> {
     let mut help = Vec::new();
     for f in &group.group_functions {
         help.push(format!(
-            "{} Function `{}` - {}",
+            "{} Function [`{}`]({}.md) - {}",
             indentation,
             f.name,
+            f.file_name(),
             f.description.first().unwrap_or(&"")
         ));
     }
+    #[cfg(feature = "create-docs")]
     for g in group.subgroups() {
         help.push(format!(
-            "{} Group `{}` - {}",
+            "{} Group [`{}`]({}.md) - {}",
             indentation,
+            g.group_name,
             g.group_name,
             g.description.first().unwrap_or(&"")
         ));
@@ -305,6 +345,7 @@ fn create_group_detailed_help(group: &FunctionsGroup, indentation: String) -> Ve
     }
     help
 }
+#[cfg(feature = "create-docs")]
 fn get_group_help(group: &FunctionsGroup) -> Vec<String> {
     let mut help = Vec::new();
     if group.is_root() {
@@ -325,7 +366,7 @@ fn get_group_help(group: &FunctionsGroup) -> Vec<String> {
     );
     help
 }
-
+#[cfg(feature = "create-docs")]
 fn get_function_help(func: &FunctionDefinitions) -> Vec<String> {
     let mut help = Vec::new();
     let name = func.name;
@@ -374,9 +415,13 @@ fn get_function_help(func: &FunctionDefinitions) -> Vec<String> {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashSet;
+    use std::{collections::HashSet, str::FromStr};
 
-    use crate::selection;
+    use crate::{
+        json_parser::JsonParser,
+        reader::from_string,
+        selection::{self, Selection},
+    };
 
     use super::*;
 

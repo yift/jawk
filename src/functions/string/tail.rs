@@ -40,7 +40,7 @@ pub fn get() -> FunctionDefinitions {
         .add_description_line(
             "If the first argument is a string and the second argument is a positive integer, the returned value will be a string with the end of the first argument."
         )
-        .add_description_line("See also `take_last`.")
+        .add_description_line("See also [`take_last`](take_last.md).")
         .add_example(
             Example::new()
                 .add_argument("\"test-123\"")

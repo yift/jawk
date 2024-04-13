@@ -20,13 +20,13 @@ mod reader;
 mod regex_cache;
 mod selection;
 mod selection_extractor;
+#[cfg(feature = "create-docs")]
 mod selection_help;
 mod sorters;
 mod splitter;
 mod variables_extractor;
 
 use additional_help::display_additional_help;
-use additional_help::HelpError;
 use clap::Parser;
 use duplication_remover::Uniquness;
 use filter::Filter;
@@ -64,6 +64,7 @@ use crate::reader::{from_file, from_std_in, Reader};
 /// An AWK like toold for JSON input.
 ///
 /// This tool should allow one to manipulate an input file that contains JSON values into CSV or JSON output.
+/// See more details in https://jawk.ykaplan.me/
 #[derive(Parser)]
 #[command(author, version, about)]
 pub struct Cli {
@@ -251,7 +252,7 @@ impl<S: Read> Master<S> {
     pub fn go(&self) -> Result<()> {
         match &self.cli.additional_help {
             Some(help_type) => {
-                display_additional_help(help_type)?;
+                display_additional_help(help_type);
                 return Ok(());
             }
             None => {}
@@ -393,8 +394,6 @@ pub enum MainError {
     Processor(#[from] ProcessError),
     #[error("{0}")]
     PreSet(#[from] PreSetParserError),
-    #[error("{0}")]
-    Help(#[from] HelpError),
     #[error("{0}")]
     OutputStyle(#[from] OutputStyleValidationError),
 }
