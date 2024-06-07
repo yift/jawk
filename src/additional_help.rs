@@ -4,10 +4,6 @@ use clap::builder::{PossibleValue, PossibleValuesParser};
 use crate::build_docs::build_docs;
 use crate::functions_definitions::{create_possible_fn_help_types, get_fn_help_name};
 
-pub trait AdditionalHelpFactory {
-    fn get() -> Vec<String>;
-}
-
 pub fn create_possible_values() -> PossibleValuesParser {
     let mut values = create_possible_fn_help_types();
     values.insert(0, PossibleValue::new("book").help("Open the book"));
