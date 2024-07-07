@@ -48,8 +48,8 @@ pub fn get() -> FunctionDefinitions {
         Example::new()
             .add_argument("\"1e100\"")
             .add_argument("\"1e80\"")
-            .add_argument("\"1e300\"")
-            .expected_output("\"1E+480\""),
+            .add_argument("\"1E300\"")
+            .expected_output("\"1e+480\""),
     )
     .add_example(Example::new().add_argument("\"2\"").add_argument("true"))
 }

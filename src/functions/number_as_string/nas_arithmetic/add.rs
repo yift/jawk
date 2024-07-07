@@ -50,7 +50,7 @@ pub fn get() -> FunctionDefinitions {
             .add_argument("\"1e999\"")
             .add_argument("\"1e999\"")
             .add_argument("\"4e999\"")
-            .expected_output("\"6E+999\""),
+            .expected_output("\"6e+999\""),
     )
     .add_example(
         Example::new()

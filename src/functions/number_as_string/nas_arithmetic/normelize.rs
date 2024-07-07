@@ -22,10 +22,10 @@ pub fn get() -> FunctionDefinitions {
     })
     .add_alias("nas_normelize")
     .add_description_line("If the argument is string as number, return it in a normelize form (to allow a constent uniquness check).")
-    .add_example(Example::new().add_argument("\"1000000\"").expected_output("\"1E+6\""))
+    .add_example(Example::new().add_argument("\"1000000\"").expected_output("\"1000000\""))
     .add_example(Example::new().add_argument("\"0.00000000005\"").expected_output("\"5E-11\""))
     .add_example(Example::new().add_argument("\"000000000005\"").expected_output("\"5\""))
     .add_example(Example::new().add_argument("\"00000000000.5\"").expected_output("\"0.5\""))
-    .add_example(Example::new().add_argument("\"100e100\"").expected_output("\"1E+102\""))
+    .add_example(Example::new().add_argument("\"100e100\"").expected_output("\"1e+102\""))
     .add_example(Example::new().add_argument("10"))
 }

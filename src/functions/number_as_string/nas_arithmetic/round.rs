@@ -26,27 +26,27 @@ pub fn get() -> FunctionDefinitions {
     .add_example(
         Example::new()
             .add_argument("\"10.3\"")
-            .expected_output("\"1E+1\""),
+            .expected_output("\"10\""),
     )
     .add_example(
         Example::new()
             .add_argument("\"-10.3\"")
-            .expected_output("\"-1E+1\""),
+            .expected_output("\"-10\""),
     )
     .add_example(
         Example::new()
             .add_argument("\"-10\"")
-            .expected_output("\"-1E+1\""),
+            .expected_output("\"-10\""),
     )
     .add_example(
         Example::new()
             .add_argument("\"-10.5\"")
-            .expected_output("\"-1E+1\""),
+            .expected_output("\"-10\""),
     )
     .add_example(
         Example::new()
             .add_argument("\"10.5\"")
-            .expected_output("\"1E+1\""),
+            .expected_output("\"10\""),
     )
     .add_example(Example::new().add_argument("10"))
 }
