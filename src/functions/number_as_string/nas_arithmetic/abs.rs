@@ -28,17 +28,17 @@ pub fn get() -> FunctionDefinitions {
     .add_example(
         Example::new()
             .add_argument("\"100\"")
-            .expected_output("\"1E+2\""),
+            .expected_output("\"100\""),
     )
     .add_example(
         Example::new()
             .add_argument("\"-100\"")
-            .expected_output("\"1E+2\""),
+            .expected_output("\"100\""),
     )
     .add_example(
         Example::new()
             .add_argument("\"100e500\"")
-            .expected_output("\"1E+502\""),
+            .expected_output("\"1e+502\""),
     )
     .add_example(Example::new().add_argument("0"))
     .add_example(Example::new().add_argument("\"test\""))
