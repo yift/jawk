@@ -1,4 +1,4 @@
-name: Rust
+name: Release
 
 on:
   push:
@@ -24,6 +24,10 @@ jobs:
             suffix: '.exe'
     steps:
       - uses: actions/checkout@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
       - name: build
         run: cargo build --release
       - uses: actions/upload-artifact@v4
@@ -35,6 +39,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
       - name: install musl
         run:  rustup target add x86_64-unknown-linux-musl
       - name: build
@@ -68,6 +76,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
       - name: build
         run: cargo build --features=create-docs
       - name: create book

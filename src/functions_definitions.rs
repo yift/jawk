@@ -2,6 +2,7 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::iter;
 use std::rc::Rc;
+use std::sync::LazyLock;
 
 use crate::functions::all::group;
 #[cfg(feature = "create-docs")]
@@ -12,7 +13,6 @@ use crate::{reader::from_string, selection::Selection};
 
 use crate::{json_value::JsonValue, selection::Get};
 use clap::builder::PossibleValue;
-use lazy_static::lazy_static;
 #[cfg(feature = "create-docs")]
 use std::str::FromStr;
 use thiserror::Error;
@@ -246,14 +246,14 @@ impl Arguments for Vec<Rc<dyn Get>> {
         }
     }
 }
-
-lazy_static! {
-    static ref ALL_GROUPS: FunctionsGroup = group();
-    static ref NAME_TO_FUNCTION: HashMap<&'static str, &'static FunctionDefinitions> = ALL_GROUPS
-        .all_functions_iter()
-        .flat_map(|f| f.names().iter().map(move |n| (*n, f)).collect::<Vec<_>>())
-        .collect();
-}
+static ALL_GROUPS: LazyLock<FunctionsGroup> = LazyLock::new(group);
+static NAME_TO_FUNCTION: LazyLock<HashMap<&'static str, &'static FunctionDefinitions>> =
+    LazyLock::new(|| {
+        ALL_GROUPS
+            .all_functions_iter()
+            .flat_map(|f| f.names().iter().map(move |n| (*n, f)).collect::<Vec<_>>())
+            .collect()
+    });
 
 pub fn find_function(name: &str) -> Result<&'static FunctionDefinitions, FunctionDefinitionsError> {
     NAME_TO_FUNCTION
