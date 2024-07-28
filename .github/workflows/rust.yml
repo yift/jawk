@@ -1,4 +1,4 @@
-name: Rust
+name: Verift
 
 on:
   pull_request:
@@ -11,6 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
     - name: Run check
       run: cargo check --all-targets
     - name: Build
@@ -26,6 +30,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
     - name: Install Tarpaulin
       run: cargo install cargo-tarpaulin
     - name: Create Report
