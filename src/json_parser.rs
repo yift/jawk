@@ -52,19 +52,19 @@ impl<R: Read> JsonParserUtils for Reader<R> {
 
     #[inline]
     fn read_true(&mut self) -> Result<JsonValue> {
-        self.read_reserved_word(&[b'r', b'u', b'e'], "true")?;
+        self.read_reserved_word(b"rue", "true")?;
         Ok(JsonValue::Boolean(true))
     }
 
     #[inline]
     fn read_false(&mut self) -> Result<JsonValue> {
-        self.read_reserved_word(&[b'a', b'l', b's', b'e'], "false")?;
+        self.read_reserved_word(b"alse", "false")?;
         Ok(JsonValue::Boolean(false))
     }
 
     #[inline]
     fn read_null(&mut self) -> Result<JsonValue> {
-        self.read_reserved_word(&[b'u', b'l', b'l'], "null")?;
+        self.read_reserved_word(b"ull", "null")?;
         Ok(JsonValue::Null)
     }
     #[inline]
