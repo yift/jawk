@@ -214,7 +214,7 @@ impl FunctionsGroup {
         )
     }
 
-    fn all_functions_iter(&'static self) -> impl Iterator<Item = &FunctionDefinitions> {
+    fn all_functions_iter(&'static self) -> impl Iterator<Item = &'static FunctionDefinitions> {
         self.all_sub_group_iter()
             .flat_map(|f| f.group_functions.iter())
     }

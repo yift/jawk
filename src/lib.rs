@@ -250,12 +250,9 @@ impl<S: Read> Master<S> {
     }
 
     pub fn go(&self) -> Result<()> {
-        match &self.cli.additional_help {
-            Some(help_type) => {
-                display_additional_help(help_type);
-                return Ok(());
-            }
-            None => {}
+        if let Some(help_type) = &self.cli.additional_help {
+            display_additional_help(help_type);
+            return Ok(());
         }
         let mut process = self.cli.output_options.get_processor(self.stdout.clone())?;
         if let Some(group_by) = &self.cli.group_by {

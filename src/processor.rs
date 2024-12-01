@@ -213,11 +213,8 @@ impl Context {
         } else {
             let mut mp = IndexMap::new();
             for (title, value) in &self.results {
-                match value {
-                    Some(value) => {
-                        mp.insert(title.deref().clone(), value.clone());
-                    }
-                    None => {}
+                if let Some(value) = value {
+                    mp.insert(title.deref().clone(), value.clone());
                 }
             }
             JsonValue::Object(mp)
