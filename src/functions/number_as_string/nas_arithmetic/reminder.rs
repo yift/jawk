@@ -34,7 +34,7 @@ pub fn get() -> FunctionDefinitions {
         Rc::new(Impl(args))
     })
         .add_alias("nas_mod")
-        .add_alias("nas_modulu")
+        .add_alias("nas_modulo")
         .add_alias("nas_remider")
         .add_description_line(
             "Find the reminder of the division of the firs argument by the second argument if both are strings as number. If the second argument is \"0\" will return nothing"
@@ -55,7 +55,7 @@ pub fn get() -> FunctionDefinitions {
             Example::new()
             .add_argument("\"7\"")
             .add_argument("\"0\"")
-            .explain("Can not devide by zero.")
+            .explain("Can not divide by zero.")
         )
         .add_example(
             Example::new()

@@ -1,6 +1,6 @@
 use clap::Parser;
-use jawk::go;
 use jawk::Cli;
+use jawk::go;
 use std::cell::RefCell;
 use std::rc::Rc;
 

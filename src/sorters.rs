@@ -6,10 +6,10 @@ use std::str::FromStr;
 use thiserror::Error;
 
 use crate::json_value::JsonValue;
-use crate::processor::{Context, Process, ProcessDesision, Result as ProcessResult, Titles};
+use crate::processor::{Context, Process, ProcessDecision, Result as ProcessResult, Titles};
 use crate::{
-    reader::{from_string, Reader},
-    selection::{read_getter, Get, SelectionParseError},
+    reader::{Reader, from_string},
+    selection::{Get, SelectionParseError, read_getter},
 };
 use std::io::Read;
 
@@ -19,7 +19,7 @@ pub enum SorterParserError {
     SelectionParseError(#[from] SelectionParseError),
     #[error("{0}")]
     IoError(#[from] IoError),
-    #[error("Only ASC or DESC allowed, {0} is niether.")]
+    #[error("Only ASC or DESC allowed, {0} is neither.")]
     UnknownOrder(String),
 }
 
@@ -97,7 +97,7 @@ impl Process for SortProcess {
     fn start(&mut self, titles_so_far: Titles) -> ProcessResult<()> {
         self.next.start(titles_so_far)
     }
-    fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
+    fn process(&mut self, context: Context) -> ProcessResult<ProcessDecision> {
         if let Some(key) = self.sort_by.get(&context) {
             self.data.entry(key).or_default().push_front(context);
             if let Some(space_left) = self.space_left {
@@ -108,7 +108,7 @@ impl Process for SortProcess {
                 }
             }
         }
-        Ok(ProcessDesision::Continue)
+        Ok(ProcessDecision::Continue)
     }
     fn complete(&mut self) -> ProcessResult<()> {
         match self.direction {
@@ -202,11 +202,11 @@ mod tests {
             fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
+            fn process(&mut self, context: Context) -> ProcessResult<ProcessDecision> {
                 let value = context.input().deref().clone();
                 let mut vec = self.0.borrow_mut();
                 vec.push(value);
-                Ok(ProcessDesision::Continue)
+                Ok(ProcessDecision::Continue)
             }
             fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
@@ -265,11 +265,11 @@ mod tests {
             fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
+            fn process(&mut self, context: Context) -> ProcessResult<ProcessDecision> {
                 let value = context.input().deref().clone();
                 let mut vec = self.0.borrow_mut();
                 vec.push(value);
-                Ok(ProcessDesision::Continue)
+                Ok(ProcessDecision::Continue)
             }
             fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
@@ -328,11 +328,11 @@ mod tests {
             fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
+            fn process(&mut self, context: Context) -> ProcessResult<ProcessDecision> {
                 let value = context.input().deref().clone();
                 let mut vec = self.0.borrow_mut();
                 vec.push(value);
-                Ok(ProcessDesision::Continue)
+                Ok(ProcessDecision::Continue)
             }
             fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
@@ -381,11 +381,11 @@ mod tests {
             fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
+            fn process(&mut self, context: Context) -> ProcessResult<ProcessDecision> {
                 let value = context.input().deref().clone();
                 let mut vec = self.0.borrow_mut();
                 vec.push(value);
-                Ok(ProcessDesision::Continue)
+                Ok(ProcessDecision::Continue)
             }
             fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())

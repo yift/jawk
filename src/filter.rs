@@ -2,9 +2,9 @@ use std::{rc::Rc, str::FromStr};
 
 use crate::{
     json_value::JsonValue,
-    processor::{Process, ProcessDesision, Result as ProcessResult},
+    processor::{Process, ProcessDecision, Result as ProcessResult},
     reader::from_string,
-    selection::{read_getter, Get, SelectionParseError},
+    selection::{Get, SelectionParseError, read_getter},
 };
 
 #[derive(Clone)]
@@ -51,11 +51,11 @@ impl Process for ActiveFilter {
     fn start(&mut self, titles_so_far: crate::processor::Titles) -> ProcessResult<()> {
         self.next.start(titles_so_far)
     }
-    fn process(&mut self, context: crate::processor::Context) -> ProcessResult<ProcessDesision> {
+    fn process(&mut self, context: crate::processor::Context) -> ProcessResult<ProcessDecision> {
         if self.filter.get(&context) == Some(JsonValue::Boolean(true)) {
             self.next.process(context)
         } else {
-            Ok(ProcessDesision::Continue)
+            Ok(ProcessDecision::Continue)
         }
     }
 }
@@ -99,8 +99,8 @@ mod tests {
             fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> ProcessResult<ProcessDesision> {
-                Ok(ProcessDesision::Continue)
+            fn process(&mut self, _: Context) -> ProcessResult<ProcessDecision> {
+                Ok(ProcessDecision::Continue)
             }
             fn start(&mut self, titles: Titles) -> ProcessResult<()> {
                 assert_eq!(titles.len(), 2);
@@ -133,8 +133,8 @@ mod tests {
                 *self.0.borrow_mut() = true;
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> ProcessResult<ProcessDesision> {
-                Ok(ProcessDesision::Continue)
+            fn process(&mut self, _: Context) -> ProcessResult<ProcessDecision> {
+                Ok(ProcessDecision::Continue)
             }
             fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
@@ -164,11 +164,11 @@ mod tests {
             fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
+            fn process(&mut self, context: Context) -> ProcessResult<ProcessDecision> {
                 let value = context.input().deref().clone();
                 let mut vec = self.0.borrow_mut();
                 vec.push(value);
-                Ok(ProcessDesision::Continue)
+                Ok(ProcessDecision::Continue)
             }
             fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())

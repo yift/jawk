@@ -10,8 +10,8 @@ use std::{io::Read, rc::Rc};
 
 #[derive(Debug, Error)]
 pub enum InputContextExtractorParseError {
-    #[error("Input context type: '{0}' is unknonw")]
-    UnknonwType(String),
+    #[error("Input context type: '{0}' is unknown")]
+    UnknownType(String),
 }
 
 #[derive(PartialEq, Debug)]
@@ -26,12 +26,12 @@ enum Type {
 }
 
 struct InputContextExtractor {
-    extration: Type,
+    extraction: Type,
 }
 
 impl InputContextExtractor {
     fn from_name(name: String) -> Result<Self, InputContextExtractorParseError> {
-        let extration = match name.as_str() {
+        let extraction = match name.as_str() {
             "index" => Type::Index,
             "index-in-file" => Type::IndexInFile,
             "started-at-line-number" => Type::StartedAtLineNumber,
@@ -40,17 +40,17 @@ impl InputContextExtractor {
             "ended-at-char-number" => Type::EndAtCharNumber,
             "file-name" => Type::FileName,
             _ => {
-                return Err(InputContextExtractorParseError::UnknonwType(name));
+                return Err(InputContextExtractorParseError::UnknownType(name));
             }
         };
-        Ok(Self { extration })
+        Ok(Self { extraction })
     }
 }
 
 impl Get for InputContextExtractor {
     fn get(&self, value: &Context) -> Option<JsonValue> {
         if let Some(context) = value.input_context() {
-            match self.extration {
+            match self.extraction {
                 Type::Index => Some(JsonValue::Number(NumberValue::Positive(context.index))),
                 Type::IndexInFile => {
                     Some(JsonValue::Number(NumberValue::Positive(context.file_index)))
@@ -92,7 +92,7 @@ pub fn parse_input_context<R: Read>(reader: &mut Reader<R>) -> SelectionResult<R
 #[cfg(test)]
 mod tests {
     use crate::{
-        reader::{from_string, Location},
+        reader::{Location, from_string},
         regex_cache::RegexCache,
     };
 
@@ -134,7 +134,7 @@ mod tests {
     }
 
     fn from_name_return_the_correct_name(name: &str, expected: &Type) -> SelectionResult<()> {
-        let got = InputContextExtractor::from_name(name.to_string())?.extration;
+        let got = InputContextExtractor::from_name(name.to_string())?.extraction;
 
         assert_eq!(&got, expected);
 
@@ -151,7 +151,7 @@ mod tests {
     #[test]
     fn get_return_the_correct_values_index() -> SelectionResult<()> {
         let ext = InputContextExtractor::from_name("index".to_string())?;
-        let conext = Context::new_with_input(
+        let context = Context::new_with_input(
             JsonValue::Null,
             Location {
                 input: None,
@@ -168,7 +168,7 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(ext.get(&conext), Some((61).into()));
+        assert_eq!(ext.get(&context), Some((61).into()));
 
         Ok(())
     }
@@ -176,7 +176,7 @@ mod tests {
     #[test]
     fn get_return_the_correct_values_index_in_file() -> SelectionResult<()> {
         let ext = InputContextExtractor::from_name("index-in-file".to_string())?;
-        let conext = Context::new_with_input(
+        let context = Context::new_with_input(
             JsonValue::Null,
             Location {
                 input: None,
@@ -193,7 +193,7 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(ext.get(&conext), Some((10).into()));
+        assert_eq!(ext.get(&context), Some((10).into()));
 
         Ok(())
     }
@@ -201,7 +201,7 @@ mod tests {
     #[test]
     fn get_return_the_correct_values_line_started() -> SelectionResult<()> {
         let ext = InputContextExtractor::from_name("started-at-line-number".to_string())?;
-        let conext = Context::new_with_input(
+        let context = Context::new_with_input(
             JsonValue::Null,
             Location {
                 input: None,
@@ -218,7 +218,7 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(ext.get(&conext), Some((41).into()));
+        assert_eq!(ext.get(&context), Some((41).into()));
 
         Ok(())
     }
@@ -226,7 +226,7 @@ mod tests {
     #[test]
     fn get_return_the_correct_values_line_ended() -> SelectionResult<()> {
         let ext = InputContextExtractor::from_name("ended-at-line-number".to_string())?;
-        let conext = Context::new_with_input(
+        let context = Context::new_with_input(
             JsonValue::Null,
             Location {
                 input: None,
@@ -243,7 +243,7 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(ext.get(&conext), Some((42).into()));
+        assert_eq!(ext.get(&context), Some((42).into()));
 
         Ok(())
     }
@@ -251,7 +251,7 @@ mod tests {
     #[test]
     fn get_return_the_correct_values_char_started() -> SelectionResult<()> {
         let ext = InputContextExtractor::from_name("started-at-char-number".to_string())?;
-        let conext = Context::new_with_input(
+        let context = Context::new_with_input(
             JsonValue::Null,
             Location {
                 input: None,
@@ -268,7 +268,7 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(ext.get(&conext), Some((11).into()));
+        assert_eq!(ext.get(&context), Some((11).into()));
 
         Ok(())
     }
@@ -276,7 +276,7 @@ mod tests {
     #[test]
     fn get_return_the_correct_values_char_ended() -> SelectionResult<()> {
         let ext = InputContextExtractor::from_name("ended-at-char-number".to_string())?;
-        let conext = Context::new_with_input(
+        let context = Context::new_with_input(
             JsonValue::Null,
             Location {
                 input: None,
@@ -293,7 +293,7 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(ext.get(&conext), Some((20).into()));
+        assert_eq!(ext.get(&context), Some((20).into()));
 
         Ok(())
     }
@@ -301,7 +301,7 @@ mod tests {
     #[test]
     fn get_return_the_correct_values_file_name() -> SelectionResult<()> {
         let ext = InputContextExtractor::from_name("file-name".to_string())?;
-        let conext = Context::new_with_input(
+        let context = Context::new_with_input(
             JsonValue::Null,
             Location {
                 input: Some("test".into()),
@@ -318,7 +318,7 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(ext.get(&conext), Some("test".into()));
+        assert_eq!(ext.get(&context), Some("test".into()));
 
         Ok(())
     }
@@ -326,7 +326,7 @@ mod tests {
     #[test]
     fn get_return_the_correct_values_file_name_none() -> SelectionResult<()> {
         let ext = InputContextExtractor::from_name("file-name".to_string())?;
-        let conext = Context::new_with_input(
+        let context = Context::new_with_input(
             JsonValue::Null,
             Location {
                 input: None,
@@ -343,7 +343,7 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(ext.get(&conext), None);
+        assert_eq!(ext.get(&context), None);
 
         Ok(())
     }
@@ -351,20 +351,20 @@ mod tests {
     #[test]
     fn get_return_notging_without_context() -> SelectionResult<()> {
         let ext = InputContextExtractor::from_name("index".to_string())?;
-        let conext = Context::new_with_no_context(JsonValue::Null);
+        let context = Context::new_with_no_context(JsonValue::Null);
 
-        assert_eq!(ext.get(&conext), None);
+        assert_eq!(ext.get(&context), None);
 
         Ok(())
     }
 
     #[test]
-    fn parse_will_be_case_insensetive() -> SelectionResult<()> {
+    fn parse_will_be_case_insensitive() -> SelectionResult<()> {
         let text = "EndEd-at_char-number 3".into();
         let mut reader = from_string(&text);
 
         let selection = parse_input_context(&mut reader)?;
-        let conext = Context::new_with_input(
+        let context = Context::new_with_input(
             JsonValue::Null,
             Location {
                 input: None,
@@ -381,13 +381,13 @@ mod tests {
             &RegexCache::new(0),
         );
 
-        assert_eq!(selection.get(&conext), Some((20).into()));
+        assert_eq!(selection.get(&context), Some((20).into()));
 
         Ok(())
     }
 
     #[test]
-    fn parse_will_create_exception_for_unknwon_name() {
+    fn parse_will_create_exception_for_unknown_name() {
         let text = "test".into();
         let mut reader = from_string(&text);
 

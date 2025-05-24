@@ -5,7 +5,7 @@ mod list;
 mod number;
 mod number_as_string;
 mod object;
-mod proccess;
+mod process;
 mod string;
 mod time;
 mod type_group;

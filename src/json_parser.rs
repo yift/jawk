@@ -396,7 +396,7 @@ pub enum JsonParserError {
     IncompleteReservedWord(Location, String, char, char),
     #[error("{0}: Got character '{1}', expecting one of [{2}]")]
     UnexpectedCharacter(Location, char, String),
-    #[error("{0}: unkonw character with hex: {1:#04x}")]
+    #[error("{0}: unknown character with hex: {1:#04x}")]
     InvalidChacterHex(Location, u32),
     #[error("{0}: Unexpected end of file")]
     UnexpectedEof(Location),
@@ -592,7 +592,7 @@ mod tests {
     }
 
     #[test]
-    fn valid_escpaes() -> Result<()> {
+    fn valid_escapes() -> Result<()> {
         let str = "\"\\\"\\\\\\/\\b\\f\\n\\r\\t\\u263a\\u263A\"".to_string();
         let mut reader = from_string(&str);
 
@@ -864,7 +864,7 @@ mod tests {
     }
 
     #[test]
-    fn unknonw_escape() {
+    fn unknown_escape() {
         let str = "\"\\q\"".to_string();
         let mut reader = from_string(&str);
 
@@ -875,7 +875,7 @@ mod tests {
     }
 
     #[test]
-    fn unknonw_char() {
+    fn unknown_char() {
         let str = "hello".to_string();
         let mut reader = from_string(&str);
 

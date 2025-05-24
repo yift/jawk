@@ -30,7 +30,7 @@ pub fn get() -> FunctionDefinitions {
     .add_alias("minus")
     .add_alias("take_away")
     .add_alias("substruct")
-    .add_description_line("If there are two numeric arguments, substract the second argument from the first one if both are number.")
+    .add_description_line("If there are two numeric arguments, subtract the second argument from the first one if both are number.")
     .add_description_line("If there is one numeric arguments, return the negative of that number.")
     .add_example(
         Example::new()

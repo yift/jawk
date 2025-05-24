@@ -45,7 +45,7 @@ pub fn get() -> FunctionDefinitions {
     .add_description_line("Join all the items in the list into a String.")
     .add_description_line("If list have non string items, it will return nuthing.")
     .add_description_line(
-        "If the second argument is ommited, the items will be seperated by comma.",
+        "If the second argument is omitted, the items will be separated by comma.",
     )
     .add_example(
         Example::new()

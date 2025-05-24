@@ -31,7 +31,7 @@ pub fn get() -> FunctionDefinitions {
     .add_alias("nas_minus")
     .add_alias("nas_take_away")
     .add_alias("nas_substruct")
-    .add_description_line("If there are two numeric arguments, substract the second argument from the first one if both are number.")
+    .add_description_line("If there are two numeric arguments, subtract the second argument from the first one if both are number.")
     .add_description_line("If there is one numeric arguments, return the negative of that number.")
     .add_example(
         Example::new()

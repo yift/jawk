@@ -37,7 +37,7 @@ pub fn get() -> FunctionDefinitions {
     .add_alias("order_by_nas")
     .add_description_line("Sort a list using number as strings.")
         .add_description_line(
-            "If the first argument is a list, return list sorted by the second argument, asuming it's a number as string."
+            "If the first argument is a list, return list sorted by the second argument, assuming it's a number as string."
         )
         .add_example(
             Example::new()

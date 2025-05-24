@@ -17,7 +17,7 @@ pub fn get() -> FunctionDefinitions {
         }
         Rc::new(Impl(args))
     })
-    .add_description_line("Return the JSON represantation of the object.")
+    .add_description_line("Return the JSON representation of the object.")
     .add_example(
         Example::new()
             .add_argument("true")

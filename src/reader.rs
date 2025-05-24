@@ -13,17 +13,16 @@ pub struct Location {
 }
 
 pub struct Reader<R: Read> {
-    bytes: Bytes<R>,
+    bytes: Bytes<BufReader<R>>,
     current_byte: Option<u8>,
     location: Location,
     eof: bool,
 }
 
-pub fn from_file(file_name: &PathBuf) -> Result<Reader<BufReader<File>>> {
+pub fn from_file(file_name: &PathBuf) -> Result<Reader<File>> {
     let file = File::open(file_name)?;
-    let reader = BufReader::new(file);
     Ok(Reader::new(
-        reader,
+        file,
         file_name.to_str().map(ToString::to_string),
     ))
 }
@@ -47,7 +46,7 @@ impl<R: Read> Reader<R> {
             char_number: 1,
         };
         Reader {
-            bytes: reader.bytes(),
+            bytes: BufReader::new(reader).bytes(),
             current_byte: Option::None,
             location,
             eof: false,
@@ -219,7 +218,7 @@ mod tests {
     }
 
     #[test]
-    fn test_location_is_corect() -> Result<()> {
+    fn test_location_is_correct() -> Result<()> {
         let str = "a\nb\ncde".to_string();
         let mut reader = from_string(&str);
         reader.next()?;

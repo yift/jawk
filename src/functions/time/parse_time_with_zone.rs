@@ -36,8 +36,8 @@ pub fn get() -> FunctionDefinitions {
         .add_description_line(
             "Parse a date/time from a string into seconds since epoc. This version expect to get the time zone as well"
         )
-        .add_description_line("The first argemnt should be the date")
-        .add_description_line("The second argemnt should be the format as string")
+        .add_description_line("The first argument should be the date")
+        .add_description_line("The second argument should be the format as string")
         .add_description_line(
             "See details in [https://docs.rs/chrono/latest/chrono/format/strftime/index.html]."
         )

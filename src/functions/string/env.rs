@@ -29,7 +29,7 @@ pub fn get() -> FunctionDefinitions {
         Rc::new(Impl(args))
     })
     .add_alias("$")
-    .add_description_line("Get enviornment variable.")
+    .add_description_line("Get environment variable.")
     .add_example(
         Example::new()
             .add_argument("\"PATH\"")

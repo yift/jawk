@@ -4,9 +4,9 @@ use thiserror::Error;
 
 use crate::{
     json_value::JsonValue,
-    processor::{Context, Process, ProcessDesision, Result as ProcessResult, Titles},
+    processor::{Context, Process, ProcessDecision, Result as ProcessResult, Titles},
     reader::from_string,
-    selection::{read_getter, Get, SelectionParseError},
+    selection::{Get, SelectionParseError, read_getter},
 };
 
 #[derive(Clone)]
@@ -75,7 +75,7 @@ impl FromStr for PreSet {
 
 pub trait PreSetCollection {
     fn create_process(&self, next: Box<dyn Process>)
-        -> Result<Box<dyn Process>, PreSetParserError>;
+    -> Result<Box<dyn Process>, PreSetParserError>;
 }
 
 struct PreSetProcessor {
@@ -121,7 +121,7 @@ impl Process for PreSetProcessor {
     fn complete(&mut self) -> ProcessResult<()> {
         self.next.complete()
     }
-    fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
+    fn process(&mut self, context: Context) -> ProcessResult<ProcessDecision> {
         let new_context = context
             .with_variables(&self.variables)
             .with_definitions(&self.macros);
@@ -154,7 +154,7 @@ mod tests {
             fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
+            fn process(&mut self, context: Context) -> ProcessResult<ProcessDecision> {
                 assert_eq!(
                     context.get_variable_value(&"ten".to_string()).cloned(),
                     JsonValue::from_str("10").ok()
@@ -162,7 +162,7 @@ mod tests {
                 let mac = context.get_definition(&"eleven".to_string()).unwrap();
                 assert_eq!(mac.get(&context), JsonValue::from_str("11").ok());
                 *self.0.borrow_mut() = true;
-                Ok(ProcessDesision::Continue)
+                Ok(ProcessDecision::Continue)
             }
         }
 
@@ -190,8 +190,8 @@ mod tests {
             fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> ProcessResult<ProcessDesision> {
-                Ok(ProcessDesision::Continue)
+            fn process(&mut self, _: Context) -> ProcessResult<ProcessDecision> {
+                Ok(ProcessDecision::Continue)
             }
         }
 
@@ -212,8 +212,8 @@ mod tests {
             fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> ProcessResult<ProcessDesision> {
-                Ok(ProcessDesision::Continue)
+            fn process(&mut self, _: Context) -> ProcessResult<ProcessDecision> {
+                Ok(ProcessDecision::Continue)
             }
         }
 
@@ -234,8 +234,8 @@ mod tests {
             fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> ProcessResult<ProcessDesision> {
-                Ok(ProcessDesision::Continue)
+            fn process(&mut self, _: Context) -> ProcessResult<ProcessDecision> {
+                Ok(ProcessDecision::Continue)
             }
         }
 
@@ -256,8 +256,8 @@ mod tests {
             fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> ProcessResult<ProcessDesision> {
-                Ok(ProcessDesision::Continue)
+            fn process(&mut self, _: Context) -> ProcessResult<ProcessDecision> {
+                Ok(ProcessDecision::Continue)
             }
         }
 
@@ -278,8 +278,8 @@ mod tests {
             fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> ProcessResult<ProcessDesision> {
-                Ok(ProcessDesision::Continue)
+            fn process(&mut self, _: Context) -> ProcessResult<ProcessDecision> {
+                Ok(ProcessDecision::Continue)
             }
         }
 

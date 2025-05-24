@@ -11,7 +11,7 @@ use crate::json_value::NumberValue;
 use crate::{
     json_value::JsonValue,
     processor::Result as ProcessResult,
-    processor::{Context, Process, ProcessDesision, ProcessError, Titles},
+    processor::{Context, Process, ProcessDecision, ProcessError, Titles},
 };
 
 #[derive(Args, Debug)]
@@ -22,11 +22,11 @@ pub struct OutputOptions {
     #[clap(value_enum)]
     output_style: OutputStyle,
 
-    /// Row seperator.
+    /// Row separator.
     ///
-    /// How to seperate between each row. The default is new line, but one can use something like `--row_seperator="---\n" to use yaml style seperation.
+    /// How to separate between each row. The default is new line, but one can use something like `--row_separator="---\n" to use yaml style separation.
     #[arg(long, short, default_value = "\n")]
-    row_seperator: String,
+    row_separator: String,
 
     #[command(flatten)]
     json_options: Option<JsonOutputOptions>,
@@ -64,8 +64,8 @@ pub struct JsonOutputOptions {
 pub enum JsonStyle {
     /// One line JSON
     OneLine,
-    /// Consise JSON output (no unneeded white spaces).
-    Consise,
+    /// Concise JSON output (no unneeded white spaces).
+    Concise,
     /// Pretty JSON output.
     Pretty,
 }
@@ -73,9 +73,9 @@ pub enum JsonStyle {
 #[derive(Args, Debug, Clone)]
 #[group(required = false, multiple = true)]
 pub struct TextOutputOptions {
-    /// Seperate items by (for text output).
+    /// separate items by (for text output).
     #[arg(long, default_value = "\t")]
-    items_seperator: String,
+    items_separator: String,
 
     /// What to add before a String value (for text output).
     #[arg(long, default_value = "")]
@@ -172,7 +172,7 @@ impl OutputOptions {
                 let options = TextOutputOptions::csv();
                 Box::new(TextProcess::new(
                     writer,
-                    self.row_seperator.clone(),
+                    self.row_separator.clone(),
                     options,
                 ))
             }
@@ -183,7 +183,7 @@ impl OutputOptions {
                 let options = self.text_options.as_ref().cloned().unwrap_or_default();
                 Box::new(TextProcess::new(
                     writer,
-                    self.row_seperator.clone(),
+                    self.row_separator.clone(),
                     options,
                 ))
             }
@@ -193,7 +193,7 @@ impl OutputOptions {
                 }
                 let options = self.json_options.as_ref().cloned().unwrap_or_default();
                 Box::new(JsonProcess {
-                    line_seperator: self.row_seperator.clone(),
+                    line_separator: self.row_separator.clone(),
                     printer: options,
                     writer,
                 })
@@ -227,14 +227,14 @@ impl From<TextOutputOptions> for TextPrinter {
 struct TextProcess {
     writer: Rc<RefCell<dyn std::io::Write + Send>>,
     length: usize,
-    line_seperator: String,
+    line_separator: String,
     printer: TextPrinter,
 }
 
 impl Default for TextOutputOptions {
     fn default() -> Self {
         Self {
-            items_seperator: "\t".to_string(),
+            items_separator: "\t".to_string(),
             string_prefix: String::new(),
             string_postfix: String::new(),
             headers: false,
@@ -250,7 +250,7 @@ impl Default for TextOutputOptions {
 impl TextOutputOptions {
     fn csv() -> Self {
         Self {
-            items_seperator: ", ".to_string(),
+            items_separator: ", ".to_string(),
             string_prefix: "\"".to_string(),
             string_postfix: "\"".to_string(),
             headers: true,
@@ -302,7 +302,7 @@ impl<W: Write> Print<W> for TextPrinter {
     }
     fn print_object(&self, f: &mut W, value: &IndexMap<String, JsonValue>) -> FmtResult {
         let json = JsonOutputOptions {
-            style: JsonStyle::Consise,
+            style: JsonStyle::Concise,
             utf8_strings: true,
         };
         let mut str = String::new();
@@ -311,7 +311,7 @@ impl<W: Write> Print<W> for TextPrinter {
     }
     fn print_array(&self, f: &mut W, value: &[JsonValue]) -> FmtResult {
         let json = JsonOutputOptions {
-            style: JsonStyle::Consise,
+            style: JsonStyle::Concise,
             utf8_strings: true,
         };
         let mut str = String::new();
@@ -418,7 +418,7 @@ impl JsonOutputOptions {
             self.print_string(f, key)?;
             write!(f, ":")?;
             match self.style {
-                JsonStyle::Consise => {}
+                JsonStyle::Concise => {}
                 _ => write!(f, " ")?,
             }
             match value {
@@ -463,17 +463,17 @@ impl JsonOutputOptions {
 impl TextProcess {
     fn new(
         writer: Rc<RefCell<dyn std::io::Write + Send>>,
-        line_seperator: String,
+        line_separator: String,
         options: TextOutputOptions,
     ) -> Self {
         Self {
             writer,
             length: 0,
-            line_seperator,
+            line_separator,
             printer: options.into(),
         }
     }
-    fn print_list(&mut self, list: &[Option<JsonValue>]) -> ProcessResult<ProcessDesision> {
+    fn print_list(&mut self, list: &[Option<JsonValue>]) -> ProcessResult<ProcessDecision> {
         for (index, value) in list.iter().enumerate() {
             let mut str = String::new();
             self.printer.print(&mut str, value)?;
@@ -482,12 +482,12 @@ impl TextProcess {
                 write!(
                     self.writer.borrow_mut(),
                     "{}",
-                    self.printer.options.items_seperator
+                    self.printer.options.items_separator
                 )?;
             }
         }
-        write!(self.writer.borrow_mut(), "{}", self.line_seperator)?;
-        Ok(ProcessDesision::Continue)
+        write!(self.writer.borrow_mut(), "{}", self.line_separator)?;
+        Ok(ProcessDecision::Continue)
     }
 }
 
@@ -509,20 +509,20 @@ impl Process for TextProcess {
 
         Ok(())
     }
-    fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
+    fn process(&mut self, context: Context) -> ProcessResult<ProcessDecision> {
         if self.length != 0 {
             self.print_list(&context.to_list())
         } else {
             let mut str = String::new();
             self.printer.print_something(&mut str, context.input())?;
-            write!(self.writer.borrow_mut(), "{}{}", str, self.line_seperator)?;
-            Ok(ProcessDesision::Continue)
+            write!(self.writer.borrow_mut(), "{}{}", str, self.line_separator)?;
+            Ok(ProcessDecision::Continue)
         }
     }
 }
 
 struct JsonProcess {
-    line_seperator: String,
+    line_separator: String,
     printer: JsonOutputOptions,
     writer: Rc<RefCell<dyn std::io::Write + Send>>,
 }
@@ -534,12 +534,12 @@ impl Process for JsonProcess {
     fn complete(&mut self) -> ProcessResult<()> {
         Ok(())
     }
-    fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
+    fn process(&mut self, context: Context) -> ProcessResult<ProcessDecision> {
         let value = context.build();
         let mut str = String::new();
         self.printer.print_something(&mut str, &value)?;
-        write!(self.writer.borrow_mut(), "{}{}", str, self.line_seperator)?;
-        Ok(ProcessDesision::Continue)
+        write!(self.writer.borrow_mut(), "{}{}", str, self.line_separator)?;
+        Ok(ProcessDecision::Continue)
     }
 }
 
@@ -553,7 +553,7 @@ mod tests {
     fn get_processor_will_fail_when_csv_has_json_options() {
         let options = OutputOptions {
             output_style: OutputStyle::Csv,
-            row_seperator: String::new(),
+            row_separator: String::new(),
             json_options: Some(JsonOutputOptions::default()),
             text_options: None,
         };
@@ -569,7 +569,7 @@ mod tests {
     fn get_processor_will_fail_when_csv_has_text_options() {
         let options = OutputOptions {
             output_style: OutputStyle::Csv,
-            row_seperator: String::new(),
+            row_separator: String::new(),
             json_options: None,
             text_options: Some(TextOutputOptions::default()),
         };
@@ -585,7 +585,7 @@ mod tests {
     fn get_processor_will_pass_when_csv_has_no_options() {
         let options = OutputOptions {
             output_style: OutputStyle::Csv,
-            row_seperator: String::new(),
+            row_separator: String::new(),
             json_options: None,
             text_options: None,
         };
@@ -601,7 +601,7 @@ mod tests {
     fn get_processor_will_fail_when_text_has_json_options() {
         let options = OutputOptions {
             output_style: OutputStyle::Text,
-            row_seperator: String::new(),
+            row_separator: String::new(),
             json_options: Some(JsonOutputOptions::default()),
             text_options: None,
         };
@@ -617,7 +617,7 @@ mod tests {
     fn get_processor_will_pass_when_text_has_no_options() {
         let options = OutputOptions {
             output_style: OutputStyle::Text,
-            row_seperator: String::new(),
+            row_separator: String::new(),
             json_options: None,
             text_options: None,
         };
@@ -633,7 +633,7 @@ mod tests {
     fn get_processor_will_pass_when_text_has_text_options() {
         let options = OutputOptions {
             output_style: OutputStyle::Text,
-            row_seperator: String::new(),
+            row_separator: String::new(),
             json_options: None,
             text_options: Some(TextOutputOptions::default()),
         };
@@ -649,7 +649,7 @@ mod tests {
     fn get_processor_will_fail_when_json_has_text_options() {
         let options = OutputOptions {
             output_style: OutputStyle::Json,
-            row_seperator: String::new(),
+            row_separator: String::new(),
             json_options: None,
             text_options: Some(TextOutputOptions::csv()),
         };
@@ -665,7 +665,7 @@ mod tests {
     fn get_processor_will_pass_when_json_has_no_options() {
         let options = OutputOptions {
             output_style: OutputStyle::Json,
-            row_seperator: String::new(),
+            row_separator: String::new(),
             json_options: None,
             text_options: None,
         };
@@ -681,7 +681,7 @@ mod tests {
     fn get_processor_will_pass_when_json_has_json_options() {
         let options = OutputOptions {
             output_style: OutputStyle::Json,
-            row_seperator: String::new(),
+            row_separator: String::new(),
             json_options: Some(JsonOutputOptions::default()),
             text_options: None,
         };
@@ -979,10 +979,10 @@ mod tests {
     }
 
     #[test]
-    fn json_printer_will_print_consise_object() {
+    fn json_printer_will_print_concise_object() {
         let printer = JsonOutputOptions {
             utf8_strings: true,
-            style: JsonStyle::Consise,
+            style: JsonStyle::Concise,
         };
         let mut text = String::new();
 
@@ -1036,10 +1036,10 @@ mod tests {
     }
 
     #[test]
-    fn json_printer_will_print_consise_array() {
+    fn json_printer_will_print_concise_array() {
         let printer = JsonOutputOptions {
             utf8_strings: true,
-            style: JsonStyle::Consise,
+            style: JsonStyle::Concise,
         };
         let mut text = String::new();
 

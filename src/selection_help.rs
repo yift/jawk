@@ -94,7 +94,7 @@ fn build_help() -> Vec<SelectionHelp> {
             vec![
                 "Invoke a function. Has a format of `(<function-name> <arg0> <arg1> ..)` where `<argN>` are other selection.",
                 "Alternative format is `(.<function-name> <arg1>...)` - in that case, the first argument will be the input (i.e. `.`).",
-                "The argument can be seperated by comma or whitespace.",
+                "The argument can be separated by comma or whitespace.",
                 "See list of available functions in [functions additional help](functions.md).",
             ],
         )
@@ -112,7 +112,7 @@ fn build_help() -> Vec<SelectionHelp> {
             "Variables",
             vec![
                 "Use a variable (either one the was predefined by the `set` command line argument or one that was defined by the `set` function).",
-                "The format to use varaibles is `:<variable-name>`. Note that the variable is defiend once.",
+                "The format to use variables is `:<variable-name>`. Note that the variable is defined once.",
             ],
         )
             .with_example(UsageExample::new(":nothing", "", ""))
@@ -143,7 +143,7 @@ fn build_help() -> Vec<SelectionHelp> {
             vec![
                 "Use input context to get the context of the input. The available input types are:",
                 "* `&index` - To get the index of the current value within the current run.",
-                "* `&index-in-file` - To get the index of the current value within the curent file.",
+                "* `&index-in-file` - To get the index of the current value within the current file.",
                 "* `&started-at-line-number` - To get the line number within the input file in which the input started.",
                 "* `&started-at-char-number` - To get the char number within the line within the input file in which the input started.",
                 "* `&ended-at-line-number` - To get the line number within the input file in which the input ended.",
@@ -160,7 +160,7 @@ fn build_help() -> Vec<SelectionHelp> {
         SelectionHelp::new(
             "Previous selected values",
             vec![
-                "Reuse previoulsy selected value. Use this to reuse a value that had been selected previously. This is not available during filtering, and one can only refere to values that had been selected before.",
+                "Reuse previously selected value. Use this to reuse a value that had been selected previously. This is not available during filtering, and one can only refer to values that had been selected before.",
                 "The format is `/<selection-name>/` where the *selection-name* is the name of the selection.",
             ],
         )

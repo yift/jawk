@@ -1,1 +1,1 @@
-Read for multpile files and sort by name
+Read for multiple files and sort by name

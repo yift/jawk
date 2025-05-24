@@ -8,7 +8,7 @@ use crate::{
 };
 
 pub fn get() -> FunctionDefinitions {
-    FunctionDefinitions::new("reverese", 1, 1, |args| {
+    FunctionDefinitions::new("reverse", 1, 1, |args| {
         struct Impl(Vec<Rc<dyn Get>>);
         impl Get for Impl {
             fn get(&self, value: &Context) -> Option<JsonValue> {

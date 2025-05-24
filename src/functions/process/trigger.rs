@@ -30,7 +30,7 @@ pub fn get() -> FunctionDefinitions {
         }
         Rc::new(Impl(vec))
     })
-    .add_description_line("Trigger an external proccess and return it's process ID.")
+    .add_description_line("Trigger an external process and return it's process ID.")
     .add_description_line("If all the arguments are strings run a process with that list.")
     .add_description_line("The result is the process ID:")
     .add_example(

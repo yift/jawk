@@ -32,7 +32,7 @@ pub fn get() -> FunctionDefinitions {
     })
     .add_description_line("Create a new list with items from 0 to the second argument.")
     .add_description_line("If the second argument is not a positive integer, return nothing.")
-    .add_description_line("Be carefull not to use large numbers.")
+    .add_description_line("Be careful not to use large numbers.")
     .add_example(
         Example::new()
             .add_argument("4")

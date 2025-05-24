@@ -1,6 +1,6 @@
 use crate::{
     json_value::JsonValue,
-    processor::{Context, Process, ProcessDesision, Result, Titles},
+    processor::{Context, Process, ProcessDecision, Result, Titles},
 };
 
 pub struct Merger {
@@ -33,10 +33,10 @@ impl Process for Merger {
         self.next.process(context)?;
         Ok(())
     }
-    fn process(&mut self, context: Context) -> Result<ProcessDesision> {
+    fn process(&mut self, context: Context) -> Result<ProcessDecision> {
         let value = context.build();
         self.data.push(value);
-        Ok(ProcessDesision::Continue)
+        Ok(ProcessDecision::Continue)
     }
     fn start(&mut self, titles_so_far: Titles) -> Result<()> {
         self.titles = Some(titles_so_far);
@@ -65,8 +65,8 @@ mod tests {
             fn complete(&mut self) -> Result<()> {
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> Result<ProcessDesision> {
-                Ok(ProcessDesision::Continue)
+            fn process(&mut self, _: Context) -> Result<ProcessDecision> {
+                Ok(ProcessDecision::Continue)
             }
             fn start(&mut self, titles: Titles) -> Result<()> {
                 assert_eq!(titles.len(), 0);
@@ -96,11 +96,11 @@ mod tests {
             fn complete(&mut self) -> Result<()> {
                 Ok(())
             }
-            fn process(&mut self, context: Context) -> Result<ProcessDesision> {
+            fn process(&mut self, context: Context) -> Result<ProcessDecision> {
                 let input = context.input().deref().clone();
                 assert!(self.data.borrow().is_none());
                 *self.data.borrow_mut() = Some(input);
-                Ok(ProcessDesision::Continue)
+                Ok(ProcessDecision::Continue)
             }
             fn start(&mut self, _: Titles) -> Result<()> {
                 Ok(())

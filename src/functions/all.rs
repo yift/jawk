@@ -4,7 +4,7 @@ use crate::functions::list::group as get_list_functions;
 use crate::functions::number::group as get_number_functions;
 use crate::functions::number_as_string::group as get_nas_functions;
 use crate::functions::object::group as get_object_functions;
-use crate::functions::proccess::group as get_exec_functions;
+use crate::functions::process::group as get_exec_functions;
 use crate::functions::string::group as get_string_functions;
 use crate::functions::time::group as get_time_functions;
 use crate::functions::type_group::group as get_type_functions;

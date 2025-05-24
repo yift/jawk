@@ -6,7 +6,7 @@ use std::rc::Rc;
 use indexmap::IndexMap;
 use regex::Regex;
 use std::fmt::Error as FormatError;
-use std::io::Error as IoEror;
+use std::io::Error as IoError;
 use thiserror::Error;
 
 use crate::json_value::JsonValue;
@@ -21,7 +21,7 @@ pub enum ProcessError {
     #[error("{0}")]
     Format(#[from] FormatError),
     #[error("{0}")]
-    Io(#[from] IoEror),
+    Io(#[from] IoError),
     #[error("{0}")]
     InvalidInputError(&'static str),
 }
@@ -213,11 +213,8 @@ impl Context {
         } else {
             let mut mp = IndexMap::new();
             for (title, value) in &self.results {
-                match value {
-                    Some(value) => {
-                        mp.insert(title.deref().clone(), value.clone());
-                    }
-                    None => {}
+                if let Some(value) = value {
+                    mp.insert(title.deref().clone(), value.clone());
                 }
             }
             JsonValue::Object(mp)
@@ -278,7 +275,7 @@ impl RegexCompile for Context {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum ProcessDesision {
+pub enum ProcessDecision {
     Continue,
     Break,
 }
@@ -287,6 +284,6 @@ pub type Result<T> = std::result::Result<T, ProcessError>;
 
 pub trait Process {
     fn start(&mut self, titles_so_far: Titles) -> Result<()>;
-    fn process(&mut self, context: Context) -> Result<ProcessDesision>;
+    fn process(&mut self, context: Context) -> Result<ProcessDecision>;
     fn complete(&mut self) -> Result<()>;
 }

@@ -1,7 +1,7 @@
 use crate::{
-    functions_definitions::{get_fn_help, get_groups, FunctionsGroup},
-    selection_help::get_selection_help,
     Cli,
+    functions_definitions::{FunctionsGroup, get_fn_help, get_groups},
+    selection_help::get_selection_help,
 };
 use mdbook::MDBook;
 use regex::Regex;

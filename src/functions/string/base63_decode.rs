@@ -32,7 +32,7 @@ pub fn get() -> FunctionDefinitions {
         .add_alias("base64")
         .add_description_line("Decode a BASE64 string and try to convert to a string using UTF8.")
         .add_description_line(
-            "Retunr nothing if the first and only argument is not a valid UTF8 string encoded using BASE64."
+            "Return nothing if the first and only argument is not a valid UTF8 string encoded using BASE64."
         )
         .add_example(
             Example::new()

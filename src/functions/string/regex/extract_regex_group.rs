@@ -57,7 +57,7 @@ pub fn get() -> FunctionDefinitions {
             "The second argument is expected to be the string with the regular expression."
         )
         .add_description_line(
-            "The third argument is expected to be the group index with in the regular epression (the first group index is one)."
+            "The third argument is expected to be the group index with in the regular expression (the first group index is one)."
         )
         .add_description_line(
             "For regular expression syntax, see [https://docs.rs/regex/latest/regex/#syntax]."

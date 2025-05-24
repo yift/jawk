@@ -1,1 +1,1 @@
-prety json file can be created with yaml style seperators.
+prety json file can be created with yaml style separators.

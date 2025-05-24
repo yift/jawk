@@ -1,5 +1,5 @@
 use clap::Parser;
-use jawk::{go, Cli};
+use jawk::{Cli, go};
 use std::cell::RefCell;
 use std::io::Read;
 use std::ops::Deref;

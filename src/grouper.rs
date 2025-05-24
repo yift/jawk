@@ -4,9 +4,9 @@ use indexmap::IndexMap;
 
 use crate::{
     json_value::JsonValue,
-    processor::{Context, Process, ProcessDesision, Result as ProcessResult, Titles},
+    processor::{Context, Process, ProcessDecision, Result as ProcessResult, Titles},
     reader::from_string,
-    selection::{read_getter, Get, SelectionParseError},
+    selection::{Get, SelectionParseError, read_getter},
 };
 
 #[derive(Clone)]
@@ -62,12 +62,12 @@ impl Process for GrouperProcess {
         self.next.process(context)?;
         Ok(())
     }
-    fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
+    fn process(&mut self, context: Context) -> ProcessResult<ProcessDecision> {
         if let Some(key) = self.name(&context) {
             let value = context.build();
             self.data.entry(key).or_default().push(value);
         }
-        Ok(ProcessDesision::Continue)
+        Ok(ProcessDecision::Continue)
     }
     fn start(&mut self, _: Titles) -> ProcessResult<()> {
         self.next.start(Titles::default())
@@ -123,8 +123,8 @@ mod tests {
             fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> ProcessResult<ProcessDesision> {
-                Ok(ProcessDesision::Continue)
+            fn process(&mut self, _: Context) -> ProcessResult<ProcessDecision> {
+                Ok(ProcessDecision::Continue)
             }
             fn start(&mut self, titles: Titles) -> ProcessResult<()> {
                 assert_eq!(titles.len(), 0);
@@ -158,11 +158,11 @@ mod tests {
             fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
+            fn process(&mut self, context: Context) -> ProcessResult<ProcessDecision> {
                 let input = context.input().deref().clone();
                 assert!(self.data.borrow().is_none());
                 *self.data.borrow_mut() = Some(input);
-                Ok(ProcessDesision::Continue)
+                Ok(ProcessDecision::Continue)
             }
             fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())

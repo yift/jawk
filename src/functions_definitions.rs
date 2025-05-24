@@ -21,9 +21,9 @@ type Factory = fn(args: Vec<Rc<dyn Get>>) -> Rc<dyn Get>;
 
 #[derive(Debug, Error)]
 pub enum FunctionDefinitionsError {
-    #[error("Function '{0}' is unknwon")]
+    #[error("Function '{0}' is unknown")]
     UnknownFunction(String),
-    #[error("Mising argument for {0}, got only {1} needed {2}")]
+    #[error("Missing argument for {0}, got only {1} needed {2}")]
     MissingArgument(String, usize, usize),
     #[error("Too many arguments for {0}, got only {1} needed {2}")]
     TooManyArgument(String, usize, usize),
@@ -43,7 +43,7 @@ pub struct Example {
     // For docs only
     explain: Option<Cow<'static, str>>,
     // For docs only
-    acurate: bool,
+    accurate: bool,
 }
 
 impl Example {
@@ -53,7 +53,7 @@ impl Example {
             arguments: vec![],
             output: None,
             explain: None,
-            acurate: true,
+            accurate: true,
         }
     }
     pub fn input(mut self, input: &'static str) -> Self {
@@ -81,7 +81,7 @@ impl Example {
         self
     }
     pub fn more_or_less(mut self) -> Self {
-        self.acurate = false;
+        self.accurate = false;
         self
     }
 }
@@ -214,7 +214,7 @@ impl FunctionsGroup {
         )
     }
 
-    fn all_functions_iter(&'static self) -> impl Iterator<Item = &FunctionDefinitions> {
+    fn all_functions_iter(&'static self) -> impl Iterator<Item = &'static FunctionDefinitions> {
         self.all_sub_group_iter()
             .flat_map(|f| f.group_functions.iter())
     }
@@ -396,7 +396,7 @@ fn get_function_help(func: &FunctionDefinitions) -> Vec<String> {
         match selection.get(&Context::new_with_no_context(json)) {
             None => help.push("  will return nothing".into()),
             Some(result) => {
-                if example.acurate {
+                if example.accurate {
                     help.push(format!("  will give: `{result}`"));
                 } else {
                     help.push(format!("  can give something like: `{result}`"));
