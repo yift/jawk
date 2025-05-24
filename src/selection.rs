@@ -1,20 +1,20 @@
 use crate::const_getter::ConstGetters;
 use crate::extractor::parse_extractor;
 use crate::extractor::root;
-use crate::functions_definitions::find_function;
 use crate::functions_definitions::FunctionDefinitionsError;
-use crate::input_context_extractor::parse_input_context;
+use crate::functions_definitions::find_function;
 use crate::input_context_extractor::InputContextExtractorParseError;
+use crate::input_context_extractor::parse_input_context;
 use crate::json_parser::JsonParserError;
 use crate::json_value::JsonValue;
 use crate::processor::Context;
 use crate::processor::Process;
-use crate::processor::ProcessDesision;
+use crate::processor::ProcessDecision;
 use crate::processor::Result as ProcessResult;
 use crate::processor::Titles;
-use crate::reader::from_string;
 use crate::reader::Location;
 use crate::reader::Reader;
+use crate::reader::from_string;
 use crate::selection_extractor::parse_get_selection;
 use crate::variables_extractor::parse_get_variable;
 use std::io::Error as IoError;
@@ -109,12 +109,12 @@ impl Process for SelectionProcess {
     fn complete(&mut self) -> ProcessResult<()> {
         self.next.complete()
     }
-    fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
+    fn process(&mut self, context: Context) -> ProcessResult<ProcessDecision> {
         let result = self.getter.get(&context);
         let new_context = context.with_result(&self.name, result);
 
         self.next.process(new_context)?;
-        Ok(ProcessDesision::Continue)
+        Ok(ProcessDecision::Continue)
     }
 }
 

@@ -38,7 +38,7 @@ pub fn get() -> FunctionDefinitions {
     .add_description_line("The first argument should be an object.")
     .add_description_line("The second argument should be a key.")
     .add_description_line("The third argument should be a value.")
-    .add_description_line("If the object dosen't has that key, it will not be replaced.")
+    .add_description_line("If the object doesn't  has that key, it will not be replaced.")
     .add_example(
         Example::new()
             .add_argument("{}")

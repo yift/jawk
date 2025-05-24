@@ -2,9 +2,9 @@ use std::{rc::Rc, str::FromStr};
 
 use crate::{
     json_value::JsonValue,
-    processor::{Context, Process, ProcessDesision, Result as ProcessResult, Titles},
+    processor::{Context, Process, ProcessDecision, Result as ProcessResult, Titles},
     reader::from_string,
-    selection::{read_getter, Get, SelectionParseError},
+    selection::{Get, SelectionParseError, read_getter},
 };
 
 #[derive(Clone)]
@@ -48,14 +48,14 @@ impl Process for SplitterProcess {
     fn complete(&mut self) -> ProcessResult<()> {
         self.next.complete()
     }
-    fn process(&mut self, context: Context) -> ProcessResult<ProcessDesision> {
+    fn process(&mut self, context: Context) -> ProcessResult<ProcessDecision> {
         if let Some(JsonValue::Array(lst)) = self.split_by.get(&context) {
             for val in lst {
                 let context = context.with_inupt(val);
                 self.next.process(context)?;
             }
         }
-        Ok(ProcessDesision::Continue)
+        Ok(ProcessDecision::Continue)
     }
     fn start(&mut self, titles_so_far: Titles) -> ProcessResult<()> {
         self.next.start(titles_so_far)
@@ -98,8 +98,8 @@ mod tests {
             fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> ProcessResult<ProcessDesision> {
-                Ok(ProcessDesision::Continue)
+            fn process(&mut self, _: Context) -> ProcessResult<ProcessDecision> {
+                Ok(ProcessDecision::Continue)
             }
             fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 *self.0.borrow_mut() = true;
@@ -129,8 +129,8 @@ mod tests {
                 *self.0.borrow_mut() = true;
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> ProcessResult<ProcessDesision> {
-                Ok(ProcessDesision::Continue)
+            fn process(&mut self, _: Context) -> ProcessResult<ProcessDecision> {
+                Ok(ProcessDecision::Continue)
             }
             fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())
@@ -158,9 +158,9 @@ mod tests {
             fn complete(&mut self) -> ProcessResult<()> {
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> ProcessResult<ProcessDesision> {
+            fn process(&mut self, _: Context) -> ProcessResult<ProcessDecision> {
                 *self.0.borrow_mut() += 1;
-                Ok(ProcessDesision::Continue)
+                Ok(ProcessDecision::Continue)
             }
             fn start(&mut self, _: Titles) -> ProcessResult<()> {
                 Ok(())

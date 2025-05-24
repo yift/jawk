@@ -2,8 +2,8 @@
 `jawk` is a command line tool thatshould be able to instract with other command line tools.
  
 ## Inputs
-By default, `jawk` will read the input from the standart input (which can be piped from a previous command), but one can specify a file or directory in the command line, in that case, `jawk` will read from those files (if one of them is a directrory, `jawk` will read from all the readable files under that directory).
-The inputs should be JSON values (objects, arrays, strings, numbers, Booleans and null). By default, if part of the input is not a valid JSON value, `jawk` will ignore it and will procceed to the next value.
+By default, `jawk` will read the input from the standard input (which can be piped from a previous command), but one can specify a file or directory in the command line, in that case, `jawk` will read from those files (if one of them is a directory, `jawk` will read from all the readable files under that directory).
+The inputs should be JSON values (objects, arrays, strings, numbers, Booleans and null). By default, if part of the input is not a valid JSON value, `jawk` will ignore it and will proceed to the next value.
 `jawk` will then process each value on it's own, and will omit output for each value.
 
 ### Example

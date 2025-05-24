@@ -1,33 +1,33 @@
-use crate::processor::{Context, ContextKey, Process, ProcessDesision, Result, Titles};
+use crate::processor::{Context, ContextKey, Process, ProcessDecision, Result, Titles};
 use std::collections::HashSet;
 
-pub struct Uniquness {
-    knwon_lines: HashSet<ContextKey>,
+pub struct Uniqueness {
+    known_lines: HashSet<ContextKey>,
     next: Box<dyn Process>,
 }
 
-impl Uniquness {
+impl Uniqueness {
     pub fn create_process(next: Box<dyn Process>) -> Box<dyn Process> {
-        Box::new(Uniquness {
-            knwon_lines: HashSet::new(),
+        Box::new(Uniqueness {
+            known_lines: HashSet::new(),
             next,
         })
     }
 }
 
-impl Process for Uniquness {
+impl Process for Uniqueness {
     fn complete(&mut self) -> Result<()> {
-        self.knwon_lines.clear();
+        self.known_lines.clear();
         self.next.complete()
     }
     fn start(&mut self, titles_so_far: Titles) -> Result<()> {
         self.next.start(titles_so_far)
     }
-    fn process(&mut self, context: Context) -> Result<ProcessDesision> {
-        if self.knwon_lines.insert(context.key()) {
+    fn process(&mut self, context: Context) -> Result<ProcessDecision> {
+        if self.known_lines.insert(context.key()) {
             self.next.process(context)
         } else {
-            Ok(ProcessDesision::Continue)
+            Ok(ProcessDecision::Continue)
         }
     }
 }
@@ -49,11 +49,11 @@ mod tests {
             fn complete(&mut self) -> Result<()> {
                 Ok(())
             }
-            fn process(&mut self, context: Context) -> Result<ProcessDesision> {
+            fn process(&mut self, context: Context) -> Result<ProcessDecision> {
                 let value = context.input().deref().clone();
                 let mut vec = self.0.borrow_mut();
                 vec.push(value);
-                Ok(ProcessDesision::Continue)
+                Ok(ProcessDecision::Continue)
             }
             fn start(&mut self, _: Titles) -> Result<()> {
                 Ok(())
@@ -61,32 +61,32 @@ mod tests {
         }
         {
             let next = Box::new(Next(data.clone()));
-            let mut uniquness = Uniquness::create_process(next);
+            let mut uniqueness = Uniqueness::create_process(next);
 
             let context = Context::new_with_no_context("text".into());
-            uniquness.process(context)?;
+            uniqueness.process(context)?;
             let context = Context::new_with_no_context("text".into());
-            uniquness.process(context)?;
+            uniqueness.process(context)?;
             let context = Context::new_with_no_context((100).into());
-            uniquness.process(context)?;
+            uniqueness.process(context)?;
             let context = Context::new_with_no_context("text2".into());
-            uniquness.process(context)?;
+            uniqueness.process(context)?;
             let context = Context::new_with_no_context((200).into());
-            uniquness.process(context)?;
+            uniqueness.process(context)?;
             let context = Context::new_with_no_context((100).into());
-            uniquness.process(context)?;
+            uniqueness.process(context)?;
             let context = Context::new_with_no_context((200).into());
-            uniquness.process(context)?;
+            uniqueness.process(context)?;
             let context = Context::new_with_no_context("text2".into());
-            uniquness.process(context)?;
+            uniqueness.process(context)?;
             let context = Context::new_with_no_context("text".into());
-            uniquness.process(context)?;
+            uniqueness.process(context)?;
             let context = Context::new_with_no_context((100).into());
-            uniquness.process(context)?;
+            uniqueness.process(context)?;
             let context = Context::new_with_no_context((200).into());
-            uniquness.process(context)?;
+            uniqueness.process(context)?;
             let context = Context::new_with_no_context("text2".into());
-            uniquness.process(context)?;
+            uniqueness.process(context)?;
         }
 
         assert_eq!(
@@ -108,8 +108,8 @@ mod tests {
             fn complete(&mut self) -> Result<()> {
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> Result<ProcessDesision> {
-                Ok(ProcessDesision::Continue)
+            fn process(&mut self, _: Context) -> Result<ProcessDecision> {
+                Ok(ProcessDecision::Continue)
             }
             fn start(&mut self, titles: Titles) -> Result<()> {
                 assert_eq!(titles.len(), 2);
@@ -119,9 +119,9 @@ mod tests {
         }
         {
             let next = Box::new(Next(data.clone()));
-            let mut uniquness = Uniquness::create_process(next);
+            let mut uniqueness = Uniqueness::create_process(next);
 
-            uniquness.start(titles)?;
+            uniqueness.start(titles)?;
         }
 
         let binding = data.borrow();
@@ -140,8 +140,8 @@ mod tests {
                 *self.0.borrow_mut() = true;
                 Ok(())
             }
-            fn process(&mut self, _: Context) -> Result<ProcessDesision> {
-                Ok(ProcessDesision::Continue)
+            fn process(&mut self, _: Context) -> Result<ProcessDecision> {
+                Ok(ProcessDecision::Continue)
             }
             fn start(&mut self, _: Titles) -> Result<()> {
                 Ok(())
@@ -149,9 +149,9 @@ mod tests {
         }
         {
             let next = Box::new(Next(data.clone()));
-            let mut uniquness = Uniquness::create_process(next);
+            let mut uniqueness = Uniqueness::create_process(next);
 
-            uniquness.complete()?;
+            uniqueness.complete()?;
         }
 
         let binding = data.borrow();

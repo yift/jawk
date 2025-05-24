@@ -1,1 +1,1 @@
-Consise json, not all selection have name.
+Concise json, not all selection have name.

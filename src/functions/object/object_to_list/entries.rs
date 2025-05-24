@@ -32,7 +32,7 @@ pub fn get() -> FunctionDefinitions {
     })
         .add_alias("to_list")
         .add_description_line(
-            "Get the list of all the entries of an obejct. Each item of the list will be an object with `key` and `value` entries"
+            "Get the list of all the entries of an object. Each item of the list will be an object with `key` and `value` entries"
         )
         .add_example(
             Example::new()

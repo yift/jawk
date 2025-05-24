@@ -27,7 +27,7 @@ pub fn get() -> FunctionDefinitions {
         }
         Rc::new(Impl(args))
     })
-    .add_description_line("Check if any of item in a list is ture.")
+    .add_description_line("Check if any of item in a list is true.")
     .add_example(
         Example::new()
             .add_argument("[1, 5, false, 1.1]")

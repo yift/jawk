@@ -34,7 +34,7 @@ pub fn get() -> FunctionDefinitions {
         .add_alias("order_by_values_by")
         .add_description_line("Sort an object by a function to it's values.")
         .add_description_line(
-            "If the first argument is an object, return object sorted by applying the second argumetn to it's values."
+            "If the first argument is an object, return object sorted by applying the second argument to it's values."
         )
         .add_example(
             Example::new()

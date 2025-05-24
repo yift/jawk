@@ -35,8 +35,8 @@ pub fn get() -> FunctionDefinitions {
         Rc::new(Impl(args))
     })
     .add_description_line("Format a date/time into a string")
-    .add_description_line("The first argemnt should be the number of seconds since epoch")
-    .add_description_line("The second argemnt should be the format as string")
+    .add_description_line("The first argument should be the number of seconds since epoch")
+    .add_description_line("The second argument should be the format as string")
     .add_description_line(
         "See details in [https://docs.rs/chrono/latest/chrono/format/strftime/index.html].",
     )

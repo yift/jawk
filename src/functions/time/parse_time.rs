@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use chrono::NaiveDateTime;
+use chrono::{DateTime, NaiveDateTime};
 
 use crate::{
     functions_definitions::{Arguments, Example, FunctionDefinitions},
@@ -18,7 +18,7 @@ pub fn get() -> FunctionDefinitions {
                     (self.0.apply(value, 0), self.0.apply(value, 1))
                 {
                     if let Ok(time) = NaiveDateTime::parse_from_str(&str, &format) {
-                        let diff = time.signed_duration_since(NaiveDateTime::UNIX_EPOCH);
+                        let diff = time.and_utc().signed_duration_since(DateTime::UNIX_EPOCH);
                         diff.num_microseconds()
                             .map(|ms| ((ms as f64) / 1_000_000.0).into())
                     } else {
@@ -32,8 +32,8 @@ pub fn get() -> FunctionDefinitions {
         Rc::new(Impl(args))
     })
     .add_description_line("Parse a date/time from a string into seconds since epoc")
-    .add_description_line("The first argemnt should be the date")
-    .add_description_line("The second argemnt should be the format as string")
+    .add_description_line("The first argument should be the date")
+    .add_description_line("The second argument should be the format as string")
     .add_description_line(
         "See details in [https://docs.rs/chrono/latest/chrono/format/strftime/index.html].",
     )

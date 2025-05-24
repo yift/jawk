@@ -23,7 +23,7 @@ pub fn get() -> FunctionDefinitions {
     })
     .add_alias("nas_abs")
     .add_description_line(
-        "If the argument is numnber as string, return it's absolute value as string.",
+        "If the argument is number as string, return it's absolute value as string.",
     )
     .add_example(
         Example::new()

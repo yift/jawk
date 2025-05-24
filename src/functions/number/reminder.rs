@@ -33,7 +33,7 @@ pub fn get() -> FunctionDefinitions {
         Rc::new(Impl(args))
     })
         .add_alias("mod")
-        .add_alias("modulu")
+        .add_alias("modulo")
         .add_alias("reminder")
         .add_description_line(
             "Find the reminder of the division of the firs argument by the second argument. If the second argument is 0 will return nothing"
@@ -54,7 +54,7 @@ pub fn get() -> FunctionDefinitions {
             Example::new()
             .add_argument("7")
             .add_argument("0")
-            .explain("Can not devide by zero.")
+            .explain("Can not divide by zero.")
         )
         .add_example(
             Example::new()

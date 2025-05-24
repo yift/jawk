@@ -38,7 +38,7 @@ pub fn get() -> FunctionDefinitions {
     })
         .add_description_line("Extract a string header.")
         .add_description_line(
-            "If the first argument is a string and the second argument is a positive integer, the returned value will be a string with the beggining of the first argument."
+            "If the first argument is a string and the second argument is a positive integer, the returned value will be a string with the beginning of the first argument."
         )
         .add_description_line("See also [`take`](take.md).")
         .add_example(

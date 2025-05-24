@@ -3,4 +3,4 @@ jawk
 --select=.name.last
 --select=.location.city=City
 --output-style=json
---style=consise
+--style=concise

@@ -28,7 +28,7 @@ mod variables_extractor;
 
 use additional_help::display_additional_help;
 use clap::Parser;
-use duplication_remover::Uniquness;
+use duplication_remover::Uniqueness;
 use filter::Filter;
 use grouper::Grouper;
 use json_parser::JsonParserError;
@@ -39,7 +39,7 @@ use output_style::OutputOptions;
 use output_style::OutputStyleValidationError;
 use pre_sets::PreSetCollection;
 use pre_sets::PreSetParserError;
-use processor::ProcessDesision;
+use processor::ProcessDecision;
 use processor::{Context, Process, ProcessError, Titles};
 use regex_cache::RegexCache;
 use selection::Selection;
@@ -50,7 +50,7 @@ use splitter::Splitter;
 use std::cell::RefCell;
 use std::fmt::Error as FormatError;
 use std::fs::read_dir;
-use std::io::Error as IoEror;
+use std::io::Error as IoError;
 use std::io::Read;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -59,7 +59,7 @@ use thiserror::Error;
 
 use crate::additional_help::create_possible_values;
 use crate::json_parser::JsonParser;
-use crate::reader::{from_file, from_std_in, Reader};
+use crate::reader::{Reader, from_file, from_std_in};
 
 /// An AWK like toold for JSON input.
 ///
@@ -70,7 +70,7 @@ use crate::reader::{from_file, from_std_in, Reader};
 pub struct Cli {
     /// Input files.
     ///
-    /// If ommited the standart in will be used.
+    /// If omitted the standard in will be used.
     /// If any of the files is a directory, all it's files will be used.
     files: Vec<PathBuf>,
 
@@ -81,8 +81,8 @@ pub struct Cli {
 
     /// What to output.
     ///
-    /// Can be multpile selection. The expected format is `<selection>[=name]`.
-    /// If name is ommited, the selection will be the name.
+    /// Can be multiple selection. The expected format is `<selection>[=name]`.
+    /// If name is omitted, the selection will be the name.
     /// See selection additional help for available selections format.
     ///
     /// For example: `--select .name.first=First Name`
@@ -115,7 +115,7 @@ pub struct Cli {
     /// The expected format is `<selection>`.
     /// If the output is not a string, the data will be ignored. One can use the `stringify` function if needed.
     /// See selection additional help for available selections format.
-    /// Ommiting the selection will produce a list instead of an object.
+    /// Omitting the selection will produce a list instead of an object.
     ///
     /// For example: `--group-by=.name.first`.
     #[arg(long, short, visible_alias = "combine", visible_alias = "merge")]
@@ -124,7 +124,7 @@ pub struct Cli {
     /// How to order the output. Allow muttiploe sorting.
     ///
     /// Be careful, the sorting is done in memory.
-    /// The expected format is `<selection>[=DESC]` or `<selection>[=ASC]`. If the directioon is ommited, `ASC` is assumed.
+    /// The expected format is `<selection>[=DESC]` or `<selection>[=ASC]`. If the directioon is omitted, `ASC` is assumed.
     /// The order is null, false, true, strings, numbers, objects, arrays.
     /// See selection additional help for available selections format.
     ///
@@ -172,8 +172,8 @@ pub struct Cli {
     /// Regular expression cache size.
     ///
     /// Regular expression compilation can time time. If you have a few repeating complex regular expression, you can set
-    /// a cahce of compiled expressions, this will make sure that the offten used regular expression are compiled only once.
-    /// Ommiting this setting will re-compile the regular expressions before any use (i.e. size 0).
+    /// a cache of compiled expressions, this will make sure that the often used regular expression are compiled only once.
+    /// Omitting this setting will re-compile the regular expressions before any use (i.e. size 0).
     ///
     #[arg(long, default_value_t = 0)]
     regular_expression_cache_size: usize,
@@ -202,7 +202,7 @@ enum OnError {
     Stdout,
 }
 
-/// Start JAWK and return a resuilt.
+/// Start JAWK and return a result.
 ///
 /// # Arguments
 ///
@@ -270,7 +270,7 @@ impl<S: Read> Master<S> {
             process = sorter.create_processor(process, max_size);
         }
         if self.cli.unique {
-            process = Uniquness::create_process(process);
+            process = Uniqueness::create_process(process);
         }
         for selection in self.cli.choose.iter().rev() {
             let selection = Selection::from_str(selection)?;
@@ -342,10 +342,10 @@ impl<S: Read> Master<S> {
                         &self.regular_expression_cache,
                     );
                     match process.process(context)? {
-                        ProcessDesision::Break => {
+                        ProcessDecision::Break => {
                             break Ok(());
                         }
-                        ProcessDesision::Continue => {
+                        ProcessDecision::Continue => {
                             in_file_index += 1;
                             *index += 1;
                         }
@@ -386,7 +386,7 @@ pub enum MainError {
     #[error("{0}")]
     SorterParse(#[from] SorterParserError),
     #[error("{0}")]
-    Io(#[from] IoEror),
+    Io(#[from] IoError),
     #[error("{0}")]
     Processor(#[from] ProcessError),
     #[error("{0}")]

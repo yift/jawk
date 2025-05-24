@@ -63,23 +63,23 @@ pub fn get() -> FunctionDefinitions {
         Rc::new(Impl(vec))
     })
         .add_alias("execute")
-        .add_description_line("Execute an external proccess and wait for it's completion.")
+        .add_description_line("Execute an external process and wait for it's completion.")
         .add_description_line(
             "If all the arguments are strings run a process with that list."
         )
         .add_description_line("The result is an object with:")
         .add_description_line(
-            "* `success` Boolean to indicate if the process was successfull."
+            "* `success` Boolean to indicate if the process was successful."
         )
         .add_description_line("* `exit_code` The process exit code.")
         .add_description_line(
-            "* `raw_stdout` The standart output of the process encode as BASE64."
+            "* `raw_stdout` The standard output of the process encode as BASE64."
         )
-        .add_description_line("* `stdout` The standart output as text.")
+        .add_description_line("* `stdout` The standard output as text.")
         .add_description_line(
-            "* `raw_stderr` The standart error of the process encode as BASE64."
+            "* `raw_stderr` The standard error of the process encode as BASE64."
         )
-        .add_description_line("* `stderr` The standart error as text.")
+        .add_description_line("* `stderr` The standard error as text.")
         .add_example(
             Example::new()
                 .add_argument("\"echo\"")
