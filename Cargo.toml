@@ -12,10 +12,10 @@ readme = "README.md"
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
 thiserror = "2.0"
-indexmap = "2.9"
+indexmap = "2.11"
 regex = "1.11"
 chrono = "0.4"
-cached = "0.55"
+cached = "0.56"
 base64 = "0.22"
 bigdecimal = "0.4"
 open = "5.3"
